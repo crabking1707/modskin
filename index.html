@@ -76,6 +76,15 @@ h1{font-size:30px;margin:14px 0 6px;letter-spacing:-.5px}p.sub{color:var(--mut);
 .offer.free:disabled{background:#cbd5e1;color:#64748b}.offer.free:disabled small{color:#64748b}
 .offer.paid b{font-size:19px}.offer .soon{font-size:11px;font-weight:800;background:#f1f5f9;color:var(--mut);padding:4px 9px;border-radius:99px;white-space:nowrap}
 .offer .rm{background:rgba(255,255,255,.25);padding:5px 12px;border-radius:99px;font-weight:800;white-space:nowrap}
+.offer .soon.ct{background:linear-gradient(135deg,#22d3ee,#7c3aed);color:#fff}
+a.offer{text-decoration:none;color:inherit}
+.admbox{background:#f8fafc;border:1.5px dashed #c4b5fd;border-radius:18px;padding:12px;margin-top:6px}
+.admbox h4{margin:0 0 10px;font-size:12px;color:#7c3aed;letter-spacing:.6px}
+.admbox .swap{width:100%;border-radius:14px;padding:12px;font-weight:800;font-size:14px;background:#fef9c3;border:1.5px solid #eab308;color:#713f12;margin-bottom:12px}
+.admbox .swap:disabled{opacity:.6}
+.admbox .r2{display:flex;gap:8px}.admbox .r2 input{margin:0}.admbox .r2 input[type=number]{width:110px;flex:none}
+.admbox .go2{flex:1;background:var(--ink);color:#fff;border-radius:14px;padding:12px;font-weight:800;font-size:14px}.admbox .go2:disabled{background:#cbd5e1;color:#94a3b8}
+.admbox .err{margin:8px 0 0}
 .step{background:#f8fafc;border-radius:18px;padding:14px;margin-bottom:12px;font-size:14px;line-height:1.5}
 a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-decoration:none;font-weight:800;border-radius:99px;padding:15px;margin:10px 0}
 .code{letter-spacing:6px;text-align:center;font-weight:800;font-size:22px;text-transform:uppercase}
@@ -113,6 +122,7 @@ const ADMIN_EMAIL = "baohieudeptrai.2009@gmail.com";
 const CAMS = [5,15,25,30,40,50];
 // Lấy điểm free: 4 lần/ngày, 2 lần đầu qua Layma rồi 2 lần sau qua Link4M
 const FREE_PER_DAY = 4, MIN_WAIT = 15, PENDING_TTL = 30*60*1000;
+const CONTACT_URL = "https://t.me/hieu_gamer"; // nút "Liên hệ ad"
 const SHORTENERS = [
   {name:'Layma', token:'3436e80b8e2230be4a19c350ad0d2ad4',
    api:(t,u)=>[`https://api.layma.net/api/admin/shortlink/quicklink?tokenUser=${t}&format=json&url=${u}`,`https://layma.net/api?api=${t}&url=${u}`],
@@ -121,7 +131,10 @@ const SHORTENERS = [
    api:(t,u)=>[`https://link4m.co/api-shorten/v2?api=${t}&url=${u}`],
    quick:(t,u)=>`https://link4m.co/st?api=${t}&url=${u}`}
 ];
-const shortenerFor = n => SHORTENERS[n<2?0:1];
+// Admin đổi được thứ tự: mặc định Layma trước → Link4M sau; đổi: Link4M trước → Layma sau (lưu trên Firestore, áp dụng cho mọi người)
+let CFG = {first:'Layma'};
+const shortenOrder = () => CFG.first==='Link4M' ? [SHORTENERS[1],SHORTENERS[0]] : [SHORTENERS[0],SHORTENERS[1]];
+const shortenerFor = n => shortenOrder()[n<2?0:1];
 /* ======================================================================== */
 
 const H = window.LQ_DATA;
@@ -140,7 +153,7 @@ if (hasFB) {
   const V="10.12.2",u=m=>`https://www.gstatic.com/firebasejs/${V}/firebase-${m}.js`;
   const [{initializeApp},A,F] = await Promise.all([import(u('app')),import(u('auth')),import(u('firestore'))]);
   const app=initializeApp(firebaseConfig), auth=A.getAuth(app), db=F.getFirestore(app);
-  const ref=uid=>F.doc(db,'users',uid);
+  const ref=uid=>F.doc(db,'users',uid);let cfgCb=()=>{};
   const viaMsg=e=>({"auth/email-already-in-use":"Email đã được đăng ký","auth/invalid-credential":"Sai email hoặc mật khẩu","auth/weak-password":"Mật khẩu tối thiểu 6 ký tự","auth/invalid-email":"Email không hợp lệ","auth/too-many-requests":"Thử lại sau ít phút"}[e.code]||e.message);
   B = {
     async register(email,name,pw){try{const c=await A.createUserWithEmailAndPassword(auth,email,pw);await A.updateProfile(c.user,{displayName:name});
@@ -148,17 +161,21 @@ if (hasFB) {
         if(email.toLowerCase()===ADMIN_EMAIL) A.sendEmailVerification(c.user).catch(()=>{});}catch(e){throw new Error(viaMsg(e))}},
     async login(email,pw){try{await A.signInWithEmailAndPassword(auth,email,pw)}catch(e){throw new Error(viaMsg(e))}},
     logout:()=>A.signOut(auth),
-    onUser(cb){let un=()=>{};A.onAuthStateChanged(auth,u=>{un();if(!u)return cb(null);
+    onUser(cb){let un=()=>{},uc=()=>{};A.onAuthStateChanged(auth,u=>{un();uc();if(!u){cfgCb({});return cb(null)}
+        uc=F.onSnapshot(F.doc(db,'config','free'),s=>cfgCb(s.data()||{}),()=>cfgCb({}));
         un=F.onSnapshot(ref(u.uid),s=>{const d=s.data()||{};cb({uid:u.uid,email:u.email,name:d.name||u.displayName||u.email,credits:d.credits||0,freeDay:d.freeDay||0,freeCount:d.freeCount||0,
           admin:u.email.toLowerCase()===ADMIN_EMAIL&&u.emailVerified,adminUnverified:u.email.toLowerCase()===ADMIN_EMAIL&&!u.emailVerified})})})},
     setCredits:(uid,n)=>F.updateDoc(ref(uid),{credits:n}),
+    addCredits:(uid,n)=>F.updateDoc(ref(uid),{credits:F.increment(n)}),
+    onCfg:f=>{cfgCb=f},
+    setCfg:d=>F.setDoc(F.doc(db,'config','free'),d,{merge:true}),
     consume:uid=>F.updateDoc(ref(uid),{credits:F.increment(-1)}),
     claimFree:(uid,day,n)=>F.updateDoc(ref(uid),{credits:F.increment(1),freeDay:day,freeCount:n}),
     async list(){const s=await F.getDocs(F.collection(db,'users'));return s.docs.map(d=>({uid:d.id,...d.data()}))}
   };
 } else {
   const L=k=>JSON.parse(localStorage.getItem(k)||'null'), S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
-  let cb=()=>{};
+  let cb=()=>{},dcfg=()=>{};
   const push=()=>{const s=L('lq_s');const us=L('lq_u')||{};const u=s&&us[s];cb(u?{uid:s,email:s,name:u.name,credits:u.credits,freeDay:u.freeDay||0,freeCount:u.freeCount||0,admin:s===ADMIN_EMAIL}:null)};
   B={
     async register(e,n,p){const us=L('lq_u')||{};if(us[e])throw new Error("Email đã được đăng ký");us[e]={name:n,pw:p,credits:0};S('lq_u',us);S('lq_s',e);push()},
@@ -166,6 +183,9 @@ if (hasFB) {
     async logout(){localStorage.removeItem('lq_s');push()},
     onUser(f){cb=f;push()},
     async setCredits(uid,n){const us=L('lq_u');us[uid].credits=n;S('lq_u',us);push()},
+    async addCredits(uid,n){const us=L('lq_u');us[uid].credits=(us[uid].credits||0)+n;S('lq_u',us);push()},
+    onCfg(f){dcfg=f;dcfg(L('lq_cfg')||{})},
+    async setCfg(d){S('lq_cfg',{...(L('lq_cfg')||{}),...d});dcfg(L('lq_cfg'))},
     async consume(uid){const us=L('lq_u');us[uid].credits--;S('lq_u',us);push()},
     async claimFree(uid,day,n){const us=L('lq_u');us[uid].credits++;us[uid].freeDay=day;us[uid].freeCount=n;S('lq_u',us);push()},
     async list(){const us=L('lq_u')||{};return Object.entries(us).map(([k,v])=>({uid:k,email:k,...v}))}
@@ -230,6 +250,11 @@ function renderTopup(){
   const u=st.user,used=freeUsed(u),left=FREE_PER_DAY-used,p=getPend();
   const head=`<button class="x" id="mx" aria-label="Đóng">✕</button><h2>Nạp điểm</h2><p class="sub" style="margin-bottom:14px">Điểm hiện có: <b>${u.credits}</b> • cần ≥ 1 điểm để tạo file</p>`;
   let body;
+  const o=shortenOrder(),adm=u.admin?`<div class="admbox"><h4>👑 CHỈ ADMIN</h4>
+    <button class="swap" id="swp">🔁 Đổi link • Hiện tại: ${o[0].name} → ${o[1].name}</button>
+    <input id="ap_u" placeholder="Gmail hoặc tên tài khoản" autocapitalize="none" autocomplete="off">
+    <div class="r2"><input id="ap_n" type="number" min="1" inputmode="numeric" placeholder="Số điểm"><button class="go2" id="ap_go">+ Cộng điểm</button></div>
+    <p class="err" id="ap_e"></p></div>`:'';
   if(p){
     const sh=SHORTENERS.find(x=>x.name===p.sh);
     body=`<div class="step"><b>Bước 1:</b> vượt link ${esc(p.sh)} (lần ${used+1}/${FREE_PER_DAY}) để lấy mã 5 ký tự.</div>
@@ -241,9 +266,10 @@ function renderTopup(){
     <p style="text-align:center;margin:12px 0 0">${p.link?'':'<button class="link" id="rt">Tạo lại link</button> • '}<button class="link" id="cx" style="color:#64748b">Huỷ</button></p>`;
   } else {
     body=`<button class="offer free" id="free" ${left>0?'':'disabled'}><div>🎁 Lấy free<small>${left>0?'Vượt link nhận mã, +1 điểm/lần':'Hết lượt hôm nay • reset 7:00 sáng'}</small></div><span class="rm">${left}/${FREE_PER_DAY}</span></button>
-    <div class="offer paid"><div><b>5.000₫</b>/1 lần</div><span class="soon">Sắp ra mắt</span></div>
-    <div class="offer paid"><div><b>20.000₫</b>/5 lần</div><span class="soon">Sắp ra mắt</span></div>
-    <div class="offer paid"><div><b>70.000₫</b>/20 lần</div><span class="soon">Sắp ra mắt</span></div>`;
+    <a class="offer paid" href="${CONTACT_URL}" target="_blank" rel="noopener"><div><b>5.000₫</b>/1 lần</div><span class="soon ct">Liên hệ ad</span></a>
+    <a class="offer paid" href="${CONTACT_URL}" target="_blank" rel="noopener"><div><b>20.000₫</b>/5 lần</div><span class="soon ct">Liên hệ ad</span></a>
+    <a class="offer paid" href="${CONTACT_URL}" target="_blank" rel="noopener"><div><b>70.000₫</b>/20 lần</div><span class="soon ct">Liên hệ ad</span></a>
+    ${adm}`;
   }
   $('#modal').innerHTML=`<div class="modal" id="mo"><div class="box topup">${head}${body}</div></div>`;
   $('#mx').onclick=closeTopup;$('#mo').onclick=e=>{if(e.target.id==='mo')closeTopup()};
@@ -253,6 +279,36 @@ function renderTopup(){
     $('#cd').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'')};
     $('#cf').onclick=confirmCode;
   } else if(left>0) $('#free').onclick=()=>startFree(false);
+  if($('#swp'))$('#swp').onclick=swapLink;
+  if($('#ap_go'))$('#ap_go').onclick=addPoints;
+}
+
+/* ---------- Công cụ admin: đổi thứ tự link free + cộng điểm theo tài khoản ---------- */
+async function swapLink(){
+  const u=st.user;if(!u||!u.admin)return toast('Chỉ admin mới đổi được link');
+  const next=CFG.first==='Link4M'?'Layma':'Link4M',other=next==='Link4M'?'Layma':'Link4M',b=$('#swp');if(b)b.disabled=true;
+  try{await B.setCfg({first:next});CFG={...CFG,first:next};toast('Đã đổi: '+next+' trước → '+other+' sau');if(st.topup&&!$('#cd'))renderTopup()}
+  catch(e){if(b)b.disabled=false;toast(e.code==='permission-denied'?'Chưa cập nhật firestore.rules mới (cần Publish rules)':'Lỗi: '+e.message)}
+}
+async function addPoints(){
+  const me=st.user,err=m=>{const e=$('#ap_e');if(e)e.textContent=m},clr=id=>{const e=$('#'+id);if(e)e.value=''};
+  if(!me||!me.admin)return toast('Chỉ admin mới cộng được điểm');
+  const raw=$('#ap_u').value.trim(),q=raw.toLowerCase(),n=parseInt($('#ap_n').value,10);
+  if(!q)return err('Nhập Gmail hoặc tên tài khoản');
+  if(!Number.isInteger(n)||n<1||n>100000)return err('Số điểm phải là số nguyên ≥ 1');
+  const btn=$('#ap_go');btn.disabled=true;err('Đang tìm tài khoản...');
+  try{
+    const us=await B.list(),k=s=>String(s||'').trim().toLowerCase();
+    let m=us.filter(x=>k(x.email)===q);
+    if(!m.length&&!q.includes('@'))m=us.filter(x=>k(x.email)===q+'@gmail.com');
+    if(!m.length)m=us.filter(x=>k(x.name)===q);
+    if(!m.length){btn.disabled=false;return err('Không tìm thấy tài khoản "'+raw+'"')}
+    if(m.length>1){btn.disabled=false;return err('Có '+m.length+' tài khoản trùng tên, hãy nhập Gmail để chọn đúng người')}
+    const t=m[0];
+    await B.addCredits(t.uid,n);
+    toast('✅ Đã cộng +'+n+' điểm cho '+(t.name||t.email));
+    err('');clr('ap_u');clr('ap_n');btn.disabled=false;
+  }catch(e){btn.disabled=false;err('Lỗi: '+(e.code==='permission-denied'?'không có quyền (cần đăng nhập đúng admin đã xác minh email)':e.message))}
 }
 async function shorten(sh,longUrl){
   const enc=encodeURIComponent(longUrl);
@@ -384,6 +440,7 @@ async function make(){
 }
 
 /* ---------- Boot ---------- */
+B.onCfg(c=>{CFG={first:c&&c.first==='Link4M'?'Link4M':'Layma'};if(st.user&&st.topup&&!$('#cd'))renderTopup()});
 B.onUser(u=>{
   if(st.landing)return;
   st.user=u;
