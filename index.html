@@ -68,6 +68,18 @@ h1{font-size:30px;margin:14px 0 6px;letter-spacing:-.5px}p.sub{color:var(--mut);
 .link{color:#7c3aed;font-weight:800;text-decoration:underline}.err{color:#dc2626;font-size:13px;min-height:18px;margin:0 0 8px}
 .urow{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:13px}.urow div{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis}.urow input{width:64px;margin:0;padding:8px}
 .toast{position:fixed;top:calc(70px + env(safe-area-inset-top,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:99px;z-index:60;font-weight:700;font-size:14px;max-width:90%;text-align:center}
+.topup{position:relative;padding-top:26px}
+.x{position:absolute;top:10px;right:12px;width:34px;height:34px;border-radius:50%;background:#f1f5f9;font-weight:800;font-size:16px}
+.offer{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;text-align:left;border-radius:20px;padding:16px 18px;margin-bottom:10px;font-size:17px;border:2px solid #e2e8f0;background:#fff}
+.offer small{display:block;font-size:12px;color:var(--mut);font-weight:600;margin-top:2px}
+.offer.free{background:linear-gradient(135deg,#22d3ee,#7c3aed);color:#fff;border:0}.offer.free small{color:#e0f2fe}
+.offer.free:disabled{background:#cbd5e1;color:#64748b}.offer.free:disabled small{color:#64748b}
+.offer.paid b{font-size:19px}.offer .soon{font-size:11px;font-weight:800;background:#f1f5f9;color:var(--mut);padding:4px 9px;border-radius:99px;white-space:nowrap}
+.offer .rm{background:rgba(255,255,255,.25);padding:5px 12px;border-radius:99px;font-weight:800;white-space:nowrap}
+.step{background:#f8fafc;border-radius:18px;padding:14px;margin-bottom:12px;font-size:14px;line-height:1.5}
+a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-decoration:none;font-weight:800;border-radius:99px;padding:15px;margin:10px 0}
+.code{letter-spacing:6px;text-align:center;font-weight:800;font-size:22px;text-transform:uppercase}
+.big{font-size:44px;letter-spacing:10px;font-weight:900;text-align:center;background:linear-gradient(135deg,#22d3ee,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0}
 .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}
 .hide{display:none!important}
 </style>
@@ -99,6 +111,17 @@ const firebaseConfig = {
 };
 const ADMIN_EMAIL = "baohieudeptrai.2009@gmail.com";
 const CAMS = [5,15,25,30,40,50];
+// Lấy điểm free: 4 lần/ngày, 2 lần đầu qua Layma rồi 2 lần sau qua Link4M
+const FREE_PER_DAY = 4, MIN_WAIT = 15, PENDING_TTL = 30*60*1000;
+const SHORTENERS = [
+  {name:'Layma', token:'3436e80b8e2230be4a19c350ad0d2ad4',
+   api:(t,u)=>[`https://api.layma.net/api/admin/shortlink/quicklink?tokenUser=${t}&format=json&url=${u}`,`https://layma.net/api?api=${t}&url=${u}`],
+   quick:(t,u)=>`https://layma.net/st?api=${t}&url=${u}`},
+  {name:'Link4M', token:'69b0b29e9f192a135a24406f',
+   api:(t,u)=>[`https://link4m.co/api-shorten/v2?api=${t}&url=${u}`],
+   quick:(t,u)=>`https://link4m.co/st?api=${t}&url=${u}`}
+];
+const shortenerFor = n => SHORTENERS[n<2?0:1];
 /* ======================================================================== */
 
 const H = window.LQ_DATA;
@@ -126,16 +149,17 @@ if (hasFB) {
     async login(email,pw){try{await A.signInWithEmailAndPassword(auth,email,pw)}catch(e){throw new Error(viaMsg(e))}},
     logout:()=>A.signOut(auth),
     onUser(cb){let un=()=>{};A.onAuthStateChanged(auth,u=>{un();if(!u)return cb(null);
-        un=F.onSnapshot(ref(u.uid),s=>{const d=s.data()||{};cb({uid:u.uid,email:u.email,name:d.name||u.displayName||u.email,credits:d.credits||0,
+        un=F.onSnapshot(ref(u.uid),s=>{const d=s.data()||{};cb({uid:u.uid,email:u.email,name:d.name||u.displayName||u.email,credits:d.credits||0,freeDay:d.freeDay||0,freeCount:d.freeCount||0,
           admin:u.email.toLowerCase()===ADMIN_EMAIL&&u.emailVerified,adminUnverified:u.email.toLowerCase()===ADMIN_EMAIL&&!u.emailVerified})})})},
     setCredits:(uid,n)=>F.updateDoc(ref(uid),{credits:n}),
     consume:uid=>F.updateDoc(ref(uid),{credits:F.increment(-1)}),
+    claimFree:(uid,day,n)=>F.updateDoc(ref(uid),{credits:F.increment(1),freeDay:day,freeCount:n}),
     async list(){const s=await F.getDocs(F.collection(db,'users'));return s.docs.map(d=>({uid:d.id,...d.data()}))}
   };
 } else {
   const L=k=>JSON.parse(localStorage.getItem(k)||'null'), S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
   let cb=()=>{};
-  const push=()=>{const s=L('lq_s');const us=L('lq_u')||{};const u=s&&us[s];cb(u?{uid:s,email:s,name:u.name,credits:u.credits,admin:s===ADMIN_EMAIL}:null)};
+  const push=()=>{const s=L('lq_s');const us=L('lq_u')||{};const u=s&&us[s];cb(u?{uid:s,email:s,name:u.name,credits:u.credits,freeDay:u.freeDay||0,freeCount:u.freeCount||0,admin:s===ADMIN_EMAIL}:null)};
   B={
     async register(e,n,p){const us=L('lq_u')||{};if(us[e])throw new Error("Email đã được đăng ký");us[e]={name:n,pw:p,credits:0};S('lq_u',us);S('lq_s',e);push()},
     async login(e,p){const us=L('lq_u')||{};if(!us[e]||us[e].pw!==p)throw new Error("Sai email hoặc mật khẩu");S('lq_s',e);push()},
@@ -143,12 +167,13 @@ if (hasFB) {
     onUser(f){cb=f;push()},
     async setCredits(uid,n){const us=L('lq_u');us[uid].credits=n;S('lq_u',us);push()},
     async consume(uid){const us=L('lq_u');us[uid].credits--;S('lq_u',us);push()},
+    async claimFree(uid,day,n){const us=L('lq_u');us[uid].credits++;us[uid].freeDay=day;us[uid].freeCount=n;S('lq_u',us);push()},
     async list(){const us=L('lq_u')||{};return Object.entries(us).map(([k,v])=>({uid:k,email:k,...v}))}
   };
 }
 
 /* ---------- State ---------- */
-const st={user:null,step:1,device:'ios',role:'',q:'',picked:[],skin:{},cam:5};
+const st={landing:false,topup:false,user:null,step:1,device:'ios',role:'',q:'',picked:[],skin:{},cam:5};
 const byId=Object.fromEntries(H.map(h=>[h.id,h]));
 
 /* ---------- Auth UI ---------- */
@@ -190,7 +215,90 @@ $('#cn').onclick=async()=>{ // Admin bấm vào số để sửa số lượt
   const n=Math.max(0,parseInt(v,10));if(Number.isNaN(n))return toast('Số không hợp lệ');
   try{await B.setCredits(u.uid,n)}catch(e){toast('Lỗi: '+e.message)}
 };
-$('#cplus').onclick=()=>toast('Cần ≥ 1 điểm để tạo file. Liên hệ Hiếu gamer để nạp thêm lượt.');
+$('#cplus').onclick=()=>openTopup();
+
+/* ---------- Nạp điểm / lấy free ---------- */
+const dayNow=()=>Math.floor(Date.now()/86400000);
+const freeUsed=u=>u.freeDay===dayNow()?u.freeCount:0;
+const getPend=()=>{try{const p=JSON.parse(localStorage.getItem('lq_pend')||'null');
+  if(p&&(p.uid!==st.user.uid||Date.now()-p.t>PENDING_TTL)){localStorage.removeItem('lq_pend');return null}return p}catch(e){return null}};
+const setPend=p=>p?localStorage.setItem('lq_pend',JSON.stringify(p)):localStorage.removeItem('lq_pend');
+const rndCode=()=>{const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',a=crypto.getRandomValues(new Uint8Array(5));return[...a].map(x=>c[x%c.length]).join('')};
+function closeTopup(){st.topup=false;$('#modal').innerHTML=''}
+function openTopup(){st.topup=true;renderTopup()}
+function renderTopup(){
+  const u=st.user,used=freeUsed(u),left=FREE_PER_DAY-used,p=getPend();
+  const head=`<button class="x" id="mx" aria-label="Đóng">✕</button><h2>Nạp điểm</h2><p class="sub" style="margin-bottom:14px">Điểm hiện có: <b>${u.credits}</b> • cần ≥ 1 điểm để tạo file</p>`;
+  let body;
+  if(p){
+    const sh=SHORTENERS.find(x=>x.name===p.sh);
+    body=`<div class="step"><b>Bước 1:</b> vượt link ${esc(p.sh)} (lần ${used+1}/${FREE_PER_DAY}) để lấy mã 5 ký tự.</div>
+    ${p.link?`<a class="lnk" id="lk" href="${esc(p.link)}" target="_blank" rel="noopener">👉 Mở link ${esc(p.sh)}</a>`:'<p class="err">Chưa tạo được link. Bấm "Tạo lại link".</p>'}
+    <div class="step"><b>Bước 2:</b> copy mã rồi quay lại đây, nhập vào ô bên dưới và bấm Xác nhận.</div>
+    <input class="code" id="cd" maxlength="5" placeholder="•••••" autocomplete="off" autocapitalize="characters">
+    <p class="err" id="ce"></p>
+    <button class="cta" id="cf">Xác nhận (+1 điểm)</button>
+    <p style="text-align:center;margin:12px 0 0">${p.link?'':'<button class="link" id="rt">Tạo lại link</button> • '}<button class="link" id="cx" style="color:#64748b">Huỷ</button></p>`;
+  } else {
+    body=`<button class="offer free" id="free" ${left>0?'':'disabled'}><div>🎁 Lấy free<small>${left>0?'Vượt link nhận mã, +1 điểm/lần':'Hết lượt hôm nay • reset 7:00 sáng'}</small></div><span class="rm">${left}/${FREE_PER_DAY}</span></button>
+    <div class="offer paid"><div><b>5.000₫</b>/1 lần</div><span class="soon">Sắp ra mắt</span></div>
+    <div class="offer paid"><div><b>20.000₫</b>/5 lần</div><span class="soon">Sắp ra mắt</span></div>
+    <div class="offer paid"><div><b>70.000₫</b>/20 lần</div><span class="soon">Sắp ra mắt</span></div>`;
+  }
+  $('#modal').innerHTML=`<div class="modal" id="mo"><div class="box topup">${head}${body}</div></div>`;
+  $('#mx').onclick=closeTopup;$('#mo').onclick=e=>{if(e.target.id==='mo')closeTopup()};
+  if(p){
+    $('#cx').onclick=()=>{setPend(null);renderTopup()};
+    if($('#rt'))$('#rt').onclick=()=>startFree(true);
+    $('#cd').oninput=e=>{e.target.value=e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'')};
+    $('#cf').onclick=confirmCode;
+  } else if(left>0) $('#free').onclick=()=>startFree(false);
+}
+async function shorten(sh,longUrl){
+  const enc=encodeURIComponent(longUrl);
+  for(const url of sh.api(sh.token,enc)){
+    try{
+      const r=await fetch(url);const t=await r.text();let j;try{j=JSON.parse(t)}catch(e){j=null}
+      const hay=j?JSON.stringify(j).split('\\/').join('/'):t;
+      const m=hay.match(/https?:\/\/[^\s"'<>\\]+/g)||[];
+      const out=m.find(x=>!x.includes(location.host)&&!/\/api/i.test(x));
+      if(out)return out;
+    }catch(e){/* thử endpoint kế tiếp */}
+  }
+  return sh.quick(sh.token,enc); // dự phòng: link vượt trực tiếp (không cần CORS)
+}
+async function startFree(retry){
+  const u=st.user,used=freeUsed(u);if(used>=FREE_PER_DAY)return toast('Hôm nay đã hết lượt free');
+  const old=retry?getPend():null,code=old?old.code:rndCode(),sh=shortenerFor(used);
+  const longUrl=location.origin+location.pathname+'?claim='+code;
+  $('#modal').innerHTML=`<div class="modal"><div class="box" style="text-align:center"><h2>Đang tạo link ${esc(sh.name)}...</h2><p class="sub">Chờ vài giây</p></div></div>`;
+  const link=await shorten(sh,longUrl);
+  setPend({uid:u.uid,code,sh:sh.name,link,t:old?old.t:Date.now(),made:Date.now()});
+  if(st.topup)renderTopup();
+}
+async function confirmCode(){
+  const u=st.user,p=getPend(),v=$('#cd').value.trim().toUpperCase(),err=m=>$('#ce').textContent=m;
+  if(!p)return renderTopup();
+  if(v.length!==5)return err('Nhập đủ 5 ký tự');
+  if(Date.now()-p.made<MIN_WAIT*1000)return err('Bạn chưa hoàn thành link, hãy vượt link rồi lấy mã');
+  if(v!==p.code)return err('Mã không đúng, kiểm tra lại');
+  const used=freeUsed(u);if(used>=FREE_PER_DAY){setPend(null);return renderTopup()}
+  $('#cf').disabled=true;
+  try{await B.claimFree(u.uid,dayNow(),used+1);setPend(null);toast('🎉 +1 điểm!');if(st.topup)renderTopup()}
+  catch(e){$('#cf').disabled=false;err('Không cộng được điểm: '+(e.code==='permission-denied'?'hết lượt hôm nay hoặc lệch giờ máy':e.message))}
+}
+
+/* Trang hiện mã sau khi vượt link: ?claim=XXXXX */
+const claimParam=(new URLSearchParams(location.search).get('claim')||'').toUpperCase();
+if(/^[A-Z0-9]{5}$/.test(claimParam)){
+  st.landing=true;
+  $('#app').innerHTML=`<div class="card" style="margin-top:50px;text-align:center"><div class="logo" style="margin:0 auto 12px">MQ</div><h2 style="margin:0">Mã của bạn</h2>
+  <div class="big" id="bc">${claimParam}</div><button class="cta" id="cc">Sao chép mã</button>
+  <p class="sub" style="margin:14px 0">Quay lại trang chính, nhập mã này vào ô xác nhận để nhận +1 điểm.</p>
+  <button class="link" id="gb">← Quay lại trang chính</button></div>`;
+  $('#cc').onclick=async()=>{try{await navigator.clipboard.writeText(claimParam);toast('Đã sao chép mã')}catch(e){toast('Hãy giữ vào mã để sao chép')}};
+  $('#gb').onclick=()=>{location.href=location.pathname};
+}
 $('#av').onclick=()=>{
   const u=st.user;
   $('#modal').innerHTML=`<div class="modal" id="mo"><div class="box"><h2>${esc(u.name)}</h2><p class="sub">${esc(u.email)}${u.admin?' • 👑 Admin':''}</p>
@@ -277,10 +385,12 @@ async function make(){
 
 /* ---------- Boot ---------- */
 B.onUser(u=>{
+  if(st.landing)return;
   st.user=u;
-  if(!u){$('#barwrap').innerHTML='';renderHeader();authView();return}
+  if(!u){st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
   renderHeader();
-  if(!st.booted){st.booted=true;go(1)}else if(st.step===3)view3(); // cập nhật nút khi điểm đổi
+  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3)view3(); // cập nhật nút khi điểm đổi
+  if(st.topup&&!$('#cd'))renderTopup(); // làm mới số điểm trong popup
 });
 </script>
 </body>
