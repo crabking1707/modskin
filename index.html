@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.0 - Có thanh tiến độ</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB)</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> của bạn, tự mod rồi tự đóng gói lại. <b>Nếu GitHub chặn (Failed to fetch / CORS) thì dùng nút Chọn file từ máy - cách này luôn chạy.</b> File mod ra chỉ chứa file đã mod, bạn giải nén đè lên Resources là chơi được.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.0</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.0 - Có thanh tiến độ</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -611,20 +611,23 @@ async function unzipNeededV2(zipBytes, needBasenames){
 }
 function patchBytesReal(orig, heroesMod){
   let bytes = orig.slice();
+  // PATCH SỐ - CHỈ DUYỆT 1 LẦN / TƯỚNG (bản cũ duyệt 18 lần nên iPhone treo)
   for(const h of heroesMod){
     const heroData = byId[h.id]; if(!heroData) continue;
     const num = heroNum(h.id);
     const targetIdx = (st.skin[h.id] ?? 0)+1;
     const total = heroData.skins.length;
-    for(let src=1; src<=total; src++){
-      if(src===targetIdx) continue;
-      for(let i=0;i+4<=bytes.length;i++){
-        if(bytes[i]===(num & 255) && bytes[i+1]===((num>>8)&255) && bytes[i+2]===(src & 255) && bytes[i+3]===((src>>8)&255)){
+    const n0 = num & 255, n1 = (num>>8)&255;
+    for(let i=0;i+4<=bytes.length;i++){
+      if(bytes[i]===n0 && bytes[i+1]===n1){
+        const src = bytes[i+2] | (bytes[i+3]<<8);
+        if(src>=1 && src<=total && src!==targetIdx){
           bytes[i+2]=targetIdx & 255; bytes[i+3]=(targetIdx>>8)&255;
         }
       }
     }
   }
+  // PATCH CHUỖI - DÙNG REGEX 1 LẦN, KHÔNG split 18 lần
   try{
     const dec = new TextDecoder('latin1');
     const enc = new TextEncoder();
@@ -634,13 +637,12 @@ function patchBytesReal(orig, heroesMod){
       const heroData = byId[h.id]; if(!heroData) continue;
       const targetIdx = (st.skin[h.id] ?? 0)+1;
       const targetCode = heroData.skins[targetIdx-1][2] || (h.id+'_'+targetIdx);
-      for(let src=1; src<=heroData.skins.length; src++){
-        if(src===targetIdx) continue;
-        const srcCode = heroData.skins[src-1][2] || (h.id+'_'+src);
-        if(srcCode && s.includes(srcCode)){ s = s.split(srcCode).join(targetCode); changed=true; }
-        const srcPath = h.id+'/'+src; const dstPath = h.id+'/'+targetIdx;
-        if(s.includes(srcPath)){ s = s.split(srcPath).join(dstPath); changed=true; }
-      }
+      // Thay airi_1, airi_2... -> airi_13 bằng regex 1 lần
+      const re = new RegExp(h.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '_\\d+', 'g');
+      if(re.test(s)){ s = s.replace(re, targetCode); changed=true; }
+      // Thay airi/1 -> airi/13
+      const re2 = new RegExp(h.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '/\\d+', 'g');
+      if(re2.test(s)){ s = s.replace(re2, h.id+'/'+targetIdx); changed=true; }
       if(s.includes('prefab_skill_effects')){ s=s.split('prefab_skill_effects').join('Prefab_Skill_Effects'); changed=true; }
       if(s.includes('hero_skill_effects')){ s=s.split('hero_skill_effects').join('Hero_Skill_Effects'); changed=true; }
     }
@@ -652,6 +654,12 @@ function patchBytesReal(orig, heroesMod){
   return bytes;
 }
 async function loadResourcesZip(onProgress){
+  // Nếu cache cũ từ bản cũ (72 file) thì xóa để nạp lại bản mới (28 file cho 2 tướng)
+  if(RES_FILES && RES_FILES.size>40){
+    try{ await caches.delete(RES_CACHE_KEY); }catch(_){}
+    RES_FILES=null;
+  }
+
   if(RES_FILES && RES_FILES.size>0) return RES_FILES;
   try{
     const cache = await caches.open(RES_CACHE_KEY);
@@ -691,14 +699,21 @@ async function loadResourcesZip(onProgress){
       return RES_FILES;
     }catch(e){ lastErr=e; console.warn('fetch url loi', url, e); continue; }
   }
-  throw new Error('Không tải được từ GitHub (Failed to fetch / CORS). GitHub chặn tải trực tiếp 242MB từ web. Hãy dùng nút Chọn file Resources.zip từ máy - cách này luôn chạy. Lỗi: '+(lastErr && lastErr.message));
+  throw new Error('GitHub chặn tải trực tiếp (bình thường) - Hãy dùng nút Chọn file từ máy. Lỗi gốc: '+(lastErr && lastErr.message));
 }
 async function buildModZipFromResources(heroesMod, onProgress){
+  const report = (pct, status)=>{ if(onProgress) { try{ onProgress(pct, status); }catch(_){} } };
+  report(2, 'Chuẩn bị...');
   const needBase = resNeededBasenames(heroesMod.map(h=>({id:h.heroId})));
   let filesMap = RES_FILES;
   if(!filesMap || filesMap.size===0){
-    filesMap = await loadResourcesZip(onProgress);
+    // Nếu chưa có Resources, tải - quy đổi 0-15% cho bước tải
+    filesMap = await loadResourcesZip((pct, got, total)=>{
+      report(Math.round(pct*0.15), 'Đang tải Resources.zip: '+pct+'%');
+    });
+    report(15, 'Đã có Resources.zip');
   } else {
+    report(8, 'Đã có Resources.zip trong cache');
     let missing=false;
     for(const bn of needBase){ if(!filesMap.has(bn)) {missing=true; break;} }
     if(missing){
@@ -708,18 +723,24 @@ async function buildModZipFromResources(heroesMod, onProgress){
         if(cached){ const buf = await cached.arrayBuffer(); filesMap = await unzipNeededV2(new Uint8Array(buf), needBase); RES_FILES = filesMap; }
       }catch(e){}
     }
+    report(15, 'Đã có Resources.zip');
   }
   const files=[]; const dirs=new Set();
   const addDir=(d)=>{ if(!dirs.has(d)){ dirs.add(d); files.push({name:d, dir:true}); } };
-  // Dùng basename để tìm file gốc, không cần đúng đường dẫn Resources/1.64.1/
-  for(const bn of needBase){
+  const needArr = [...needBase];
+  const totalFiles = needArr.length;
+  // 15% -> 85% : Mod từng file
+  for(let idxF=0; idxF<needArr.length; idxF++){
+    const bn = needArr[idxF];
+    const pctFile = 15 + Math.round((idxF/totalFiles)*70);
+    report(pctFile, 'Đang mod file '+(idxF+1)+'/'+totalFiles+': '+bn);
+    // Nhường UI để thanh tiến độ kịp vẽ - nếu không iPhone sẽ treo, thanh không chạy
+    if(idxF%3===0) await new Promise(r=>setTimeout(r,10));
     let data = filesMap.get(bn) || null;
     let rel = 'Resources/1.64.1/';
-    // Tìm đường dẫn thật trong zip để giữ cấu trúc
     for(const k of filesMap.keys()){
       if(baseName(k)===bn){ rel = k.startsWith('Resources/') ? k : 'Resources/1.64.1/'+k; if(!rel.includes('Resources/')) rel='Resources/1.64.1/'+k; break; }
     }
-    // Nếu là file đặc biệt, gán đường dẫn chuẩn
     if(bn==='heroSkin.bytes') rel='Resources/1.64.1/Databin/Client/Actor/heroSkin.bytes';
     if(bn==='skillcombine.bytes') rel='Resources/1.64.1/Databin/Client/Skill/skillcombine.bytes';
     if(bn==='liteBulletCfg.bytes') rel='Resources/1.64.1/Databin/Client/Skill/liteBulletCfg.bytes';
@@ -732,9 +753,17 @@ async function buildModZipFromResources(heroesMod, onProgress){
     for(let i=0;i<parts.length-1;i++){ cur+=parts[i]+'/'; addDir(cur); }
     files.push({name:rel, data});
   }
+  report(86, 'Đang đóng gói ZIP...');
+  await new Promise(r=>setTimeout(r,60));
   const uniq = [...new Map(heroesMod.map(h=>[h.heroId,h])).values()];
   const name=(uniq.length===1?slugFile(uniq[0].skin):uniq.map(h=>slugFile(h.skin)).join('_'))+'.zip';
-  return {blob: zipStore(files), name, files, total: files.length};
+  report(92, 'Đang nén file...');
+  const blob = zipStore(files);
+  report(98, 'Sắp xong...');
+  await new Promise(r=>setTimeout(r,120));
+  report(100, 'Xong! Đang nhả file...');
+  await new Promise(r=>setTimeout(r,350));
+  return {blob, name, files, total: files.length};
 }
 
 function buildModZip(){
@@ -796,53 +825,135 @@ function buildModZip(){
   const uniqSkins=[...new Map(rows.map(r=>[r.id, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip'; // Fix: rows đã expand nên đếm tướng duy nhất, không đếm tổng record
   return {blob:zipStore(files), name, rows};
 }
-function handoffZip(blob,name){
-  const file=new File([blob],name,{type:'application/zip'});
-  const ios=st.device==='ios'||/iPhone|iPad|iPod/.test(navigator.userAgent||'');
-  if(ios && navigator.canShare && navigator.canShare({files:[file]})) return navigator.share({files:[file], title:name});
-  const a=document.createElement('a'), url=URL.createObjectURL(blob);
-  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),20000);
-  return Promise.resolve();
+/* ---------- THANH TIẾN ĐỘ TẠO MOD ---------- */
+let MOD_PROG = 0;
+function showModProgress(name){
+  let m = document.getElementById('modProgressModal');
+  if(!m){
+    m=document.createElement('div'); m.id='modProgressModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(m);
+  }
+  m.innerHTML = '<div style="background:#fff;border-radius:18px;padding:22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">'
+    + '<div style="font-size:36px">⚒️</div>'
+    + '<h3 style="margin:8px 0 2px;font-size:17px">Đang tạo mod...</h3>'
+    + '<p id="modProgName" style="font-size:12px;color:#64748b;margin:0 0 14px;word-break:break-all">'+(name||'Đang chuẩn bị...')+'</p>'
+    + '<div style="background:#e2e8f0;border-radius:99px;height:16px;overflow:hidden"><div id="modProgFill" style="height:100%;width:0%;background:linear-gradient(90deg,#6366f1,#22d3ee);border-radius:99px;transition:width 0.25s ease"></div></div>'
+    + '<div style="display:flex;justify-content:space-between;margin-top:8px"><span id="modProgPct" style="font-weight:800;font-size:15px;color:#0f172a">0%</span><span id="modProgStatus" style="font-size:12px;color:#64748b">Chuẩn bị...</span></div>'
+    + '<p style="font-size:11px;color:#94a3b8;margin:12px 0 0">Đừng tắt web / đừng bấm thêm.<br>Chạy đến 100% là tự nhả file để tải.</p></div>';
+  m.style.display='flex';
+  MOD_PROG=0;
+}
+function updateModProgress(pct, status, name){
+  pct = Math.max(0, Math.min(100, Math.round(pct)));
+  if(pct < MOD_PROG) pct = MOD_PROG; // không cho chạy lùi
+  MOD_PROG = pct;
+  const fill=document.getElementById('modProgFill');
+  const pctEl=document.getElementById('modProgPct');
+  const stEl=document.getElementById('modProgStatus');
+  const nmEl=document.getElementById('modProgName');
+  if(fill) fill.style.width=pct+'%';
+  if(pctEl) pctEl.textContent=pct+'%';
+  if(stEl && status) stEl.textContent=status;
+  if(nmEl && name) nmEl.textContent=name;
+}
+function hideModProgress(){
+  const m=document.getElementById('modProgressModal');
+  if(m) m.style.display='none';
 }
 
+let MAKING=false;
+let LAST_MOD_URL=null;
+let LAST_MOD_NAME='';
+function handoffZip(blob,name){
+  // iPhone: navigator.share với file ZIP 20-50MB hay bị lỗi / không hiện. Thay bằng modal có nút Tải rõ ràng.
+  if(LAST_MOD_URL) { try{ URL.revokeObjectURL(LAST_MOD_URL); }catch(_){} }
+  const url = URL.createObjectURL(blob);
+  LAST_MOD_URL=url; LAST_MOD_NAME=name;
+  const sizeMB = (blob.size/1024/1024).toFixed(1);
+  // Tạo modal tải file
+  let m = document.getElementById('modModal');
+  if(!m){
+    m=document.createElement('div'); m.id='modModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(m);
+  }
+  m.innerHTML = '<div style="background:#fff;border-radius:16px;padding:20px;max-width:360px;width:100%;text-align:center">'
+    + '<div style="font-size:32px">✅</div><h3 style="margin:8px 0 4px">File mod đã xong!</h3>'
+    + '<p style="font-size:13px;color:#64748b;margin:0 0 12px;word-break:break-all">'+name+'<br>'+sizeMB+' MB • Đã trừ 1 điểm</p>'
+    + '<a id="modDownloadBtn" href="'+url+'" download="'+name+'" style="display:block;background:#0f172a;color:#fff;padding:12px;border-radius:12px;text-decoration:none;font-weight:700;margin-bottom:8px">⬇️ Bấm để Tải file về</a>'
+    + '<button id="modShareBtn" style="display:block;width:100%;background:#e0e7ff;color:#0f172a;padding:12px;border-radius:12px;border:0;font-weight:700;margin-bottom:8px">📤 Chia sẻ / Lưu vào Tệp</button>'
+    + '<button id="modCloseBtn" style="display:block;width:100%;background:#f1f5f9;color:#0f172a;padding:10px;border-radius:12px;border:0">Đóng</button>'
+    + '<p style="font-size:11px;color:#94a3b8;margin:10px 0 0">Nếu bấm Tải mà không thấy file, bấm Chia sẻ rồi chọn <b>Lưu vào Tệp</b>. iPhone: vào Tệp > Tải về để thấy file.</p></div>';
+  m.style.display='flex';
+  const dl = document.getElementById('modDownloadBtn');
+  if(dl) dl.onclick = ()=>{ setTimeout(()=>{ try{ toast('Đang tải '+name+'... Kiểm tra mục Tải về / Tệp'); }catch(_){} }, 200); };
+  const sh = document.getElementById('modShareBtn');
+  if(sh) sh.onclick = async ()=>{
+    try{
+      const file = new File([blob], name, {type:'application/zip'});
+      if(navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({files:[file], title:name});
+        toast('Đã mở Chia sẻ');
+      } else {
+        toast('Máy này không hỗ trợ Chia sẻ file - Hãy bấm nút Tải file ở trên');
+      }
+    }catch(e){ if(e && e.name!=='AbortError') toast('Chia sẻ lỗi: '+e.message); }
+  };
+  const cl = document.getElementById('modCloseBtn');
+  if(cl) cl.onclick = ()=>{ m.style.display='none'; };
+  // Tự động thử tải 1 lần cho Android / PC (iPhone sẽ chặn, nhưng modal vẫn hiện để bấm tay)
+  try{
+    const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  }catch(_){}
+  return Promise.resolve();
+}
 async function make(){
+  if(MAKING){ return toast('Đang tạo file, đợi xíu đừng bấm thêm...'); }
   const u=st.user;
   if(!u){ return toast('Bạn cần đăng nhập để tạo file'); }
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
-  const btn=$('#mk'); if(btn) btn.disabled=true;
+  const btn=$('#mk'); MAKING=true;
+  if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0%'; }
+  const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; const skinID=skinNumericId(i, st.skin[i]); return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID, skinKey: i+'_'+(st.skin[i]+1)};});
+  const modName = heroesMod.map(h=>h.hero+': '+h.skin).join(' | ');
+  showModProgress(modName);
+  updateModProgress(0, 'Chuẩn bị...', modName);
+  await new Promise(r=>setTimeout(r,120));
+  let built;
+  try{
+    setResStatus('Đang mod file gốc...');
+    built = await buildModZipFromResources(heroesMod, (pct, status)=>{
+      updateModProgress(pct, status, modName);
+      if(btn) btn.textContent='Đang tạo mod... '+pct+'%';
+    });
+  }catch(e){
+    hideModProgress();
+    MAKING=false;
+    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
+    console.warn('build from Resources loi:', e);
+    setResStatus('Lỗi mod: '+e.message+' - Chưa trừ điểm. Nếu bạn đã nạp file từ máy mà vẫn lỗi, hãy bấm Xóa cache rồi nạp lại file Resources_ios.zip.');
+    return toast('Mod lỗi, CHƯA trừ điểm: '+e.message);
+  }
+  // Thanh đã 100% -> nhả file
+  updateModProgress(100, 'Xong! Đang nhả file...', modName);
+  await new Promise(r=>setTimeout(r,400));
+  hideModProgress();
   try{ await B.consume(u.uid); }catch(e){
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); }catch(e2){}
   }
   st.user = {...st.user, credits: Math.max(0,(st.user.credits||0)-1)};
   if(typeof renderHeader==='function') renderHeader();
-  const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; const skinID=skinNumericId(i, st.skin[i]); return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID, skinKey: i+'_'+(st.skin[i]+1)};});
-  let built;
-  try{
-    setResStatus('Đang lấy file gốc từ Resources.zip để mod...');
-    toast('Đang lấy file gốc từ Resources.zip để mod... Lần đầu hơi lâu, lần sau sẽ nhanh hơn');
-    built = await buildModZipFromResources(heroesMod, (pct, got, total)=>{
-      const el = document.getElementById('resProgress');
-      if(el) el.textContent = 'Đang tải Resources.zip: '+pct+'% ('+Math.round(got/1024/1024)+'MB / '+Math.round(total/1024/1024)+'MB)';
-      if(btn) btn.textContent = 'Đang mod... '+pct+'%';
-    });
-  }catch(e){
-    console.warn('build from Resources loi, fallback template:', e);
-    setResStatus('Lỗi Resources: '+e.message+' - Đang dùng file template để tạo file. Bạn hãy chọn file Resources.zip từ máy ở hộp bên trên.');
-    toast('Không lấy được Resources.zip: '+e.message+' - Đang tạo file template để bạn vẫn tải được');
-    try{ built = buildModZip(); }catch(e2){ if(btn)btn.disabled=false; return toast('Không tạo được file: '+e2.message); }
-  }
   try{ await handoffZip(built.blob, built.name); }
   catch(e){
-    if(btn)btn.disabled=false;
-    if(e && e.name==='AbortError'){
-      try{ if(B.addCredits) await B.addCredits(u.uid, 1); st.user={...st.user, credits:(st.user.credits||0)+1}; if(typeof renderHeader==='function') renderHeader(); }catch(_){}
-      return toast('Đã hủy tải - Đã hoàn lại 1 điểm');
-    }
-    return toast('Không tải được file: '+(e.message||e));
+    MAKING=false;
+    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
+    try{ if(B.addCredits) await B.addCredits(u.uid, 1); st.user={...st.user, credits:(st.user.credits||0)+1}; if(typeof renderHeader==='function') renderHeader(); }catch(_){}
+    return toast('Đưa file lỗi, đã hoàn lại 1 điểm: '+(e.message||e));
   }
-  toast('Đã tải '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm • Đã mod từ file gốc Resources.zip - Tất cả skin đều thành skin bạn chọn, chỉ mình bạn thấy');
+  toast('Đã tạo xong '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm');
+  MAKING=false;
   if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
   try{ if(typeof view3==='function') view3(); }catch(_){}
 }
