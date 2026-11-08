@@ -423,7 +423,7 @@ function view3(){
     try{ await loadResourcesZip((pct,got,total)=>{ if(p) p.textContent='Đang tải Resources.zip: '+pct+'% ('+Math.round(got/1024/1024)+'MB / '+Math.round(total/1024/1024)+'MB)'; }); if(p) p.textContent='Đã tải xong Resources.zip - Đã lưu cache, lần sau không cần tải lại. Sẵn sàng mod!'; toast('Đã tải Resources.zip xong'); }catch(e){ if(p) p.textContent='Lỗi: '+e.message+' - Hãy chọn file từ máy.'; toast(e.message); }
   };
   const fileRes=document.getElementById('fileResZip');
-  if(fileRes) fileRes.onchange=async(e=>{
+  if(fileRes) fileRes.onchange=async (e)=>{
     const f=e.target.files[0]; if(!f) return;
     const p=document.getElementById('resProgress'); if(p) p.textContent='Đang đọc file '+f.name+'...';
     try{
