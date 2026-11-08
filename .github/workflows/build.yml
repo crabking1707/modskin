@@ -1,0 +1,47 @@
+
+name: Build Mod Bundles
+
+on:
+  workflow_dispatch:
+    inputs:
+      resources_url:
+        description: 'Link Resources.zip moi (MediaFire / Drive)'
+        required: false
+  push:
+    paths:
+      - 'textures/**'
+      - 'heroes.json'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      
+      - name: Install deps
+        run: pip install -r requirements.txt
+      
+      - name: Download Resources.zip
+        run: |
+          if [ -f Resources.zip ]; then
+            echo "Da co Resources.zip"
+          else
+            echo "Ban can up Resources.zip len Release hoac cung cap link"
+            # wget -O Resources.zip "${{ inputs.resources_url }}"
+          fi
+      
+      - name: Build mods
+        run: python generate_mods.py
+      
+      - name: Commit mods
+        run: |
+          git config --global user.name "modbot"
+          git config --global user.email "modbot@github.com"
+          git add mods/
+          git commit -m "Auto build mods $(date)" || echo "No changes"
+          git push
