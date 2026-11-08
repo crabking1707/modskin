@@ -1,0 +1,5892 @@
+{
+  "airi": {
+    "game_id": "106",
+    "bundle_file": "106_xiaoqiao_battle_base_low.assetbundle",
+    "texture_name": "AIRI_SKIN",
+    "skins": [
+      {
+        "code": "airi_1",
+        "name": "Airi"
+      },
+      {
+        "code": "airi_2",
+        "name": "Airi Ninja Xanh Lá"
+      },
+      {
+        "code": "airi_3",
+        "name": "Airi Thích Khách"
+      },
+      {
+        "code": "airi_4",
+        "name": "Airi Cấm Vệ Nguyệt Tộc"
+      },
+      {
+        "code": "airi_5",
+        "name": "Airi Kiemono"
+      },
+      {
+        "code": "airi_6",
+        "name": "Airi Bạch Kiemono"
+      },
+      {
+        "code": "airi_7",
+        "name": "Airi Phó kiếm đạo"
+      },
+      {
+        "code": "airi_8",
+        "name": "Airi Quái xế công nghệ"
+      },
+      {
+        "code": "airi_9",
+        "name": "Airi Tiệc bãi biển"
+      },
+      {
+        "code": "airi_10",
+        "name": "Airi Mỵ Hồ"
+      },
+      {
+        "code": "airi_11",
+        "name": "Airi Đặc công tử điệp"
+      },
+      {
+        "code": "airi_12",
+        "name": "Airi Lễ hội mùa xuân"
+      },
+      {
+        "code": "airi_13",
+        "name": "Airi Bích hải thánh nữ"
+      },
+      {
+        "code": "airi_14",
+        "name": "Airi Thánh nữ Xiêm La"
+      },
+      {
+        "code": "airi_15",
+        "name": "Airi Thứ nguyên Vệ thần"
+      },
+      {
+        "code": "airi_16",
+        "name": "Airi Búp bê Mộng mị"
+      },
+      {
+        "code": "airi_17",
+        "name": "Airi Ninja ẩm thực"
+      },
+      {
+        "code": "airi_18",
+        "name": "Airi Quản lý tài năng"
+      }
+    ]
+  },
+  "aleister": {
+    "game_id": "105",
+    "bundle_file": "105_aleister_battle_base_low.assetbundle",
+    "texture_name": "ALEISTER_SKIN",
+    "skins": [
+      {
+        "code": "aleister_1",
+        "name": "Aleister"
+      },
+      {
+        "code": "aleister_2",
+        "name": "Aleister Thiếu Niên Hắc Ám"
+      },
+      {
+        "code": "aleister_3",
+        "name": "Aleister Quang Vinh"
+      },
+      {
+        "code": "aleister_4",
+        "name": "Aleister Quỷ soái nguyệt tộc"
+      },
+      {
+        "code": "aleister_5",
+        "name": "Aleister siêu sao bóng rổ"
+      },
+      {
+        "code": "aleister_6",
+        "name": "Aleister Mật vụ thần thám"
+      },
+      {
+        "code": "aleister_7",
+        "name": "Aleister Ảo thuật gia"
+      },
+      {
+        "code": "aleister_8",
+        "name": "Aleister Âm dương sư"
+      },
+      {
+        "code": "aleister_9",
+        "name": "Aleister Xứ sở thần tiên"
+      },
+      {
+        "code": "aleister_10",
+        "name": "Aleister HLV bất bại"
+      },
+      {
+        "code": "aleister_11",
+        "name": "Aleister Ác nhân đồ chơi"
+      },
+      {
+        "code": "aleister_12",
+        "name": "Aleister Tư lệnh viễn chinh"
+      },
+      {
+        "code": "aleister_13",
+        "name": "Aleister S-Quang vinh"
+      }
+    ]
+  },
+  "alice": {
+    "game_id": "118",
+    "bundle_file": "118_sunbin_battle_base_low.assetbundle",
+    "texture_name": "ALICE_SKIN",
+    "skins": [
+      {
+        "code": "alice_1",
+        "name": "Alice"
+      },
+      {
+        "code": "alice_2",
+        "name": "Alice Nhà chiêm tinh"
+      },
+      {
+        "code": "alice_3",
+        "name": "Alice Bé Gấu Tuyết"
+      },
+      {
+        "code": "alice_4",
+        "name": "Alice Xứ sở thần tiên"
+      },
+      {
+        "code": "alice_5",
+        "name": "Alice Dạ hội"
+      },
+      {
+        "code": "alice_6",
+        "name": "Alice Tiểu quỷ bí ngô"
+      },
+      {
+        "code": "alice_7",
+        "name": "Alice bé du xuân"
+      },
+      {
+        "code": "alice_8",
+        "name": "Alice Phi hành gia"
+      },
+      {
+        "code": "alice_9",
+        "name": "Alice Tiểu tiên tử"
+      },
+      {
+        "code": "alice_10",
+        "name": "Alice The Butterfly Mansion Girl"
+      },
+      {
+        "code": "alice_11",
+        "name": "Alice - Eternal Sailor Chibi Moon"
+      },
+      {
+        "code": "alice_12",
+        "name": "Alice Xứ sở diệu kỳ"
+      },
+      {
+        "code": "alice_13",
+        "name": "Alice Ốc quế tinh nghịch"
+      },
+      {
+        "code": "alice_14",
+        "name": "Alice Quân nhạc Athanor"
+      },
+      {
+        "code": "alice_15",
+        "name": "Alice Tiên nữ mộng giới"
+      }
+    ]
+  },
+  "allain": {
+    "game_id": "550",
+    "bundle_file": "550_allain_battle_base_low.assetbundle",
+    "texture_name": "ALLAIN_SKIN",
+    "skins": [
+      {
+        "code": "allain_1",
+        "name": "Allain"
+      },
+      {
+        "code": "allain_2",
+        "name": "Allain Kirito Hắc kiếm sĩ"
+      },
+      {
+        "code": "allain_3",
+        "name": "Allain Kirito"
+      },
+      {
+        "code": "allain_4",
+        "name": "Allain Tuyết sơn song kiếm"
+      },
+      {
+        "code": "allain_5",
+        "name": "Allain Thần mặt trời"
+      },
+      {
+        "code": "allain_6",
+        "name": "Allain Bạch kiếm sĩ"
+      },
+      {
+        "code": "allain_7",
+        "name": "Allain Hạo thiên khuyển"
+      },
+      {
+        "code": "allain_8",
+        "name": "Allain Tình yêu nổi loạn"
+      },
+      {
+        "code": "allain_9",
+        "name": "Allain Lân sư Vũ thần"
+      },
+      {
+        "code": "allain_10",
+        "name": "Allain Cẩm y vệ Xích Hổ"
+      }
+    ]
+  },
+  "amily": {
+    "game_id": "159",
+    "bundle_file": "159_amily_battle_base_low.assetbundle",
+    "texture_name": "AMILY_SKIN",
+    "skins": [
+      {
+        "code": "amily_1",
+        "name": "Amily"
+      },
+      {
+        "code": "amily_2",
+        "name": "Amily Đặc cảnh NYPD"
+      },
+      {
+        "code": "amily_3",
+        "name": "Amily Thư ký"
+      },
+      {
+        "code": "amily_4",
+        "name": "Amily Đặc công nhện đỏ"
+      },
+      {
+        "code": "amily_5",
+        "name": "Amily Thỏ may mắn"
+      },
+      {
+        "code": "amily_6",
+        "name": "Amily Võ thần thiên hà"
+      },
+      {
+        "code": "amily_7",
+        "name": "Amily Khủng long xanh"
+      },
+      {
+        "code": "amily_8",
+        "name": "Amily Nữ đội trưởng"
+      },
+      {
+        "code": "amily_9",
+        "name": "Amily Hội ám hoàng"
+      },
+      {
+        "code": "amily_10",
+        "name": "Amily Thám tử trung học"
+      }
+    ]
+  },
+  "annette": {
+    "game_id": "528",
+    "bundle_file": "528_annette_battle_base_low.assetbundle",
+    "texture_name": "ANNETTE_SKIN",
+    "skins": [
+      {
+        "code": "annette_1",
+        "name": "Annette"
+      },
+      {
+        "code": "annette_2",
+        "name": "Annette Nữ quản ga"
+      },
+      {
+        "code": "annette_3",
+        "name": "Annette Xứ sở thần tiên"
+      },
+      {
+        "code": "annette_4",
+        "name": "Annette Thần tượng âm nhạc"
+      },
+      {
+        "code": "annette_5",
+        "name": "Annette Tiệc bãi biển"
+      },
+      {
+        "code": "annette_6",
+        "name": "Annette Tiên tri tập sự"
+      },
+      {
+        "code": "annette_7",
+        "name": "Annette Chị ong bay thấp"
+      },
+      {
+        "code": "annette_8",
+        "name": "Annette Nữ sinh trung học"
+      },
+      {
+        "code": "annette_9",
+        "name": "Annette Vân mộng tiên tử"
+      },
+      {
+        "code": "annette_10",
+        "name": "Annette Phi hành gia"
+      },
+      {
+        "code": "annette_11",
+        "name": "Annette Băng kỳ lâm"
+      },
+      {
+        "code": "annette_12",
+        "name": "Annette Doombot thơ ngây"
+      },
+      {
+        "code": "annette_13",
+        "name": "Annette Thiên sứ may mắn"
+      }
+    ]
+  },
+  "aoi": {
+    "game_id": "",
+    "bundle_file": "aoi_battle_base_low.assetbundle",
+    "texture_name": "AOI_SKIN",
+    "skins": [
+      {
+        "code": "aoi_1",
+        "name": "Aoi"
+      },
+      {
+        "code": "aoi_2",
+        "name": "Aoi Sát Thủ Đô Thị"
+      },
+      {
+        "code": "aoi_3",
+        "name": "Aoi Hoàng kim công chúa"
+      },
+      {
+        "code": "aoi_4",
+        "name": "Aoi Tiệc bãi biển"
+      },
+      {
+        "code": "aoi_5",
+        "name": "Aoi Lam Hải quận chúa"
+      },
+      {
+        "code": "aoi_6",
+        "name": "Aoi Tiểu thư Mafia"
+      },
+      {
+        "code": "aoi_7",
+        "name": "Aoi Sát thủ Dạ Ưng"
+      },
+      {
+        "code": "aoi_8",
+        "name": "Aoi Quán quân"
+      },
+      {
+        "code": "aoi_9",
+        "name": "Aoi Mikasa Ackermann"
+      }
+    ]
+  },
+  "arduin": {
+    "game_id": "",
+    "bundle_file": "arduin_battle_base_low.assetbundle",
+    "texture_name": "ARDUIN_SKIN",
+    "skins": [
+      {
+        "code": "arduin_1",
+        "name": "Arduin"
+      },
+      {
+        "code": "arduin_2",
+        "name": "Arduin Cận Vệ Hoàng Gia"
+      },
+      {
+        "code": "arduin_3",
+        "name": "Arduin Tà linh hiệp sỹ"
+      },
+      {
+        "code": "arduin_4",
+        "name": "Arduin Quang Vinh"
+      },
+      {
+        "code": "arduin_5",
+        "name": "Arduin Bạch vệ chiến giáp"
+      },
+      {
+        "code": "arduin_6",
+        "name": "Arduin Đường vào tim em"
+      },
+      {
+        "code": "arduin_7",
+        "name": "Arduin Chiến binh cổ đại"
+      },
+      {
+        "code": "arduin_8",
+        "name": "Arduin Organ cổ quái"
+      },
+      {
+        "code": "arduin_9",
+        "name": "Arduin Ngạo Hổ Hàn Đao"
+      },
+      {
+        "code": "arduin_10",
+        "name": "Arduin Nhà vô địch"
+      },
+      {
+        "code": "arduin_11",
+        "name": "Arduin Cự thần Biển Mây"
+      }
+    ]
+  },
+  "arthur": {
+    "game_id": "166",
+    "bundle_file": "166_arthur_battle_base_low.assetbundle",
+    "texture_name": "ARTHUR_SKIN",
+    "skins": [
+      {
+        "code": "arthur_1",
+        "name": "Arthur"
+      },
+      {
+        "code": "arthur_2",
+        "name": "Arthur Lãnh chúa xương"
+      },
+      {
+        "code": "arthur_3",
+        "name": "Arthur Hoàng kim cốt"
+      },
+      {
+        "code": "arthur_4",
+        "name": "Arthur Si Tình Kiếm"
+      },
+      {
+        "code": "arthur_5",
+        "name": "Arthur Siêu sao Cricket"
+      },
+      {
+        "code": "arthur_6",
+        "name": "Arthur Đặc cảnh băng lôi"
+      },
+      {
+        "code": "arthur_7",
+        "name": "Arthur Hiệp sĩ trăng khuyết"
+      },
+      {
+        "code": "arthur_8",
+        "name": "Arthur Siêu Việt"
+      },
+      {
+        "code": "arthur_9",
+        "name": "Arthur Băng lam kiếm vệ"
+      },
+      {
+        "code": "arthur_10",
+        "name": "Arthur Tôn Hổ vô song"
+      },
+      {
+        "code": "arthur_11",
+        "name": "Arthur Pompompurin‘s Oath"
+      }
+    ]
+  },
+  "arum": {
+    "game_id": "531",
+    "bundle_file": "531_arum_battle_base_low.assetbundle",
+    "texture_name": "ARUM_SKIN",
+    "skins": [
+      {
+        "code": "arum_1",
+        "name": "Arum"
+      },
+      {
+        "code": "arum_2",
+        "name": "Arum Thú Vệ Cổ Mộ"
+      },
+      {
+        "code": "arum_3",
+        "name": "Arum Vũ khúc long hổ"
+      },
+      {
+        "code": "arum_4",
+        "name": "Arum Linh tượng vu nữ"
+      },
+      {
+        "code": "arum_5",
+        "name": "Arum Vũ khúc thần sứ"
+      },
+      {
+        "code": "arum_6",
+        "name": "Arum Thỏ may mắn"
+      },
+      {
+        "code": "arum_7",
+        "name": "Arum Bạn muốn hẹn hò?"
+      },
+      {
+        "code": "arum_8",
+        "name": "Arum Quản lý tài năng"
+      },
+      {
+        "code": "arum_9",
+        "name": "Arum Nữ hoàng gấu xám"
+      },
+      {
+        "code": "arum_10",
+        "name": "Arum Thần tượng nhạc Rock"
+      },
+      {
+        "code": "arum_11",
+        "name": "Arum Thần phong Thống lĩnh"
+      },
+      {
+        "code": "arum_12",
+        "name": "Arum Ký Ức Đại Dương"
+      },
+      {
+        "code": "arum_13",
+        "name": "Arum Chị đại Gangster"
+      }
+    ]
+  },
+  "astrid": {
+    "game_id": "169",
+    "bundle_file": "169_astrid_battle_base_low.assetbundle",
+    "texture_name": "ASTRID_SKIN",
+    "skins": [
+      {
+        "code": "astrid_1",
+        "name": "Astrid"
+      },
+      {
+        "code": "astrid_2",
+        "name": "Astrid Bạch Kiếm Tiểu Thư"
+      },
+      {
+        "code": "astrid_3",
+        "name": "Astrid Siêu sao bóng chày"
+      },
+      {
+        "code": "astrid_4",
+        "name": "Astrid Tổ trưởng học đường"
+      },
+      {
+        "code": "astrid_5",
+        "name": "Astrid thần thoại hy lạp"
+      },
+      {
+        "code": "astrid_6",
+        "name": "Astrid Xứ sở diệu kỳ"
+      },
+      {
+        "code": "astrid_7",
+        "name": "Astrid Thần Trí Tuệ"
+      },
+      {
+        "code": "astrid_8",
+        "name": "Astrid Nữ tổng tài"
+      },
+      {
+        "code": "astrid_9",
+        "name": "Astrid Hoa anh đào"
+      },
+      {
+        "code": "astrid_10",
+        "name": "Astrid Nữ thuyền trưởng"
+      },
+      {
+        "code": "astrid_11",
+        "name": "Astrid Tiệc bãi biển"
+      }
+    ]
+  },
+  "ata": {
+    "game_id": "537",
+    "bundle_file": "537_ata_battle_base_low.assetbundle",
+    "texture_name": "ATA_SKIN",
+    "skins": [
+      {
+        "code": "ata_1",
+        "name": "Ata"
+      },
+      {
+        "code": "ata_2",
+        "name": "Ata Tân thủy thủ"
+      },
+      {
+        "code": "ata_3",
+        "name": "Ata Cao bồi"
+      },
+      {
+        "code": "ata_4",
+        "name": "Ata Chiến Binh Hải Tộc"
+      },
+      {
+        "code": "ata_5",
+        "name": "Ata Mèo đi mưa"
+      },
+      {
+        "code": "ata_6",
+        "name": "Ata Quang vinh"
+      },
+      {
+        "code": "ata_7",
+        "name": "Ata Gà mờ"
+      },
+      {
+        "code": "ata_8",
+        "name": "Ata Giao long"
+      }
+    ]
+  },
+  "aya": {
+    "game_id": "",
+    "bundle_file": "aya_battle_base_low.assetbundle",
+    "texture_name": "AYA_SKIN",
+    "skins": [
+      {
+        "code": "aya_1",
+        "name": "Aya"
+      },
+      {
+        "code": "aya_2",
+        "name": "Aya Hoạt náo viên"
+      },
+      {
+        "code": "aya_3",
+        "name": "Aya MC Sóc nhỏ"
+      },
+      {
+        "code": "aya_4",
+        "name": "Aya Thủy thủ"
+      },
+      {
+        "code": "aya_5",
+        "name": "Aya Điệp viên ký ức"
+      },
+      {
+        "code": "aya_6",
+        "name": "Aya Công chúa cầu vồng"
+      },
+      {
+        "code": "aya_7",
+        "name": "Aya Hỏa Hồ Tiên Ngư"
+      },
+      {
+        "code": "aya_8",
+        "name": "Aya Cinnamoroll's Dream"
+      }
+    ]
+  },
+  "azzenka": {
+    "game_id": "127",
+    "bundle_file": "127_azzenka_battle_base_low.assetbundle",
+    "texture_name": "AZZENKA_SKIN",
+    "skins": [
+      {
+        "code": "azzenka_1",
+        "name": "Azzen'Ka"
+      },
+      {
+        "code": "azzenka_2",
+        "name": "Azzen'Ka Linh Hồn Lữ Khách"
+      },
+      {
+        "code": "azzenka_3",
+        "name": "Azzen'ka Ghẹo hay kẹo"
+      },
+      {
+        "code": "azzenka_4",
+        "name": "Azzen'ka Quang Vinh 2.0"
+      },
+      {
+        "code": "azzenka_5",
+        "name": "Azzen'ka Quỷ diện lãng khách"
+      },
+      {
+        "code": "azzenka_6",
+        "name": "Azzen'Ka Giáng sinh \"An lành\""
+      },
+      {
+        "code": "azzenka_7",
+        "name": "Azzen'Ka U hồn sa mạc"
+      },
+      {
+        "code": "azzenka_8",
+        "name": "Azzen'Ka Tông đồ thần miếu"
+      }
+    ]
+  },
+  "baldum": {
+    "game_id": "135",
+    "bundle_file": "135_baldum_battle_base_low.assetbundle",
+    "texture_name": "BALDUM_SKIN",
+    "skins": [
+      {
+        "code": "baldum_1",
+        "name": "Baldum"
+      },
+      {
+        "code": "baldum_2",
+        "name": "Baldum chú thợ ống nước"
+      },
+      {
+        "code": "baldum_3",
+        "name": "Baldum Liệt hỏa dung nham"
+      },
+      {
+        "code": "baldum_4",
+        "name": "Baldum thần thoại hy lạp"
+      },
+      {
+        "code": "baldum_5",
+        "name": "Baldum Thế giới kẹo ngọt"
+      },
+      {
+        "code": "baldum_6",
+        "name": "Baldum Đồ chơi"
+      },
+      {
+        "code": "baldum_7",
+        "name": "Baldum Sói Quàng Khăn Đỏ"
+      },
+      {
+        "code": "baldum_8",
+        "name": "Baldum Thẩm Phán Lời Thề"
+      }
+    ]
+  },
+  "bijan": {
+    "game_id": "570",
+    "bundle_file": "570_bijan_battle_base_low.assetbundle",
+    "texture_name": "BIJAN_SKIN",
+    "skins": [
+      {
+        "code": "bijan_1",
+        "name": "Bijan"
+      },
+      {
+        "code": "bijan_2",
+        "name": "Bijan Chiến binh sa mạc"
+      },
+      {
+        "code": "bijan_3",
+        "name": "Bijan Hoàng kim cơ giáp"
+      },
+      {
+        "code": "bijan_4",
+        "name": "Bijan Kình thiên Long Kỵ"
+      },
+      {
+        "code": "bijan_5",
+        "name": "Bijan Đập vỡ Cây đàn"
+      },
+      {
+        "code": "bijan_6",
+        "name": "Bijan Lữ Hành Thời Không"
+      },
+      {
+        "code": "bijan_7",
+        "name": "Bijan Giai điệu Giáng Sinh"
+      }
+    ]
+  },
+  "billow": {
+    "game_id": "",
+    "bundle_file": "billow_battle_base_low.assetbundle",
+    "texture_name": "BILLOW_SKIN",
+    "skins": [
+      {
+        "code": "billow_1",
+        "name": "Billow"
+      },
+      {
+        "code": "billow_2",
+        "name": "Billow Thiên Tướng - Độ Ách"
+      },
+      {
+        "code": "billow_3",
+        "name": "Billow T-Rex Bất Bại"
+      },
+      {
+        "code": "billow_4",
+        "name": "Billow Okarun"
+      }
+    ]
+  },
+  "biron": {
+    "game_id": "",
+    "bundle_file": "biron_battle_base_low.assetbundle",
+    "texture_name": "BIRON_SKIN",
+    "skins": [
+      {
+        "code": "biron_1",
+        "name": "Biron"
+      },
+      {
+        "code": "biron_2",
+        "name": "Biron Yuji Itadori"
+      },
+      {
+        "code": "biron_3",
+        "name": "Biron Võ sĩ Giác đấu"
+      },
+      {
+        "code": "biron_4",
+        "name": "Biron Deathmerc"
+      }
+    ]
+  },
+  "bolt-baron": {
+    "game_id": "",
+    "bundle_file": "bolt-baron_battle_base_low.assetbundle",
+    "texture_name": "BOLT-BARON_SKIN",
+    "skins": [
+      {
+        "code": "bolt-baron_1",
+        "name": "Bolt Baron"
+      },
+      {
+        "code": "bolt-baron_2",
+        "name": "Bolt Baron Thiên Phủ - Tư Mệnh"
+      },
+      {
+        "code": "bolt-baron_3",
+        "name": "Bolt Baron Lôi vệ"
+      }
+    ]
+  },
+  "bonnie": {
+    "game_id": "565",
+    "bundle_file": "565_bonnie_battle_base_low.assetbundle",
+    "texture_name": "BONNIE_SKIN",
+    "skins": [
+      {
+        "code": "bonnie_1",
+        "name": "Bonnie"
+      },
+      {
+        "code": "bonnie_2",
+        "name": "Bonnie Thỏ ma quái"
+      },
+      {
+        "code": "bonnie_3",
+        "name": "Bonnie Cô bé sợ ma"
+      },
+      {
+        "code": "bonnie_4",
+        "name": "Bonnie Hoa hướng dương"
+      },
+      {
+        "code": "bonnie_5",
+        "name": "Bonnie S-Quang vinh"
+      },
+      {
+        "code": "bonnie_6",
+        "name": "Bonnie Tân binh Pixel"
+      }
+    ]
+  },
+  "bright": {
+    "game_id": "534",
+    "bundle_file": "534_bright_battle_base_low.assetbundle",
+    "texture_name": "BRIGHT_SKIN",
+    "skins": [
+      {
+        "code": "bright_1",
+        "name": "Bright"
+      },
+      {
+        "code": "bright_2",
+        "name": "Bright Soái ca thánh điện"
+      },
+      {
+        "code": "bright_3",
+        "name": "Bright Toshiro Hitsugaya"
+      },
+      {
+        "code": "bright_4",
+        "name": "Bright Khiêu chiến"
+      },
+      {
+        "code": "bright_5",
+        "name": "Bright Mật vụ hacker"
+      },
+      {
+        "code": "bright_6",
+        "name": "Bright Kỳ Lân Soái"
+      },
+      {
+        "code": "bright_7",
+        "name": "Bright Vua về nhì"
+      },
+      {
+        "code": "bright_8",
+        "name": "Bright Nhà thám hiểm"
+      }
+    ]
+  },
+  "butterfly": {
+    "game_id": "116",
+    "bundle_file": "116_jingke_battle_base_low.assetbundle",
+    "texture_name": "BUTTERFLY_SKIN",
+    "skins": [
+      {
+        "code": "butterfly_1",
+        "name": "Butterfly"
+      },
+      {
+        "code": "butterfly_2",
+        "name": "Butterfly Thủy thủ"
+      },
+      {
+        "code": "butterfly_3",
+        "name": "Butterfly Xuân nữ ngổ ngáo"
+      },
+      {
+        "code": "butterfly_4",
+        "name": "Butterfly Teen Nữ Công Nghệ"
+      },
+      {
+        "code": "butterfly_5",
+        "name": "Butterfly Nữ Quái Nổi Loạn"
+      },
+      {
+        "code": "butterfly_6",
+        "name": "Butterfly Quận Chúa Đế Chế"
+      },
+      {
+        "code": "butterfly_7",
+        "name": "Butterfly Đông êm đềm"
+      },
+      {
+        "code": "butterfly_8",
+        "name": "Butterfly Phượng Cửu Thiên"
+      },
+      {
+        "code": "butterfly_9",
+        "name": "Butterfly Cẩm y vệ: Chu Tước"
+      },
+      {
+        "code": "butterfly_10",
+        "name": "Butterfly Asuna Tia chớp"
+      },
+      {
+        "code": "butterfly_11",
+        "name": "Butterfly Stacia"
+      },
+      {
+        "code": "butterfly_12",
+        "name": "Butterfly Thánh nữ khởi nguyên"
+      },
+      {
+        "code": "butterfly_13",
+        "name": "Butterfly Kim ngư thần nữ"
+      },
+      {
+        "code": "butterfly_14",
+        "name": "Butterfly Gánh anh đến cùng"
+      },
+      {
+        "code": "butterfly_15",
+        "name": "Butterfly Tình yêu nổi loạn"
+      },
+      {
+        "code": "butterfly_16",
+        "name": "Butterfly Rockgirl Siêu Đẳng"
+      },
+      {
+        "code": "butterfly_17",
+        "name": "Butterfly Bình minh tận thế"
+      },
+      {
+        "code": "butterfly_18",
+        "name": "Butterfly Ninh Tần"
+      },
+      {
+        "code": "butterfly_19",
+        "name": "Butterfly Thỏ may mắn"
+      }
+    ]
+  },
+  "capheny": {
+    "game_id": "532",
+    "bundle_file": "532_capheny_battle_base_low.assetbundle",
+    "texture_name": "CAPHENY_SKIN",
+    "skins": [
+      {
+        "code": "capheny_1",
+        "name": "Capheny"
+      },
+      {
+        "code": "capheny_2",
+        "name": "Capheny Hầu gái"
+      },
+      {
+        "code": "capheny_3",
+        "name": "Capheny Thần tượng âm nhạc"
+      },
+      {
+        "code": "capheny_4",
+        "name": "Capheny Kimono"
+      },
+      {
+        "code": "capheny_5",
+        "name": "Capheny Toán Hóa Sinh"
+      },
+      {
+        "code": "capheny_6",
+        "name": "Capheny Phi hành gia"
+      },
+      {
+        "code": "capheny_7",
+        "name": "Capheny Tử đinh hương"
+      },
+      {
+        "code": "capheny_8",
+        "name": "Capheny Quân Nhạc Mildar"
+      },
+      {
+        "code": "capheny_9",
+        "name": "Capheny Harley Quinn"
+      },
+      {
+        "code": "capheny_10",
+        "name": "Capheny Siêu cấp tin tặc"
+      },
+      {
+        "code": "capheny_11",
+        "name": "Capheny S-Quang Vinh"
+      },
+      {
+        "code": "capheny_12",
+        "name": "Capheny Vua trò chơi"
+      },
+      {
+        "code": "capheny_13",
+        "name": "Capheny Càn Nguyên Điện Chủ"
+      },
+      {
+        "code": "capheny_14",
+        "name": "Capheny Bugcat Assemble"
+      },
+      {
+        "code": "capheny_15",
+        "name": "Capheny Hoa Linh Lan"
+      }
+    ]
+  },
+  "celica": {
+    "game_id": "155",
+    "bundle_file": "155_celica_battle_base_low.assetbundle",
+    "texture_name": "CELICA_SKIN",
+    "skins": [
+      {
+        "code": "celica_1",
+        "name": "Celica"
+      },
+      {
+        "code": "celica_2",
+        "name": "Celica Nữ cao bồi"
+      },
+      {
+        "code": "celica_3",
+        "name": "Celica Đếm cừu"
+      },
+      {
+        "code": "celica_4",
+        "name": "Celica Tâm hồn trà sữa"
+      },
+      {
+        "code": "celica_5",
+        "name": "Celica Băng lam pháo thủ"
+      },
+      {
+        "code": "celica_6",
+        "name": "Celica S-Quang Vinh"
+      },
+      {
+        "code": "celica_7",
+        "name": "Celica Vịt lướt bọt biển"
+      },
+      {
+        "code": "celica_8",
+        "name": "Celica Ảo thuật gia"
+      }
+    ]
+  },
+  "charlotte": {
+    "game_id": "",
+    "bundle_file": "charlotte_battle_base_low.assetbundle",
+    "texture_name": "CHARLOTTE_SKIN",
+    "skins": [
+      {
+        "code": "charlotte_1",
+        "name": "Charlotte"
+      },
+      {
+        "code": "charlotte_2",
+        "name": "Charlotte Hexsword"
+      }
+    ]
+  },
+  "chaugnar": {
+    "game_id": "101",
+    "bundle_file": "101_chaugnar_battle_base_low.assetbundle",
+    "texture_name": "CHAUGNAR_SKIN",
+    "skins": [
+      {
+        "code": "chaugnar_1",
+        "name": "Chaugnar"
+      },
+      {
+        "code": "chaugnar_2",
+        "name": "Chaugnar Ác Mộng Sinh Hóa"
+      },
+      {
+        "code": "chaugnar_3",
+        "name": "Chaugnar Quang Vinh"
+      },
+      {
+        "code": "chaugnar_4",
+        "name": "Chaugnar Quân cảnh"
+      },
+      {
+        "code": "chaugnar_5",
+        "name": "Chaugnar Ác Mộng Arcade"
+      }
+    ]
+  },
+  "cresht": {
+    "game_id": "",
+    "bundle_file": "cresht_battle_base_low.assetbundle",
+    "texture_name": "CRESHT_SKIN",
+    "skins": [
+      {
+        "code": "cresht_1",
+        "name": "Cresht"
+      },
+      {
+        "code": "cresht_2",
+        "name": "Cresht Thợ sửa cáp"
+      },
+      {
+        "code": "cresht_3",
+        "name": "Cresht Cá Cắn Cáp"
+      },
+      {
+        "code": "cresht_4",
+        "name": "Cresht Đại sư sushi"
+      },
+      {
+        "code": "cresht_5",
+        "name": "Cresht Caesar bão tố"
+      },
+      {
+        "code": "cresht_6",
+        "name": "Cresht Bách tướng Lão tam"
+      },
+      {
+        "code": "cresht_7",
+        "name": "Cresht Eren Jaegar"
+      }
+    ]
+  },
+  "darcy": {
+    "game_id": "525",
+    "bundle_file": "525_darcy_battle_base_low.assetbundle",
+    "texture_name": "DARCY_SKIN",
+    "skins": [
+      {
+        "code": "darcy_1",
+        "name": "D'arcy"
+      },
+      {
+        "code": "darcy_2",
+        "name": "D'arcy Nam tước"
+      },
+      {
+        "code": "darcy_3",
+        "name": "D'arcy Đô đốc tinh hệ"
+      },
+      {
+        "code": "darcy_4",
+        "name": "D'arcy Pháp sư hỏa long"
+      },
+      {
+        "code": "darcy_5",
+        "name": "D'Arcy Tiến sĩ thiên tài"
+      },
+      {
+        "code": "darcy_6",
+        "name": "D'Arcy Chân nhân"
+      },
+      {
+        "code": "darcy_7",
+        "name": "D'Arcy Tông đồ Chân lý"
+      },
+      {
+        "code": "darcy_8",
+        "name": "D'Arcy Bác sĩ thú y"
+      }
+    ]
+  },
+  "dextra": {
+    "game_id": "",
+    "bundle_file": "dextra_battle_base_low.assetbundle",
+    "texture_name": "DEXTRA_SKIN",
+    "skins": [
+      {
+        "code": "dextra_1",
+        "name": "Dextra"
+      },
+      {
+        "code": "dextra_2",
+        "name": "Dextra Chiến binh quyến rũ"
+      },
+      {
+        "code": "dextra_3",
+        "name": "Dextra Quận chúa Tuyết"
+      },
+      {
+        "code": "dextra_4",
+        "name": "Dextra Quý cô Tuổi Dần"
+      },
+      {
+        "code": "dextra_5",
+        "name": "Dextra Băng Sa công chúa"
+      },
+      {
+        "code": "dextra_6",
+        "name": "Dextra Lữ khách cao nguyên"
+      },
+      {
+        "code": "dextra_7",
+        "name": "Dextra Đảo thiên đường"
+      },
+      {
+        "code": "dextra_8",
+        "name": "Dextra Nữ hoàng tốc độ"
+      }
+    ]
+  },
+  "dirak": {
+    "game_id": "",
+    "bundle_file": "dirak_battle_base_low.assetbundle",
+    "texture_name": "DIRAK_SKIN",
+    "skins": [
+      {
+        "code": "dirak_1",
+        "name": "Dirak"
+      },
+      {
+        "code": "dirak_2",
+        "name": "Dirak Cảnh vệ bầu trời"
+      },
+      {
+        "code": "dirak_3",
+        "name": "Dirak Pháp sư trăng khuyết"
+      },
+      {
+        "code": "dirak_4",
+        "name": "Dirak Quý tộc Norman"
+      },
+      {
+        "code": "dirak_5",
+        "name": "Dirak Ông bầu Showbiz"
+      },
+      {
+        "code": "dirak_6",
+        "name": "Dirak Đường chủ yêu giới"
+      },
+      {
+        "code": "dirak_7",
+        "name": "Dirak Lốp trưởng"
+      }
+    ]
+  },
+  "dolia": {
+    "game_id": "",
+    "bundle_file": "dolia_battle_base_low.assetbundle",
+    "texture_name": "DOLIA_SKIN",
+    "skins": [
+      {
+        "code": "dolia_1",
+        "name": "Dolia"
+      },
+      {
+        "code": "dolia_2",
+        "name": "Dolia Hoa tiêu đại dương"
+      },
+      {
+        "code": "dolia_3",
+        "name": "Dolia Môn đồ tập sự"
+      },
+      {
+        "code": "dolia_4",
+        "name": "Dolia Mã Khởi Thiên Ca"
+      },
+      {
+        "code": "dolia_5",
+        "name": "Dolia Nhật ký tình yêu"
+      }
+    ]
+  },
+  "dyadia": {
+    "game_id": "",
+    "bundle_file": "dyadia_battle_base_low.assetbundle",
+    "texture_name": "DYADIA_SKIN",
+    "skins": [
+      {
+        "code": "dyadia_1",
+        "name": "Dyadia"
+      }
+    ]
+  },
+  "11596": {
+    "game_id": "",
+    "bundle_file": "11596_battle_base_low.assetbundle",
+    "texture_name": "11596_SKIN",
+    "skins": [
+      {
+        "code": "11596_1",
+        "name": "Edras"
+      }
+    ]
+  },
+  "elandorr": {
+    "game_id": "",
+    "bundle_file": "elandorr_battle_base_low.assetbundle",
+    "texture_name": "ELANDORR_SKIN",
+    "skins": [
+      {
+        "code": "elandorr_1",
+        "name": "Eland'orr"
+      },
+      {
+        "code": "elandorr_2",
+        "name": "Eland'orr Soái tặc"
+      },
+      {
+        "code": "elandorr_3",
+        "name": "Eland'orr Học viện Carano"
+      },
+      {
+        "code": "elandorr_4",
+        "name": "Eland'orr Phi vụ thế kỷ"
+      },
+      {
+        "code": "elandorr_5",
+        "name": "Eland'orr Siêu Thám Tử"
+      },
+      {
+        "code": "elandorr_6",
+        "name": "Eland'orr Chú ong bay cao"
+      },
+      {
+        "code": "elandorr_7",
+        "name": "Eland'orr-Tuxedo"
+      },
+      {
+        "code": "elandorr_8",
+        "name": "Eland'orr Uyên Ương Mộng Điệp"
+      },
+      {
+        "code": "elandorr_9",
+        "name": "Eland'orr Mộng giới thần chủ"
+      },
+      {
+        "code": "elandorr_10",
+        "name": "Eland'oor S-Quang vinh"
+      }
+    ]
+  },
+  "elsu": {
+    "game_id": "529",
+    "bundle_file": "529_elsu_battle_base_low.assetbundle",
+    "texture_name": "ELSU_SKIN",
+    "skins": [
+      {
+        "code": "elsu_1",
+        "name": "Elsu"
+      },
+      {
+        "code": "elsu_2",
+        "name": "Elsu Mafia"
+      },
+      {
+        "code": "elsu_3",
+        "name": "Elsu Guitar tình ái"
+      },
+      {
+        "code": "elsu_4",
+        "name": "Elsu Cảnh vệ thảo nguyên"
+      },
+      {
+        "code": "elsu_5",
+        "name": "Elsu Chiến binh bóng tối"
+      },
+      {
+        "code": "elsu_6",
+        "name": "Elsu Sứ giả tận thế"
+      },
+      {
+        "code": "elsu_7",
+        "name": "Elsu Hỏa diệm Chu Tước"
+      },
+      {
+        "code": "elsu_8",
+        "name": "Elsu Trấn thiên phi hồ"
+      },
+      {
+        "code": "elsu_9",
+        "name": "Elsu Xạ thủ tinh linh"
+      },
+      {
+        "code": "elsu_10",
+        "name": "Elsu Tuyết ưng"
+      },
+      {
+        "code": "elsu_11",
+        "name": "Elsu DJ"
+      },
+      {
+        "code": "elsu_12",
+        "name": "Elsu Xạ thần mộng giới"
+      }
+    ]
+  },
+  "enzo": {
+    "game_id": "",
+    "bundle_file": "enzo_battle_base_low.assetbundle",
+    "texture_name": "ENZO_SKIN",
+    "skins": [
+      {
+        "code": "enzo_1",
+        "name": "Enzo"
+      },
+      {
+        "code": "enzo_2",
+        "name": "Enzo Phẩm chất quý tộc"
+      },
+      {
+        "code": "enzo_3",
+        "name": "Enzo Chiến binh trăng khuyết"
+      },
+      {
+        "code": "enzo_4",
+        "name": "Enzo Thần thoại Hy Lạp"
+      },
+      {
+        "code": "enzo_5",
+        "name": "Enzo Kurapika"
+      },
+      {
+        "code": "enzo_6",
+        "name": "Enzo Sát quỷ đoàn"
+      },
+      {
+        "code": "enzo_7",
+        "name": "Enzo Leo núi"
+      },
+      {
+        "code": "enzo_8",
+        "name": "Enzo Hồng hạc thị vệ"
+      },
+      {
+        "code": "enzo_9",
+        "name": "Enzo Sát thần Bạch Hổ"
+      },
+      {
+        "code": "enzo_10",
+        "name": "Enzo Cá heo bảnh chọe"
+      },
+      {
+        "code": "enzo_11",
+        "name": "Enzo Shinobi Đoạt mệnh"
+      }
+    ]
+  },
+  "erin": {
+    "game_id": "",
+    "bundle_file": "erin_battle_base_low.assetbundle",
+    "texture_name": "ERIN_SKIN",
+    "skins": [
+      {
+        "code": "erin_1",
+        "name": "Erin"
+      },
+      {
+        "code": "erin_2",
+        "name": "Erin Mộc tinh linh"
+      },
+      {
+        "code": "erin_3",
+        "name": "Erin Tình yêu cổ tích"
+      },
+      {
+        "code": "erin_4",
+        "name": "Erin Huyễn Ảnh Mị Điệp"
+      },
+      {
+        "code": "erin_5",
+        "name": "Erin Nhạc Công Phiêu Du"
+      }
+    ]
+  },
+  "errol": {
+    "game_id": "526",
+    "bundle_file": "526_errol_battle_base_low.assetbundle",
+    "texture_name": "ERROL_SKIN",
+    "skins": [
+      {
+        "code": "errol_1",
+        "name": "Errol"
+      },
+      {
+        "code": "errol_2",
+        "name": "Errol Vượt ngục"
+      },
+      {
+        "code": "errol_3",
+        "name": "Errol Diệt nguyệt tiên phong"
+      },
+      {
+        "code": "errol_4",
+        "name": "Errol Đêm ác mộng"
+      },
+      {
+        "code": "errol_5",
+        "name": "Errol Sát thủ Mafia"
+      },
+      {
+        "code": "errol_6",
+        "name": "Errol Stream đến bao giờ?"
+      },
+      {
+        "code": "errol_7",
+        "name": "Errol Huyết thủ Tu La"
+      },
+      {
+        "code": "errol_8",
+        "name": "Errol Genos"
+      },
+      {
+        "code": "errol_9",
+        "name": "Errol Dị nhân tinh hệ"
+      },
+      {
+        "code": "errol_10",
+        "name": "Errol Dũng sĩ Pixel"
+      }
+    ]
+  },
+  "evita": {
+    "game_id": "",
+    "bundle_file": "evita_battle_base_low.assetbundle",
+    "texture_name": "EVITA_SKIN",
+    "skins": [
+      {
+        "code": "evita_1",
+        "name": "Evita"
+      }
+    ]
+  },
+  "fennik": {
+    "game_id": "",
+    "bundle_file": "fennik_battle_base_low.assetbundle",
+    "texture_name": "FENNIK_SKIN",
+    "skins": [
+      {
+        "code": "fennik_1",
+        "name": "Fennik"
+      },
+      {
+        "code": "fennik_2",
+        "name": "Fennik Nhà thám hiểm"
+      },
+      {
+        "code": "fennik_3",
+        "name": "Fennik Tiệc Bánh Kẹo"
+      },
+      {
+        "code": "fennik_4",
+        "name": "Fennik Tuần Lộc Láu Lỉnh"
+      },
+      {
+        "code": "fennik_5",
+        "name": "Fennik Tay đua F1"
+      },
+      {
+        "code": "fennik_6",
+        "name": "Fennik Phi hành gia"
+      },
+      {
+        "code": "fennik_7",
+        "name": "Fennik Phi hồ ẩn sĩ"
+      },
+      {
+        "code": "fennik_8",
+        "name": "Fennik Shipper Siêu thanh"
+      },
+      {
+        "code": "fennik_9",
+        "name": "Fennik Đội đặc nhiệm"
+      },
+      {
+        "code": "fennik_10",
+        "name": "Fennik Phong Tranh Thám Xuân"
+      },
+      {
+        "code": "fennik_11",
+        "name": "Fennik Rối Gỗ Tinh Quái"
+      },
+      {
+        "code": "fennik_12",
+        "name": "Fennik Cáo chiêu tài"
+      },
+      {
+        "code": "fennik_13",
+        "name": "Fennik Sứ giả may mắn"
+      }
+    ]
+  },
+  "florentino": {
+    "game_id": "129",
+    "bundle_file": "129_huamulan_battle_base_low.assetbundle",
+    "texture_name": "FLORENTINO_SKIN",
+    "skins": [
+      {
+        "code": "florentino_1",
+        "name": "Florentino"
+      },
+      {
+        "code": "florentino_2",
+        "name": "Florentino Vũ kiếm sư"
+      },
+      {
+        "code": "florentino_3",
+        "name": "Florentino Giám sát tinh hệ"
+      },
+      {
+        "code": "florentino_4",
+        "name": "Florentino Kiếm sĩ Olympic"
+      },
+      {
+        "code": "florentino_5",
+        "name": "Florentino SEVEN"
+      },
+      {
+        "code": "florentino_6",
+        "name": "Florentino Thần thoại Hy Lạp"
+      },
+      {
+        "code": "florentino_7",
+        "name": "Florentino Tà long kiếm sĩ"
+      },
+      {
+        "code": "florentino_8",
+        "name": "Florentino Hisoka"
+      },
+      {
+        "code": "florentino_9",
+        "name": "Florentino Bá vương âm nhạc"
+      },
+      {
+        "code": "florentino_10",
+        "name": "Florentino Xứ sở thần tiên"
+      },
+      {
+        "code": "florentino_11",
+        "name": "Florentino Hỏa diệm Thần Long"
+      },
+      {
+        "code": "florentino_12",
+        "name": "Florentino S-Quang Vinh"
+      },
+      {
+        "code": "florentino_13",
+        "name": "Florentino Kỷ Nguyên Hổ Phách"
+      },
+      {
+        "code": "florentino_14",
+        "name": "Florentino Quán quân"
+      }
+    ]
+  },
+  "flowborn-2": {
+    "game_id": "",
+    "bundle_file": "flowborn-2_battle_base_low.assetbundle",
+    "texture_name": "FLOWBORN-2_SKIN",
+    "skins": [
+      {
+        "code": "flowborn-2_1",
+        "name": "Flowborn"
+      }
+    ]
+  },
+  "flowborn": {
+    "game_id": "",
+    "bundle_file": "flowborn_battle_base_low.assetbundle",
+    "texture_name": "FLOWBORN_SKIN",
+    "skins": [
+      {
+        "code": "flowborn_1",
+        "name": "Flowborn"
+      }
+    ]
+  },
+  "gildur": {
+    "game_id": "",
+    "bundle_file": "gildur_battle_base_low.assetbundle",
+    "texture_name": "GILDUR_SKIN",
+    "skins": [
+      {
+        "code": "gildur_1",
+        "name": ""
+      },
+      {
+        "code": "gildur_2",
+        "name": "Gildur phượt thủ"
+      },
+      {
+        "code": "gildur_3",
+        "name": "Gildur Tiệc Bãi Biển"
+      },
+      {
+        "code": "gildur_4",
+        "name": "Gildur Đại gia học viện"
+      },
+      {
+        "code": "gildur_5",
+        "name": "Gildur Đại võ sư"
+      },
+      {
+        "code": "gildur_6",
+        "name": "Gildur Thuyền trưởng râu bạc"
+      },
+      {
+        "code": "gildur_7",
+        "name": "Gildur Bác học thiên tài"
+      },
+      {
+        "code": "gildur_8",
+        "name": "Gildur Phù thủy Ba Tư"
+      },
+      {
+        "code": "gildur_9",
+        "name": "Gildur Xích long"
+      },
+      {
+        "code": "gildur_10",
+        "name": "Gildur PASULOL"
+      },
+      {
+        "code": "gildur_11",
+        "name": "Gildur Jiji"
+      }
+    ]
+  },
+  "goverra": {
+    "game_id": "",
+    "bundle_file": "goverra_battle_base_low.assetbundle",
+    "texture_name": "GOVERRA_SKIN",
+    "skins": [
+      {
+        "code": "goverra_1",
+        "name": "Goverra"
+      },
+      {
+        "code": "goverra_2",
+        "name": "Goverra Kỳ Nghỉ Hoàn Mỹ"
+      },
+      {
+        "code": "goverra_3",
+        "name": "Goverra Swampseer"
+      }
+    ]
+  },
+  "grakk": {
+    "game_id": "104",
+    "bundle_file": "104_grakk_battle_base_low.assetbundle",
+    "texture_name": "GRAKK_SKIN",
+    "skins": [
+      {
+        "code": "grakk_1",
+        "name": "Grakk"
+      },
+      {
+        "code": "grakk_2",
+        "name": "Grakk Chàng gấu tuyết"
+      },
+      {
+        "code": "grakk_3",
+        "name": "Grakk Khô Lâu Đại Tướng"
+      },
+      {
+        "code": "grakk_4",
+        "name": "Grakk Thuyền Trưởng Râu Đỏ"
+      },
+      {
+        "code": "grakk_5",
+        "name": "Grakk Mèo thần tài"
+      },
+      {
+        "code": "grakk_6",
+        "name": "Grakk Sumo"
+      },
+      {
+        "code": "grakk_7",
+        "name": "Grakk Tiệc bãi biển"
+      },
+      {
+        "code": "grakk_8",
+        "name": "Grakk Cận vệ Mafia"
+      },
+      {
+        "code": "grakk_9",
+        "name": "Grakk Màu cờ sắc áo"
+      },
+      {
+        "code": "grakk_10",
+        "name": "Grakk Đi vào lòng đất"
+      },
+      {
+        "code": "grakk_11",
+        "name": "Grakk Thần ẩm thực"
+      },
+      {
+        "code": "grakk_12",
+        "name": "Grakk Thủ vệ Dạ Ưng"
+      },
+      {
+        "code": "grakk_13",
+        "name": "Grakk Ngũ Cốc Phong Đăng"
+      }
+    ]
+  },
+  "hayate": {
+    "game_id": "132",
+    "bundle_file": "132_makeboluo_battle_base_low.assetbundle",
+    "texture_name": "HAYATE_SKIN",
+    "skins": [
+      {
+        "code": "hayate_1",
+        "name": "Hayate"
+      },
+      {
+        "code": "hayate_2",
+        "name": "Hayate Bạch ảnh"
+      },
+      {
+        "code": "hayate_3",
+        "name": "Hayate chiến binh trăng khuyết"
+      },
+      {
+        "code": "hayate_4",
+        "name": "Hayate Ngân lang"
+      },
+      {
+        "code": "hayate_5",
+        "name": "Hayate Quỷ diện"
+      },
+      {
+        "code": "hayate_6",
+        "name": "Hayate Tử thần vũ trụ"
+      },
+      {
+        "code": "hayate_7",
+        "name": "Hayate Mãnh hổ kim cang"
+      },
+      {
+        "code": "hayate_8",
+        "name": "Hayate Tu Di Thánh Đế"
+      },
+      {
+        "code": "hayate_9",
+        "name": "Hayate Bóng người dưới trăng"
+      },
+      {
+        "code": "hayate_10",
+        "name": "Hayate Bạch vô thường"
+      },
+      {
+        "code": "hayate_11",
+        "name": "Hayate Bạch lang"
+      },
+      {
+        "code": "hayate_12",
+        "name": "Hayate Kim ưng sát thủ"
+      },
+      {
+        "code": "hayate_13",
+        "name": "Hayate Thống soái Dạ Ưng"
+      },
+      {
+        "code": "hayate_14",
+        "name": "Hayate Siêu đạo chích Kid"
+      },
+      {
+        "code": "hayate_15",
+        "name": "Hayate Đầu bếp Yakitori"
+      },
+      {
+        "code": "hayate_16",
+        "name": "Hayate Thứ nguyên vệ thần"
+      }
+    ]
+  },
+  "heino": {
+    "game_id": "",
+    "bundle_file": "heino_battle_base_low.assetbundle",
+    "texture_name": "HEINO_SKIN",
+    "skins": [
+      {
+        "code": "heino_1",
+        "name": "Heino"
+      },
+      {
+        "code": "heino_2",
+        "name": "Heino Scout Regiment"
+      },
+      {
+        "code": "heino_3",
+        "name": "Heino Nhật ký tình yêu"
+      }
+    ]
+  },
+  "helen": {
+    "game_id": "",
+    "bundle_file": "helen_battle_base_low.assetbundle",
+    "texture_name": "HELEN_SKIN",
+    "skins": [
+      {
+        "code": "helen_1",
+        "name": "Helen"
+      },
+      {
+        "code": "helen_2",
+        "name": "Helen Ngủ trong rừng"
+      },
+      {
+        "code": "helen_3",
+        "name": "Helen Hồng Liên tiên tử"
+      },
+      {
+        "code": "helen_4",
+        "name": "Helen Hotgirl Trà sữa"
+      },
+      {
+        "code": "helen_5",
+        "name": "Helen Bé Hoa Xuân"
+      },
+      {
+        "code": "helen_6",
+        "name": "Helen Cổ tích Biển xanh"
+      },
+      {
+        "code": "helen_7",
+        "name": "Helen Trợ lý nghệ sĩ"
+      },
+      {
+        "code": "helen_8",
+        "name": "Helen Xứ sở diệu kỳ"
+      }
+    ]
+  },
+  "iggy": {
+    "game_id": "",
+    "bundle_file": "iggy_battle_base_low.assetbundle",
+    "texture_name": "IGGY_SKIN",
+    "skins": [
+      {
+        "code": "iggy_1",
+        "name": "Iggy"
+      },
+      {
+        "code": "iggy_2",
+        "name": "Iggy Tiểu Hoàng Đế"
+      },
+      {
+        "code": "iggy_3",
+        "name": "Iggy Thần Miêu thiếu chủ"
+      },
+      {
+        "code": "iggy_4",
+        "name": "Iggy Bạch hồ ly"
+      },
+      {
+        "code": "iggy_5",
+        "name": "Iggy Tiếng thét Hỗn mang"
+      },
+      {
+        "code": "iggy_6",
+        "name": "Iggy Rimuru Tempest"
+      },
+      {
+        "code": "iggy_7",
+        "name": "Iggy Đại chiến bùng nổ"
+      }
+    ]
+  },
+  "ignis": {
+    "game_id": "",
+    "bundle_file": "ignis_battle_base_low.assetbundle",
+    "texture_name": "IGNIS_SKIN",
+    "skins": [
+      {
+        "code": "ignis_1",
+        "name": "Ignis"
+      },
+      {
+        "code": "ignis_2",
+        "name": "Ignis Hỏa Thuật Sư"
+      },
+      {
+        "code": "ignis_3",
+        "name": "Ignis Quang Vinh"
+      },
+      {
+        "code": "ignis_4",
+        "name": "Ignis Bắc băng vương"
+      },
+      {
+        "code": "ignis_5",
+        "name": "Ignis Thầy tế mặt trời"
+      },
+      {
+        "code": "ignis_6",
+        "name": "Ignis Thần mặt trời"
+      },
+      {
+        "code": "ignis_7",
+        "name": "Ignis Nguyệt lão"
+      },
+      {
+        "code": "ignis_8",
+        "name": "Ignis Vì sao con khóc"
+      }
+    ]
+  },
+  "ilumia": {
+    "game_id": "",
+    "bundle_file": "ilumia_battle_base_low.assetbundle",
+    "texture_name": "ILUMIA_SKIN",
+    "skins": [
+      {
+        "code": "ilumia_1",
+        "name": "Ilumia"
+      },
+      {
+        "code": "ilumia_2",
+        "name": "Ilumia Nữ Chúa Tuyết"
+      },
+      {
+        "code": "ilumia_3",
+        "name": "Ilumia Hồng Hoa Hậu"
+      },
+      {
+        "code": "ilumia_4",
+        "name": "Ilumia Thiên nữ áo dài"
+      },
+      {
+        "code": "ilumia_5",
+        "name": "Ilumia Nữ hoàng khí giới"
+      },
+      {
+        "code": "ilumia_6",
+        "name": "Ilumia Quý cô Nhà hát"
+      },
+      {
+        "code": "ilumia_7",
+        "name": "Ilumia Ngược dòng thời gian"
+      },
+      {
+        "code": "ilumia_8",
+        "name": "Ilumia Khải Huyền Thiên Hậu"
+      },
+      {
+        "code": "ilumia_9",
+        "name": "Ilumia Thần mặt trời"
+      },
+      {
+        "code": "ilumia_10",
+        "name": "Ilumia Diva nổi loạn"
+      },
+      {
+        "code": "ilumia_11",
+        "name": "Ilumia Trọng tài"
+      },
+      {
+        "code": "ilumia_12",
+        "name": "Ilumia Nộ hải Thiên ngư"
+      },
+      {
+        "code": "ilumia_13",
+        "name": "Ilumia Thụy Mộc liên hoa"
+      },
+      {
+        "code": "ilumia_14",
+        "name": "Ilumia Lưỡng Nghi Long Hậu"
+      },
+      {
+        "code": "ilumia_15",
+        "name": "Ilumia Hải nữ Oán linh"
+      }
+    ]
+  },
+  "ishar": {
+    "game_id": "",
+    "bundle_file": "ishar_battle_base_low.assetbundle",
+    "texture_name": "ISHAR_SKIN",
+    "skins": [
+      {
+        "code": "ishar_1",
+        "name": "Ishar"
+      },
+      {
+        "code": "ishar_2",
+        "name": "Ishar Giấc Mơ Ngọt Ngào"
+      },
+      {
+        "code": "ishar_3",
+        "name": "Ishar Tiểu thư kẹo ngọt"
+      },
+      {
+        "code": "ishar_4",
+        "name": "Ishar Tiểu thư gấu trúc"
+      },
+      {
+        "code": "ishar_5",
+        "name": "Ishar Quận chúa sông Nile"
+      },
+      {
+        "code": "ishar_6",
+        "name": "Ishar Rồng bé bự"
+      },
+      {
+        "code": "ishar_7",
+        "name": "Ishar Gián điệp hacker"
+      },
+      {
+        "code": "ishar_8",
+        "name": "Ishar Lễ hội ma quái"
+      },
+      {
+        "code": "ishar_9",
+        "name": "Ishar Tiểu thư"
+      },
+      {
+        "code": "ishar_10",
+        "name": "Ishar Capoo Boom"
+      },
+      {
+        "code": "ishar_11",
+        "name": "Ishar Đoàn trưởng tạp kỹ"
+      },
+      {
+        "code": "ishar_12",
+        "name": "Ishar Thuật Sư Săn Thẻ"
+      }
+    ]
+  },
+  "jinna": {
+    "game_id": "114",
+    "bundle_file": "114_jinna_battle_base_low.assetbundle",
+    "texture_name": "JINNA_SKIN",
+    "skins": [
+      {
+        "code": "jinna_1",
+        "name": "Jinna"
+      },
+      {
+        "code": "jinna_2",
+        "name": "Jinna Đại Tư Tế"
+      },
+      {
+        "code": "jinna_3",
+        "name": "Jinna Dạ xoa vương"
+      },
+      {
+        "code": "jinna_4",
+        "name": "Jinna Hỏa nhãn ma vương"
+      },
+      {
+        "code": "jinna_5",
+        "name": "Jinna Kim Giác"
+      },
+      {
+        "code": "jinna_6",
+        "name": "Jinna Ma Thuật sĩ"
+      },
+      {
+        "code": "jinna_7",
+        "name": "Jinna Mafia"
+      }
+    ]
+  },
+  "kahlii": {
+    "game_id": "",
+    "bundle_file": "kahlii_battle_base_low.assetbundle",
+    "texture_name": "KAHLII_SKIN",
+    "skins": [
+      {
+        "code": "kahlii_1",
+        "name": "Kahlii"
+      },
+      {
+        "code": "kahlii_2",
+        "name": "Kahlii Cô dâu hắc ám"
+      },
+      {
+        "code": "kahlii_3",
+        "name": "Kahlii Kim cô giáo chủ"
+      },
+      {
+        "code": "kahlii_4",
+        "name": "Kahlii Quàng Khăn Đỏ"
+      },
+      {
+        "code": "kahlii_5",
+        "name": "Kahlii Siêu đầu bếp"
+      },
+      {
+        "code": "kahlii_6",
+        "name": "Kahlii Vũ hội Bóng đêm"
+      },
+      {
+        "code": "kahlii_7",
+        "name": "Kahlii Tử điệp"
+      },
+      {
+        "code": "kahlii_8",
+        "name": "Kahlii Linh Hoa thần nữ"
+      },
+      {
+        "code": "kahlii_9",
+        "name": "Kahlii Rối nước Thủy đình"
+      },
+      {
+        "code": "kahlii_10",
+        "name": "Kahlii Oán nữ Tai Ương"
+      }
+    ]
+  },
+  "kaine": {
+    "game_id": "",
+    "bundle_file": "kaine_battle_base_low.assetbundle",
+    "texture_name": "KAINE_SKIN",
+    "skins": [
+      {
+        "code": "kaine_1",
+        "name": "Kaine"
+      },
+      {
+        "code": "kaine_2",
+        "name": "Kaine Đôi Cánh Đại Dương"
+      },
+      {
+        "code": "kaine_3",
+        "name": "Kaine Dơi Địa Ngục"
+      },
+      {
+        "code": "kaine_4",
+        "name": "Kaine Người dơi"
+      },
+      {
+        "code": "kaine_5",
+        "name": "Kaine Chiến Binh Kim Quang"
+      },
+      {
+        "code": "kaine_6",
+        "name": "Kaine Thiếu chủ bóng đêm"
+      },
+      {
+        "code": "kaine_7",
+        "name": "Kaine Thợ săn chính nghĩa"
+      }
+    ]
+  },
+  "keera": {
+    "game_id": "",
+    "bundle_file": "keera_battle_base_low.assetbundle",
+    "texture_name": "KEERA_SKIN",
+    "skins": [
+      {
+        "code": "keera_1",
+        "name": "Keera"
+      },
+      {
+        "code": "keera_2",
+        "name": "Keera Y tá lạ"
+      },
+      {
+        "code": "keera_3",
+        "name": "Keera Học viên Carano"
+      },
+      {
+        "code": "keera_4",
+        "name": "Keera Sát thủ bí ngô"
+      },
+      {
+        "code": "keera_5",
+        "name": "Keera Tiệc bãi biển"
+      },
+      {
+        "code": "keera_6",
+        "name": "Keera Nghệ sĩ Graffiti"
+      },
+      {
+        "code": "keera_7",
+        "name": "Keera Nezuko Kamado"
+      },
+      {
+        "code": "keera_8",
+        "name": "Keera Thuỷ thủ"
+      },
+      {
+        "code": "keera_9",
+        "name": "Keera Hồ điệp"
+      },
+      {
+        "code": "keera_10",
+        "name": "Keera Môn đồ xảo quyệt"
+      },
+      {
+        "code": "keera_11",
+        "name": "Keera Quán quân"
+      },
+      {
+        "code": "keera_12",
+        "name": "Keera Yêu Thần Nekomata"
+      }
+    ]
+  },
+  "kilgroth": {
+    "game_id": "",
+    "bundle_file": "kilgroth_battle_base_low.assetbundle",
+    "texture_name": "KILGROTH_SKIN",
+    "skins": [
+      {
+        "code": "kilgroth_1",
+        "name": "Kil'Groth"
+      },
+      {
+        "code": "kilgroth_2",
+        "name": "Kil'Groth Quang Vinh"
+      },
+      {
+        "code": "kilgroth_3",
+        "name": "Kil'Groth Cảnh Vệ Biển"
+      },
+      {
+        "code": "kilgroth_4",
+        "name": "Kil'Groth Chú lính chì"
+      },
+      {
+        "code": "kilgroth_5",
+        "name": "Kil'Groth Càn Nguyên thủ vệ"
+      },
+      {
+        "code": "kilgroth_6",
+        "name": "Kil'Groth Hung thần biển sâu"
+      }
+    ]
+  },
+  "kriknak": {
+    "game_id": "",
+    "bundle_file": "kriknak_battle_base_low.assetbundle",
+    "texture_name": "KRIKNAK_SKIN",
+    "skins": [
+      {
+        "code": "kriknak_1",
+        "name": "Kriknak"
+      },
+      {
+        "code": "kriknak_2",
+        "name": "Kriknak Bọ Cánh Bạc"
+      },
+      {
+        "code": "kriknak_3",
+        "name": "Kriknak Yêu trùng cổ mộ"
+      },
+      {
+        "code": "kriknak_4",
+        "name": "Kriknak ST.L-162"
+      },
+      {
+        "code": "kriknak_5",
+        "name": "Kriknak Bọ cánh cam"
+      },
+      {
+        "code": "kriknak_6",
+        "name": "Kriknak Tử trùng DDoS"
+      },
+      {
+        "code": "kriknak_7",
+        "name": "Kriknak Bọ hoàng kim"
+      }
+    ]
+  },
+  "krixi": {
+    "game_id": "",
+    "bundle_file": "krixi_battle_base_low.assetbundle",
+    "texture_name": "KRIXI_SKIN",
+    "skins": [
+      {
+        "code": "krixi_1",
+        "name": "Krixi"
+      },
+      {
+        "code": "krixi_2",
+        "name": "Krixi Công chúa Bướm"
+      },
+      {
+        "code": "krixi_3",
+        "name": "Krixi Xứ Sở Thần Tiên"
+      },
+      {
+        "code": "krixi_4",
+        "name": "Krixi Tiệc Bãi Biển"
+      },
+      {
+        "code": "krixi_5",
+        "name": "Krixi Cô Tiên Thỏ"
+      },
+      {
+        "code": "krixi_6",
+        "name": "Krixi Phó văn nghệ"
+      },
+      {
+        "code": "krixi_7",
+        "name": "Krixi Tiểu yêu nữ"
+      },
+      {
+        "code": "krixi_8",
+        "name": "Krixi Hồ Thiên Nga"
+      },
+      {
+        "code": "krixi_9",
+        "name": "Krixi Thần Thoại Hy Lạp"
+      },
+      {
+        "code": "krixi_10",
+        "name": "Krixi Thủy Thủ"
+      },
+      {
+        "code": "krixi_11",
+        "name": "Krixi Terrible Tornado"
+      },
+      {
+        "code": "krixi_12",
+        "name": "Krixi Nàng tiên nổi loạn"
+      },
+      {
+        "code": "krixi_13",
+        "name": "Krixi Quán quân"
+      },
+      {
+        "code": "krixi_14",
+        "name": "Krixi Phù thủy thời không"
+      },
+      {
+        "code": "krixi_15",
+        "name": "Krixi Uyên Ương Mộng Điệp"
+      },
+      {
+        "code": "krixi_16",
+        "name": "Krixi Kimono"
+      }
+    ]
+  },
+  "krizzix": {
+    "game_id": "",
+    "bundle_file": "krizzix_battle_base_low.assetbundle",
+    "texture_name": "KRIZZIX_SKIN",
+    "skins": [
+      {
+        "code": "krizzix_1",
+        "name": "Krizzix"
+      },
+      {
+        "code": "krizzix_2",
+        "name": "Krizzix Cún siêu quậy"
+      },
+      {
+        "code": "krizzix_3",
+        "name": "Krizzix Đội đặc nhiệm"
+      },
+      {
+        "code": "krizzix_4",
+        "name": "Krizzix Nghệ sĩ đường phố"
+      },
+      {
+        "code": "krizzix_5",
+        "name": "Krizzix Trưởng lão"
+      },
+      {
+        "code": "krizzix_6",
+        "name": "Krizzix Cursed Corpse"
+      },
+      {
+        "code": "krizzix_7",
+        "name": "Krizzix Thám tử tư"
+      },
+      {
+        "code": "krizzix_8",
+        "name": "Krizzix Tiến sĩ tắc kè"
+      }
+    ]
+  },
+  "lauriel": {
+    "game_id": "",
+    "bundle_file": "lauriel_battle_base_low.assetbundle",
+    "texture_name": "LAURIEL_SKIN",
+    "skins": [
+      {
+        "code": "lauriel_1",
+        "name": "Lauriel"
+      },
+      {
+        "code": "lauriel_2",
+        "name": "Lauriel Đọa Lạc Thiên Sứ"
+      },
+      {
+        "code": "lauriel_3",
+        "name": "Lauriel Phù Thủy Bí Ngô"
+      },
+      {
+        "code": "lauriel_4",
+        "name": "Lauriel Hỏa Phượng Hoàng"
+      },
+      {
+        "code": "lauriel_5",
+        "name": "Lauriel Thánh quang sứ"
+      },
+      {
+        "code": "lauriel_6",
+        "name": "Lauriel Lạc thần"
+      },
+      {
+        "code": "lauriel_7",
+        "name": "Lauriel Hoa khôi Giáng sinh"
+      },
+      {
+        "code": "lauriel_8",
+        "name": "Lauriel Tinh vân sứ"
+      },
+      {
+        "code": "lauriel_9",
+        "name": "Lauriel Tiệc bãi biển"
+      },
+      {
+        "code": "lauriel_10",
+        "name": "Lauriel thiên sứ công nghệ"
+      },
+      {
+        "code": "lauriel_11",
+        "name": "Lauriel Vũ khúc miêu ảnh"
+      },
+      {
+        "code": "lauriel_12",
+        "name": "Lauriel Nữ vương học đường"
+      },
+      {
+        "code": "lauriel_13",
+        "name": "Lauriel Đôi cánh Nguyệt thực"
+      },
+      {
+        "code": "lauriel_14",
+        "name": "Lauriel Phi thiên"
+      },
+      {
+        "code": "lauriel_15",
+        "name": "Lauriel Thứ nguyên vệ thần"
+      },
+      {
+        "code": "lauriel_16",
+        "name": "Lauriel Thiên nữ Dạ Ưng"
+      },
+      {
+        "code": "lauriel_17",
+        "name": "Lauriel Mã Đằng Cửu Thế"
+      }
+    ]
+  },
+  "laville": {
+    "game_id": "533",
+    "bundle_file": "533_laville_battle_base_low.assetbundle",
+    "texture_name": "LAVILLE_SKIN",
+    "skins": [
+      {
+        "code": "laville_1",
+        "name": "Laville"
+      },
+      {
+        "code": "laville_2",
+        "name": "Laville Tay đua đường phố"
+      },
+      {
+        "code": "laville_3",
+        "name": "Laville Tay súng diệt thần"
+      },
+      {
+        "code": "laville_4",
+        "name": "Laville Tay súng vô địch"
+      },
+      {
+        "code": "laville_5",
+        "name": "Laville Xạ Thần Tinh Vệ"
+      },
+      {
+        "code": "laville_6",
+        "name": "Laville Kim quy thần vương"
+      },
+      {
+        "code": "laville_7",
+        "name": "Laville Tiệc bãi biển"
+      },
+      {
+        "code": "laville_8",
+        "name": "Laville Sắc màu Holi"
+      },
+      {
+        "code": "laville_9",
+        "name": "Laville Chiến thần MOBA"
+      },
+      {
+        "code": "laville_10",
+        "name": "Laville Vệ binh giáng sinh"
+      },
+      {
+        "code": "laville_11",
+        "name": "Laville Thám tử học đường"
+      },
+      {
+        "code": "laville_12",
+        "name": "Laville S-Quang vinh"
+      },
+      {
+        "code": "laville_13",
+        "name": "Laville Thợ Săn Truy Ảnh"
+      },
+      {
+        "code": "laville_14",
+        "name": "Laville Cơn Lốc Đường Biên"
+      }
+    ]
+  },
+  "liliana": {
+    "game_id": "",
+    "bundle_file": "liliana_battle_base_low.assetbundle",
+    "texture_name": "LILIANA_SKIN",
+    "skins": [
+      {
+        "code": "liliana_1",
+        "name": "Liliana"
+      },
+      {
+        "code": "liliana_2",
+        "name": "Liliana Hồ Quý Phi"
+      },
+      {
+        "code": "liliana_3",
+        "name": "Liliana thần tượng âm nhạc"
+      },
+      {
+        "code": "liliana_4",
+        "name": "Liliana Nguyệt mị ly"
+      },
+      {
+        "code": "liliana_5",
+        "name": "Liliana Tiểu thơ anh đào"
+      },
+      {
+        "code": "liliana_6",
+        "name": "Liliana Tân nguyệt mị ly"
+      },
+      {
+        "code": "liliana_7",
+        "name": "Liliana Nữ thần F1"
+      },
+      {
+        "code": "liliana_8",
+        "name": "Liliana Thuỷ thủ hồ ly"
+      },
+      {
+        "code": "liliana_9",
+        "name": "Liliana WaVe"
+      },
+      {
+        "code": "liliana_10",
+        "name": "Liliana Tiệc bãi biển"
+      },
+      {
+        "code": "liliana_11",
+        "name": "Liliana Lưu Thủy Thần Long"
+      },
+      {
+        "code": "liliana_12",
+        "name": "Liliana Thần hổ Xiêm La"
+      },
+      {
+        "code": "liliana_13",
+        "name": "Liliana Ma Pháp Tối Thượng"
+      }
+    ]
+  },
+  "lindis": {
+    "game_id": "",
+    "bundle_file": "lindis_battle_base_low.assetbundle",
+    "texture_name": "LINDIS_SKIN",
+    "skins": [
+      {
+        "code": "lindis_1",
+        "name": "Lindis"
+      },
+      {
+        "code": "lindis_2",
+        "name": "Lindis Thám Tử Tư"
+      },
+      {
+        "code": "lindis_3",
+        "name": "Lindis Quang thánh tiễn"
+      },
+      {
+        "code": "lindis_4",
+        "name": "Lindis Nữ vương pháo hoa"
+      },
+      {
+        "code": "lindis_5",
+        "name": "Lindis Quang Vinh"
+      },
+      {
+        "code": "lindis_6",
+        "name": "Lindis Dạ tiệc"
+      },
+      {
+        "code": "lindis_7",
+        "name": "Lindis Đặc vụ thần thám"
+      },
+      {
+        "code": "lindis_8",
+        "name": "Lindis Đồng phục Shihakusho"
+      },
+      {
+        "code": "lindis_9",
+        "name": "Lindis Linh Hoa tiễn"
+      }
+    ]
+  },
+  "lorion": {
+    "game_id": "",
+    "bundle_file": "lorion_battle_base_low.assetbundle",
+    "texture_name": "LORION_SKIN",
+    "skins": [
+      {
+        "code": "lorion_1",
+        "name": "Lorion"
+      },
+      {
+        "code": "lorion_2",
+        "name": "Lorion Chiến giáp hắc ám"
+      },
+      {
+        "code": "lorion_3",
+        "name": "Lorion Hoả vân tà thần"
+      },
+      {
+        "code": "lorion_4",
+        "name": "Lorion Quân vương bóng tối"
+      },
+      {
+        "code": "lorion_5",
+        "name": "Lorion Quân vương ánh sáng"
+      },
+      {
+        "code": "lorion_6",
+        "name": "Lorion Giáo chủ tinh hệ"
+      }
+    ]
+  },
+  "lumburr": {
+    "game_id": "113",
+    "bundle_file": "113_lumburr_battle_base_low.assetbundle",
+    "texture_name": "LUMBURR_SKIN",
+    "skins": [
+      {
+        "code": "lumburr_1",
+        "name": "Lumburr"
+      },
+      {
+        "code": "lumburr_2",
+        "name": "Lumburr Dung Nham"
+      },
+      {
+        "code": "lumburr_3",
+        "name": "Lumburr Cự thần viễn cổ"
+      },
+      {
+        "code": "lumburr_4",
+        "name": "Lumburr Vệ binh hỏa diệm"
+      },
+      {
+        "code": "lumburr_5",
+        "name": "Lumburr Máy Đào Khoáng"
+      },
+      {
+        "code": "lumburr_6",
+        "name": "Lumburr Golem thảo nguyên"
+      },
+      {
+        "code": "lumburr_7",
+        "name": "Lumburr Tóm được ngươi rồi"
+      }
+    ]
+  },
+  "lu-bo": {
+    "game_id": "",
+    "bundle_file": "lu-bo_battle_base_low.assetbundle",
+    "texture_name": "LU-BO_SKIN",
+    "skins": [
+      {
+        "code": "lu-bo_1",
+        "name": "Lữ Bố"
+      },
+      {
+        "code": "lu-bo_2",
+        "name": "Lữ Bố Long Kỵ Sĩ"
+      },
+      {
+        "code": "lu-bo_3",
+        "name": "Lữ Bố Kỵ Sĩ Âm Phủ"
+      },
+      {
+        "code": "lu-bo_4",
+        "name": "Lữ Bố Đặc Nhiệm Swat"
+      },
+      {
+        "code": "lu-bo_5",
+        "name": "Lữ Bố Tiệc Bãi Biển"
+      },
+      {
+        "code": "lu-bo_6",
+        "name": "Lữ Bố Nam Vương"
+      },
+      {
+        "code": "lu-bo_7",
+        "name": "Lữ Bố Tư lệnh Robot"
+      },
+      {
+        "code": "lu-bo_8",
+        "name": "Lữ Bố Vũ điệu Samba"
+      },
+      {
+        "code": "lu-bo_9",
+        "name": "Lữ Bố Thần Ngọc"
+      },
+      {
+        "code": "lu-bo_10",
+        "name": "Lữ Bố Ichigo Kurosaki"
+      },
+      {
+        "code": "lu-bo_11",
+        "name": "Lữ Bố Cửu Thiên Lôi Thần"
+      },
+      {
+        "code": "lu-bo_12",
+        "name": "Lữ bố Hỏa long chiến thần"
+      }
+    ]
+  },
+  "maloch": {
+    "game_id": "",
+    "bundle_file": "maloch_battle_base_low.assetbundle",
+    "texture_name": "MALOCH_SKIN",
+    "skins": [
+      {
+        "code": "maloch_1",
+        "name": "Maloch"
+      },
+      {
+        "code": "maloch_2",
+        "name": "Maloch Tiệc hóa trang"
+      },
+      {
+        "code": "maloch_3",
+        "name": "Maloch Ác Ma Địa Ngục"
+      },
+      {
+        "code": "maloch_4",
+        "name": "Maloch Samurai Tử Sĩ"
+      },
+      {
+        "code": "maloch_5",
+        "name": "Maloch Đại Tướng Robot"
+      },
+      {
+        "code": "maloch_6",
+        "name": "Maloch Ông kẹ bí ngô"
+      },
+      {
+        "code": "maloch_7",
+        "name": "Maloch Quỷ nhãn ma thể"
+      },
+      {
+        "code": "maloch_8",
+        "name": "Maloch Đại ca Mukbang"
+      },
+      {
+        "code": "maloch_9",
+        "name": "Maloch Vũ hội Bóng đêm"
+      },
+      {
+        "code": "maloch_10",
+        "name": "Maloch Ác nhân vô tuyến"
+      },
+      {
+        "code": "maloch_11",
+        "name": "Maloch Đao phủ Dạ Ưng"
+      },
+      {
+        "code": "maloch_12",
+        "name": "Maloch Đấu Sĩ Đoạt Thẻ"
+      }
+    ]
+  },
+  "marja": {
+    "game_id": "",
+    "bundle_file": "marja_battle_base_low.assetbundle",
+    "texture_name": "MARJA_SKIN",
+    "skins": [
+      {
+        "code": "marja_1",
+        "name": "Marja"
+      },
+      {
+        "code": "marja_2",
+        "name": "Marja Linh Xà Tư Tế"
+      },
+      {
+        "code": "marja_3",
+        "name": "Marja Hỏa ngọc nữ vương"
+      },
+      {
+        "code": "marja_4",
+        "name": "Marja Lam Hải yêu hậu"
+      },
+      {
+        "code": "marja_5",
+        "name": "Marja Yêu nữ săn mồi"
+      },
+      {
+        "code": "marja_6",
+        "name": "Marja Chủ hôn"
+      },
+      {
+        "code": "marja_7",
+        "name": "Marja Phù Quang Mạc Ảnh"
+      },
+      {
+        "code": "marja_8",
+        "name": "Marja Hi Phi"
+      },
+      {
+        "code": "marja_9",
+        "name": "Marja Huyết mẫu tà linh"
+      }
+    ]
+  },
+  "max": {
+    "game_id": "",
+    "bundle_file": "max_battle_base_low.assetbundle",
+    "texture_name": "MAX_SKIN",
+    "skins": [
+      {
+        "code": "max_1",
+        "name": "Max"
+      },
+      {
+        "code": "max_2",
+        "name": "Max Hiệp Sĩ Nhí"
+      },
+      {
+        "code": "max_3",
+        "name": "Max Găng Tay Vàng"
+      },
+      {
+        "code": "max_4",
+        "name": "Max Quang Vinh"
+      },
+      {
+        "code": "max_5",
+        "name": "Max Thần đồng sinh hóa"
+      },
+      {
+        "code": "max_6",
+        "name": "Max Tiểu King Kong"
+      },
+      {
+        "code": "max_7",
+        "name": "Max Chuyên gia đập hộp"
+      },
+      {
+        "code": "max_8",
+        "name": "Max Thần thoại Hy Lạp"
+      },
+      {
+        "code": "max_9",
+        "name": "Max \"Không trêu bạn\""
+      },
+      {
+        "code": "max_10",
+        "name": "Max Trà chanh"
+      },
+      {
+        "code": "max_11",
+        "name": "Max Người đưa thư"
+      }
+    ]
+  },
+  "mganga": {
+    "game_id": "",
+    "bundle_file": "mganga_battle_base_low.assetbundle",
+    "texture_name": "MGANGA_SKIN",
+    "skins": [
+      {
+        "code": "mganga_1",
+        "name": "Mganga"
+      },
+      {
+        "code": "mganga_2",
+        "name": "Mganga Hề cung đình"
+      },
+      {
+        "code": "mganga_3",
+        "name": "Mganga Tiệc Bánh Kẹo"
+      },
+      {
+        "code": "mganga_4",
+        "name": "Mganga Pháp sư mèo"
+      },
+      {
+        "code": "mganga_5",
+        "name": "Mganga Nhà hóa học"
+      },
+      {
+        "code": "mganga_6",
+        "name": "Mganga Độc toàn thân"
+      },
+      {
+        "code": "mganga_7",
+        "name": "Mganga Quái tặc không gian"
+      },
+      {
+        "code": "mganga_8",
+        "name": "Mganga Đèn Thần Hậu Đậu"
+      },
+      {
+        "code": "mganga_9",
+        "name": "Mganga Doombot hủy diệt"
+      }
+    ]
+  },
+  "mina": {
+    "game_id": "120",
+    "bundle_file": "120_mina_battle_base_low.assetbundle",
+    "texture_name": "MINA_SKIN",
+    "skins": [
+      {
+        "code": "mina_1",
+        "name": "Mina"
+      },
+      {
+        "code": "mina_2",
+        "name": "Mina Tiểu thư đoạt hồn"
+      },
+      {
+        "code": "mina_3",
+        "name": "Mina Tiệc Bánh Kẹo"
+      },
+      {
+        "code": "mina_4",
+        "name": "Mina Kẹo hay ghẹo"
+      },
+      {
+        "code": "mina_5",
+        "name": "Mina Lưỡi hái hoàng kim"
+      },
+      {
+        "code": "mina_6",
+        "name": "Mina Chị đại lắm chiêu"
+      },
+      {
+        "code": "mina_7",
+        "name": "Mina Đào tạo siêu sao"
+      },
+      {
+        "code": "mina_8",
+        "name": "Mina Nữ thần Ai Cập"
+      },
+      {
+        "code": "mina_9",
+        "name": "Mina Linh Xà yêu vũ"
+      },
+      {
+        "code": "mina_10",
+        "name": "Mina Xích Huyết Diễm Quỷ"
+      },
+      {
+        "code": "mina_11",
+        "name": "Mina Cẩm y vệ Kim Ô"
+      },
+      {
+        "code": "mina_12",
+        "name": "Mina Tiệc bãi biển"
+      }
+    ]
+  },
+  "ming": {
+    "game_id": "",
+    "bundle_file": "ming_battle_base_low.assetbundle",
+    "texture_name": "MING_SKIN",
+    "skins": [
+      {
+        "code": "ming_1",
+        "name": "Ming"
+      },
+      {
+        "code": "ming_2",
+        "name": "Ming Thầy tướng"
+      }
+    ]
+  },
+  "moren": {
+    "game_id": "",
+    "bundle_file": "moren_battle_base_low.assetbundle",
+    "texture_name": "MOREN_SKIN",
+    "skins": [
+      {
+        "code": "moren_1",
+        "name": "Moren"
+      },
+      {
+        "code": "moren_2",
+        "name": "Moren Anh thợ điện"
+      },
+      {
+        "code": "moren_3",
+        "name": "Moren Lính cứu hỏa"
+      },
+      {
+        "code": "moren_4",
+        "name": "Moren Binh nhì"
+      },
+      {
+        "code": "moren_5",
+        "name": "Moren Thợ cắt cáp"
+      }
+    ]
+  },
+  "murad": {
+    "game_id": "131",
+    "bundle_file": "131_libai_battle_base_low.assetbundle",
+    "texture_name": "MURAD_SKIN",
+    "skins": [
+      {
+        "code": "murad_1",
+        "name": "Murad"
+      },
+      {
+        "code": "murad_2",
+        "name": "Murad Thợ Săn Tiền Thưởng"
+      },
+      {
+        "code": "murad_3",
+        "name": "Murad M-TP Thần Tượng Học Đường"
+      },
+      {
+        "code": "murad_4",
+        "name": "Murad Thiên Tài Sân Cỏ"
+      },
+      {
+        "code": "murad_5",
+        "name": "Murad Siêu việt"
+      },
+      {
+        "code": "murad_6",
+        "name": "Murad Đồ thần đao"
+      },
+      {
+        "code": "murad_7",
+        "name": "Murad Đặc dị"
+      },
+      {
+        "code": "murad_8",
+        "name": "Murad Siêu việt 2.0"
+      },
+      {
+        "code": "murad_9",
+        "name": "Murad Điệp viên Anubis"
+      },
+      {
+        "code": "murad_10",
+        "name": "Murad Chí tôn thần kiếm"
+      },
+      {
+        "code": "murad_11",
+        "name": "Murad Dược Sĩ Tình yêu"
+      },
+      {
+        "code": "murad_12",
+        "name": "Murad Byakuya Kuchiki"
+      },
+      {
+        "code": "murad_13",
+        "name": "Murad Zenitsu Agatsuma"
+      },
+      {
+        "code": "murad_14",
+        "name": "Murad Thích Khách Sa Mạc"
+      },
+      {
+        "code": "murad_15",
+        "name": "Murad S-Quang Vinh"
+      },
+      {
+        "code": "murad_16",
+        "name": "Murad Huyết hỏa cuồng đồ"
+      },
+      {
+        "code": "murad_17",
+        "name": "Murad Tuyệt thế thần binh"
+      },
+      {
+        "code": "murad_18",
+        "name": "Murad Chiến binh đồ chơi"
+      },
+      {
+        "code": "murad_19",
+        "name": "Murad Thiên Luân Kiếm Thánh"
+      },
+      {
+        "code": "murad_20",
+        "name": "Murad Thần Pháo hoa"
+      }
+    ]
+  },
+  "nakroth": {
+    "game_id": "150",
+    "bundle_file": "150_hanxin_battle_base_low.assetbundle",
+    "texture_name": "NAKROTH_SKIN",
+    "skins": [
+      {
+        "code": "nakroth_1",
+        "name": "Nakroth"
+      },
+      {
+        "code": "nakroth_2",
+        "name": "Nakroth Quân đoàn địa ngục"
+      },
+      {
+        "code": "nakroth_3",
+        "name": "Nakroth BBoy công nghệ"
+      },
+      {
+        "code": "nakroth_4",
+        "name": "Nakroth Chiến Binh Hỏa Ngục"
+      },
+      {
+        "code": "nakroth_5",
+        "name": "Nakroth Siêu Việt"
+      },
+      {
+        "code": "nakroth_6",
+        "name": "Nakroth Khiêu chiến"
+      },
+      {
+        "code": "nakroth_7",
+        "name": "Nakroth Quán quân"
+      },
+      {
+        "code": "nakroth_8",
+        "name": "Nakroth Tiệc Bãi Biển"
+      },
+      {
+        "code": "nakroth_9",
+        "name": "Nakroth Killua"
+      },
+      {
+        "code": "nakroth_10",
+        "name": "Nakroth Lôi Quang Sứ"
+      },
+      {
+        "code": "nakroth_11",
+        "name": "Nakroth thứ nguyên vệ thần"
+      },
+      {
+        "code": "nakroth_12",
+        "name": "Nakroth Bạch diện chiến thương"
+      },
+      {
+        "code": "nakroth_13",
+        "name": "Nakroth Producer Tia chớp"
+      },
+      {
+        "code": "nakroth_14",
+        "name": "Nakroth Quỷ thương Liệp Đế"
+      },
+      {
+        "code": "nakroth_15",
+        "name": "Nakroth Levi"
+      }
+    ]
+  },
+  "natalya": {
+    "game_id": "",
+    "bundle_file": "natalya_battle_base_low.assetbundle",
+    "texture_name": "NATALYA_SKIN",
+    "skins": [
+      {
+        "code": "natalya_1",
+        "name": "Natalya"
+      },
+      {
+        "code": "natalya_2",
+        "name": "Natalya Nghệ nhân lân"
+      },
+      {
+        "code": "natalya_3",
+        "name": "Natalya Quý Cô Thủy Tề"
+      },
+      {
+        "code": "natalya_4",
+        "name": "Natalya Quà Quái Quỷ"
+      },
+      {
+        "code": "natalya_5",
+        "name": "Natalya Phó nháy nhí nhảnh"
+      },
+      {
+        "code": "natalya_6",
+        "name": "Natalya nữ quái công nghệ"
+      },
+      {
+        "code": "natalya_7",
+        "name": "Natalya Biệt đội băng lam"
+      },
+      {
+        "code": "natalya_8",
+        "name": "Natalya Thần Phú Quý"
+      },
+      {
+        "code": "natalya_9",
+        "name": "Natalya Mị muốn đi chơi"
+      },
+      {
+        "code": "natalya_10",
+        "name": "Natalya Băng tâm thần nữ"
+      },
+      {
+        "code": "natalya_11",
+        "name": "Natalya Nghệ sĩ ma mị"
+      },
+      {
+        "code": "natalya_12",
+        "name": "Natalya Nguyệt Ảnh Kiếm Tiên"
+      },
+      {
+        "code": "natalya_13",
+        "name": "Natalya Nghiệp hỏa yêu hậu"
+      },
+      {
+        "code": "natalya_14",
+        "name": "Natalya Kuromi's Heart"
+      },
+      {
+        "code": "natalya_15",
+        "name": "Natalya Phù thủy bóng đêm"
+      },
+      {
+        "code": "natalya_16",
+        "name": "Natalya Băng lam nữ soái"
+      }
+    ]
+  },
+  "ngo-khong": {
+    "game_id": "",
+    "bundle_file": "ngo-khong_battle_base_low.assetbundle",
+    "texture_name": "NGO-KHONG_SKIN",
+    "skins": [
+      {
+        "code": "ngo-khong_1",
+        "name": "Ngộ Không"
+      },
+      {
+        "code": "ngo-khong_2",
+        "name": "Ngộ Không Đạo tặc"
+      },
+      {
+        "code": "ngo-khong_3",
+        "name": "Ngộ Không Hỏa Nhãn Kim Tinh"
+      },
+      {
+        "code": "ngo-khong_4",
+        "name": "Ngộ Không Siêu việt"
+      },
+      {
+        "code": "ngo-khong_5",
+        "name": "Ngộ Không Ngộ Khá Trẩu"
+      },
+      {
+        "code": "ngo-khong_6",
+        "name": "Ngộ Không Siêu việt 2.0"
+      },
+      {
+        "code": "ngo-khong_7",
+        "name": "Ngộ Không Đặc vụ băng hầu"
+      },
+      {
+        "code": "ngo-khong_8",
+        "name": "Ngộ Không Nhóc tỳ bá đạo"
+      },
+      {
+        "code": "ngo-khong_9",
+        "name": "Ngộ Không Thần Giáp Xích Diễm"
+      },
+      {
+        "code": "ngo-khong_10",
+        "name": "Ngộ Không Tân niên Võ Thần"
+      },
+      {
+        "code": "ngo-khong_11",
+        "name": "Ngộ Không Cổ thần Ai Cập"
+      },
+      {
+        "code": "ngo-khong_12",
+        "name": "Ngộ Không Tề Thiên ma hầu"
+      },
+      {
+        "code": "ngo-khong_13",
+        "name": "Ngộ Không Tề Thiên Võ Thánh"
+      },
+      {
+        "code": "ngo-khong_14",
+        "name": "Ngộ Không Đại náo văn phòng"
+      }
+    ]
+  },
+  "omega": {
+    "game_id": "102",
+    "bundle_file": "102_omega_battle_base_low.assetbundle",
+    "texture_name": "OMEGA_SKIN",
+    "skins": [
+      {
+        "code": "omega_1",
+        "name": "Omega"
+      },
+      {
+        "code": "omega_2",
+        "name": "Omega Người máy xanh"
+      },
+      {
+        "code": "omega_3",
+        "name": "Omega Cỗ Máy Siêu Tốc"
+      },
+      {
+        "code": "omega_4",
+        "name": "Omega Hộ vệ ba bích"
+      },
+      {
+        "code": "omega_5",
+        "name": "Omega Hộ vệ Carano"
+      },
+      {
+        "code": "omega_6",
+        "name": "Omega Sứ Thanh Hoa"
+      },
+      {
+        "code": "omega_7",
+        "name": "Omega Samurai cơ hóa"
+      },
+      {
+        "code": "omega_8",
+        "name": "Omega Khởi nguyên"
+      }
+    ]
+  },
+  "omen": {
+    "game_id": "171",
+    "bundle_file": "171_omen_battle_base_low.assetbundle",
+    "texture_name": "OMEN_SKIN",
+    "skins": [
+      {
+        "code": "omen_1",
+        "name": "Omen"
+      },
+      {
+        "code": "omen_2",
+        "name": "Omen Sĩ Quan Viễn Chinh"
+      },
+      {
+        "code": "omen_3",
+        "name": "Omen Ám tử đao"
+      },
+      {
+        "code": "omen_4",
+        "name": "Omen Quỷ nguyệt tướng"
+      },
+      {
+        "code": "omen_5",
+        "name": "Omen Chiến binh trăng khuyết"
+      },
+      {
+        "code": "omen_6",
+        "name": "Omen Đao phủ tận thế"
+      },
+      {
+        "code": "omen_7",
+        "name": "Omen Thuyền trưởng hải tặc"
+      },
+      {
+        "code": "omen_8",
+        "name": "Omen Chiến xa quang minh"
+      },
+      {
+        "code": "omen_9",
+        "name": "Omen Chiến xa hắc ám"
+      },
+      {
+        "code": "omen_10",
+        "name": "Omen Quái Kiệt Guitar"
+      },
+      {
+        "code": "omen_11",
+        "name": "Omen Nhạc sĩ huyền thoại"
+      },
+      {
+        "code": "omen_12",
+        "name": "Omen Huyết ảnh Tà thần"
+      },
+      {
+        "code": "omen_13",
+        "name": "Omen Liệt Hỏa Thiên Cang"
+      }
+    ]
+  },
+  "ormarr": {
+    "game_id": "",
+    "bundle_file": "ormarr_battle_base_low.assetbundle",
+    "texture_name": "ORMARR_SKIN",
+    "skins": [
+      {
+        "code": "ormarr_1",
+        "name": "Ormarr"
+      },
+      {
+        "code": "ormarr_2",
+        "name": "Ormarr Cựu chiến binh"
+      },
+      {
+        "code": "ormarr_3",
+        "name": "Ormarr Thông Thỏa Thích"
+      },
+      {
+        "code": "ormarr_4",
+        "name": "Ormarr Giáo Viên Thể Hình"
+      },
+      {
+        "code": "ormarr_5",
+        "name": "Ormarr CĐV Cuồng nhiệt"
+      },
+      {
+        "code": "ormarr_6",
+        "name": "Ormarr Quỷ vệ"
+      },
+      {
+        "code": "ormarr_7",
+        "name": "Ormarr Chuyện của nhà nông"
+      }
+    ]
+  },
+  "paine": {
+    "game_id": "",
+    "bundle_file": "paine_battle_base_low.assetbundle",
+    "texture_name": "PAINE_SKIN",
+    "skins": [
+      {
+        "code": "paine_1",
+        "name": "Paine"
+      },
+      {
+        "code": "paine_2",
+        "name": "Paine khúc nhạc tử vong"
+      },
+      {
+        "code": "paine_3",
+        "name": "Paine Phi vụ thế kỷ"
+      },
+      {
+        "code": "paine_4",
+        "name": "Paine Công tước máu"
+      },
+      {
+        "code": "paine_5",
+        "name": "Paine Ô Thước Đại hiệp"
+      },
+      {
+        "code": "paine_6",
+        "name": "Paine Tử xà Bá tước"
+      },
+      {
+        "code": "paine_7",
+        "name": "Paine Megumi Fushiguro"
+      },
+      {
+        "code": "paine_8",
+        "name": "Paine Cửu Sơn Tương Liễu"
+      }
+    ]
+  },
+  "preyta": {
+    "game_id": "",
+    "bundle_file": "preyta_battle_base_low.assetbundle",
+    "texture_name": "PREYTA_SKIN",
+    "skins": [
+      {
+        "code": "preyta_1",
+        "name": "Preyta"
+      },
+      {
+        "code": "preyta_2",
+        "name": "Preyta Không Tặc"
+      },
+      {
+        "code": "preyta_3",
+        "name": "Preyta Băng Hỏa Long Sư"
+      },
+      {
+        "code": "preyta_4",
+        "name": "Preyta Phi cơ F1"
+      },
+      {
+        "code": "preyta_5",
+        "name": "Preyta Ma độc huyết long"
+      },
+      {
+        "code": "preyta_6",
+        "name": "Preyta Bù nhìn xứ Athanor"
+      }
+    ]
+  },
+  "qi": {
+    "game_id": "522",
+    "bundle_file": "522_qi_battle_base_low.assetbundle",
+    "texture_name": "QI_SKIN",
+    "skins": [
+      {
+        "code": "qi_1",
+        "name": "Qi"
+      },
+      {
+        "code": "qi_2",
+        "name": "Qi Tiểu long"
+      },
+      {
+        "code": "qi_3",
+        "name": "Qi Đặc vụ cáo tuyết"
+      },
+      {
+        "code": "qi_4",
+        "name": "Qi Búp bê Daruma"
+      },
+      {
+        "code": "qi_5",
+        "name": "Qi Blogger Ẩm thực"
+      },
+      {
+        "code": "qi_6",
+        "name": "Qi Thiếu nữ mùa xuân"
+      },
+      {
+        "code": "qi_7",
+        "name": "Qi Quán quân"
+      },
+      {
+        "code": "qi_8",
+        "name": "Qi Thần phong Hiệp nữ"
+      },
+      {
+        "code": "qi_9",
+        "name": "Qi Milim Nava"
+      },
+      {
+        "code": "qi_10",
+        "name": "Qi Annie Leonhart"
+      }
+    ]
+  },
+  "quillen": {
+    "game_id": "523",
+    "bundle_file": "523_quillen_battle_base_low.assetbundle",
+    "texture_name": "QUILLEN_SKIN",
+    "skins": [
+      {
+        "code": "quillen_1",
+        "name": "Quillen"
+      },
+      {
+        "code": "quillen_2",
+        "name": "Quillen Trưởng ngoại khoa"
+      },
+      {
+        "code": "quillen_3",
+        "name": "Quillen Thống soái đế chế"
+      },
+      {
+        "code": "quillen_4",
+        "name": "Quillen Đặc công mãng xà"
+      },
+      {
+        "code": "quillen_5",
+        "name": "Quillen Sao đỏ học đường"
+      },
+      {
+        "code": "quillen_6",
+        "name": "Quillen Huyết thủ nguyệt tộc"
+      },
+      {
+        "code": "quillen_7",
+        "name": "Quillen Tà linh ma đao"
+      },
+      {
+        "code": "quillen_8",
+        "name": "Quillen Hoàng Kim Soái Vương"
+      },
+      {
+        "code": "quillen_9",
+        "name": "Quillen Giám đốc âm nhạc"
+      },
+      {
+        "code": "quillen_10",
+        "name": "Quillen Người gác đền"
+      },
+      {
+        "code": "quillen_11",
+        "name": "Quillen Nghịch thiên long đế"
+      },
+      {
+        "code": "quillen_12",
+        "name": "Quillen Huyết phong"
+      },
+      {
+        "code": "quillen_13",
+        "name": "Quillen Đảo thiên đường"
+      },
+      {
+        "code": "quillen_14",
+        "name": "Quillen Thẩm phán Trăng khuyết"
+      }
+    ]
+  },
+  "raz": {
+    "game_id": "110",
+    "bundle_file": "110_raz_battle_base_low.assetbundle",
+    "texture_name": "RAZ_SKIN",
+    "skins": [
+      {
+        "code": "raz_1",
+        "name": "Raz"
+      },
+      {
+        "code": "raz_2",
+        "name": "Raz Đại tù trưởng"
+      },
+      {
+        "code": "raz_3",
+        "name": "Raz Băng Quyền Quán Quân"
+      },
+      {
+        "code": "raz_4",
+        "name": "Raz Chiến thần Muay Thái"
+      },
+      {
+        "code": "raz_5",
+        "name": "Raz Siêu việt"
+      },
+      {
+        "code": "raz_6",
+        "name": "Raz Gon"
+      },
+      {
+        "code": "raz_7",
+        "name": "Raz Bão vũ Cuồng lôi"
+      },
+      {
+        "code": "raz_8",
+        "name": "Raz MC Võ đài"
+      },
+      {
+        "code": "raz_9",
+        "name": "Raz Mãnh lôi thần quyền"
+      },
+      {
+        "code": "raz_10",
+        "name": "Raz Saitama Cosplay"
+      },
+      {
+        "code": "raz_11",
+        "name": "Raz Siêu cấp tin tặc"
+      },
+      {
+        "code": "raz_12",
+        "name": "Raz Lễ hội té nước"
+      },
+      {
+        "code": "raz_13",
+        "name": "Raz Đại chiến bùng nổ"
+      }
+    ]
+  },
+  "richter": {
+    "game_id": "",
+    "bundle_file": "richter_battle_base_low.assetbundle",
+    "texture_name": "RICHTER_SKIN",
+    "skins": [
+      {
+        "code": "richter_1",
+        "name": "Richter"
+      },
+      {
+        "code": "richter_2",
+        "name": "Richter Bá tước"
+      },
+      {
+        "code": "richter_3",
+        "name": "Richter Thống soái kháng chiến"
+      },
+      {
+        "code": "richter_4",
+        "name": "Richter Dạ hội"
+      },
+      {
+        "code": "richter_5",
+        "name": "Richter Quang vinh 2.0"
+      },
+      {
+        "code": "richter_6",
+        "name": "Richter Kiếm thần Susanoo"
+      },
+      {
+        "code": "richter_7",
+        "name": "Richter Cứu hộ"
+      },
+      {
+        "code": "richter_8",
+        "name": "Richter Tổng Lãnh thiên thần"
+      }
+    ]
+  },
+  "rouie": {
+    "game_id": "",
+    "bundle_file": "rouie_battle_base_low.assetbundle",
+    "texture_name": "ROUIE_SKIN",
+    "skins": [
+      {
+        "code": "rouie_1",
+        "name": "Rouie"
+      },
+      {
+        "code": "rouie_2",
+        "name": "Rouie Sứ giả vũ trụ"
+      },
+      {
+        "code": "rouie_3",
+        "name": "Rouie Quang Vinh"
+      },
+      {
+        "code": "rouie_4",
+        "name": "Rouie Sứ giả quang minh"
+      },
+      {
+        "code": "rouie_5",
+        "name": "Rouie Vẹt cầu vồng"
+      },
+      {
+        "code": "rouie_6",
+        "name": "Rouie Tuần lộc đáng yêu"
+      },
+      {
+        "code": "rouie_7",
+        "name": "Rouie Công chúa hỏa long"
+      },
+      {
+        "code": "rouie_8",
+        "name": "Rouie Thụy mộc Thanh Long"
+      },
+      {
+        "code": "rouie_9",
+        "name": "Rouie Mèo hầu gái"
+      },
+      {
+        "code": "rouie_10",
+        "name": "Rouie Linh Sứ Thời không"
+      }
+    ]
+  },
+  "rourke": {
+    "game_id": "",
+    "bundle_file": "rourke_battle_base_low.assetbundle",
+    "texture_name": "ROURKE_SKIN",
+    "skins": [
+      {
+        "code": "rourke_1",
+        "name": "Rourke"
+      },
+      {
+        "code": "rourke_2",
+        "name": "Rourke Pháo Thủ Tuộc Neo"
+      },
+      {
+        "code": "rourke_3",
+        "name": "Rourke Biệt đội siêu hùng"
+      },
+      {
+        "code": "rourke_4",
+        "name": "Rourke Cuồng tặc"
+      },
+      {
+        "code": "rourke_5",
+        "name": "Rourke Thợ cơ khí"
+      },
+      {
+        "code": "rourke_6",
+        "name": "Rourke Cảnh sát trưởng"
+      },
+      {
+        "code": "rourke_7",
+        "name": "Rourke Bách tướng Lão đại"
+      },
+      {
+        "code": "rourke_8",
+        "name": "Rourke Thánh Vệ"
+      }
+    ]
+  },
+  "roxie": {
+    "game_id": "",
+    "bundle_file": "roxie_battle_base_low.assetbundle",
+    "texture_name": "ROXIE_SKIN",
+    "skins": [
+      {
+        "code": "roxie_1",
+        "name": "Roxie"
+      },
+      {
+        "code": "roxie_2",
+        "name": "Roxie Thám tử tập sự"
+      },
+      {
+        "code": "roxie_3",
+        "name": "Roxie kèn ái tình"
+      },
+      {
+        "code": "roxie_4",
+        "name": "Roxie Hầu gái"
+      },
+      {
+        "code": "roxie_5",
+        "name": "Roxie Tiệc bánh kẹo"
+      },
+      {
+        "code": "roxie_6",
+        "name": "Roxie Hỏa thuật sư"
+      },
+      {
+        "code": "roxie_7",
+        "name": "Roxie Lễ hội hoa"
+      },
+      {
+        "code": "roxie_8",
+        "name": "Roxie \"Bạch Tuyết\" Kỳ Lạ"
+      },
+      {
+        "code": "roxie_9",
+        "name": "Roxie Cháy phố"
+      }
+    ]
+  },
+  "ryoma": {
+    "game_id": "165",
+    "bundle_file": "165_ryoma_battle_base_low.assetbundle",
+    "texture_name": "RYOMA_SKIN",
+    "skins": [
+      {
+        "code": "ryoma_1",
+        "name": "Ryoma"
+      },
+      {
+        "code": "ryoma_2",
+        "name": "Ryoma Thợ Săn Tiền Thưởng"
+      },
+      {
+        "code": "ryoma_3",
+        "name": "Ryoma Đại Tướng Nguyệt Tộc"
+      },
+      {
+        "code": "ryoma_4",
+        "name": "Ryoma Thanh long bang chủ"
+      },
+      {
+        "code": "ryoma_5",
+        "name": "Ryoma Samurai Huyền thoại"
+      },
+      {
+        "code": "ryoma_6",
+        "name": "Ryoma Dạ hội"
+      },
+      {
+        "code": "ryoma_7",
+        "name": "Ryoma Chiến binh Cyborg"
+      },
+      {
+        "code": "ryoma_8",
+        "name": "Ryoma Ultraman"
+      },
+      {
+        "code": "ryoma_9",
+        "name": "Ryoma Khiêu chiến"
+      },
+      {
+        "code": "ryoma_10",
+        "name": "Ryoma Đặc nhiệm Giáng sinh"
+      },
+      {
+        "code": "ryoma_11",
+        "name": "Ryoma Ailing Samurai"
+      },
+      {
+        "code": "ryoma_12",
+        "name": "Ryoma Maple Frost"
+      },
+      {
+        "code": "ryoma_13",
+        "name": "Ryoma Thống lãnh quỷ binh"
+      },
+      {
+        "code": "ryoma_14",
+        "name": "Ryoma Bá Tước Rừng Đen"
+      }
+    ]
+  },
+  "sephera": {
+    "game_id": "",
+    "bundle_file": "sephera_battle_base_low.assetbundle",
+    "texture_name": "SEPHERA_SKIN",
+    "skins": [
+      {
+        "code": "sephera_1",
+        "name": "Sephera"
+      },
+      {
+        "code": "sephera_2",
+        "name": "Sephera Quý tiểu thư"
+      },
+      {
+        "code": "sephera_3",
+        "name": "Sephera Thần tượng âm nhạc"
+      },
+      {
+        "code": "sephera_4",
+        "name": "Sephera Chiêm tinh gia"
+      },
+      {
+        "code": "sephera_5",
+        "name": "Sephera Phi vụ thế kỷ"
+      },
+      {
+        "code": "sephera_6",
+        "name": "Sephera Cô thủ thư"
+      },
+      {
+        "code": "sephera_7",
+        "name": "Sephera Bách nhạn ngân linh"
+      },
+      {
+        "code": "sephera_8",
+        "name": "Sephera Thần thoại Hy Lạp"
+      },
+      {
+        "code": "sephera_9",
+        "name": "Sephera Lam Hải phu nhân"
+      },
+      {
+        "code": "sephera_10",
+        "name": "Sephera Thủy Liên Hoa"
+      },
+      {
+        "code": "sephera_11",
+        "name": "Sephera NoVa Stardust"
+      },
+      {
+        "code": "sephera_12",
+        "name": "Sephera S - Quang Vinh"
+      }
+    ]
+  },
+  "sinestrea": {
+    "game_id": "",
+    "bundle_file": "sinestrea_battle_base_low.assetbundle",
+    "texture_name": "SINESTREA_SKIN",
+    "skins": [
+      {
+        "code": "sinestrea_1",
+        "name": "Sinestrea"
+      },
+      {
+        "code": "sinestrea_2",
+        "name": "Sinestrea Giấc mơ trưa"
+      },
+      {
+        "code": "sinestrea_3",
+        "name": "Sinestrea Tiểu thư băng giá"
+      },
+      {
+        "code": "sinestrea_4",
+        "name": "Sinestrea WaVe"
+      },
+      {
+        "code": "sinestrea_5",
+        "name": "Sinestrea Đại tiểu thư"
+      },
+      {
+        "code": "sinestrea_6",
+        "name": "Sinestrea Lữ khách sa mạc"
+      },
+      {
+        "code": "sinestrea_7",
+        "name": "Sinestrea Giấc mộng biển xanh"
+      },
+      {
+        "code": "sinestrea_8",
+        "name": "Sinestra Điệp viên cánh cụt"
+      },
+      {
+        "code": "sinestrea_9",
+        "name": "Sinestrea S-Quang vinh"
+      },
+      {
+        "code": "sinestrea_10",
+        "name": "Sinestrea Nữ quỷ say ngủ"
+      },
+      {
+        "code": "sinestrea_11",
+        "name": "Sinestrea Định Vị Tuyệt Đối"
+      }
+    ]
+  },
+  "skud": {
+    "game_id": "",
+    "bundle_file": "skud_battle_base_low.assetbundle",
+    "texture_name": "SKUD_SKIN",
+    "skins": [
+      {
+        "code": "skud_1",
+        "name": "Skud"
+      },
+      {
+        "code": "skud_2",
+        "name": "Skud Sơn Tặc"
+      },
+      {
+        "code": "skud_3",
+        "name": "Skud Quang Vinh"
+      },
+      {
+        "code": "skud_4",
+        "name": "Skud Tà linh ma tướng"
+      },
+      {
+        "code": "skud_5",
+        "name": "Skud Mafia"
+      },
+      {
+        "code": "skud_6",
+        "name": "Skud Cứu hộ"
+      },
+      {
+        "code": "skud_7",
+        "name": "Skud Quái thần thủy vực"
+      },
+      {
+        "code": "skud_8",
+        "name": "Skud Nhà thám hiểm"
+      }
+    ]
+  },
+  "slimz": {
+    "game_id": "",
+    "bundle_file": "slimz_battle_base_low.assetbundle",
+    "texture_name": "SLIMZ_SKIN",
+    "skins": [
+      {
+        "code": "slimz_1",
+        "name": "Slimz"
+      },
+      {
+        "code": "slimz_2",
+        "name": "Slimz Xứ sở thần tiên"
+      },
+      {
+        "code": "slimz_3",
+        "name": "Slimz Thỏ Thợ Mỏ"
+      },
+      {
+        "code": "slimz_4",
+        "name": "Slimz Chú thỏ ngọc"
+      },
+      {
+        "code": "slimz_5",
+        "name": "Slimz Thỏ nhồi bông"
+      },
+      {
+        "code": "slimz_6",
+        "name": "Slimz Lẩu chua cay"
+      },
+      {
+        "code": "slimz_7",
+        "name": "Slimz Sứ giả Thiên giới"
+      },
+      {
+        "code": "slimz_8",
+        "name": "Slimz \"Siêu Cấp Tối Thượng\""
+      },
+      {
+        "code": "slimz_9",
+        "name": "Slimz Linh Hoa đạo sĩ"
+      },
+      {
+        "code": "slimz_10",
+        "name": "Slimz Thỏ săn ác mộng"
+      },
+      {
+        "code": "slimz_11",
+        "name": "Slimz Cam siêu quậy"
+      },
+      {
+        "code": "slimz_12",
+        "name": "Slimz Chuyên Gia Đổi Thẻ"
+      }
+    ]
+  },
+  "stuart": {
+    "game_id": "",
+    "bundle_file": "stuart_battle_base_low.assetbundle",
+    "texture_name": "STUART_SKIN",
+    "skins": [
+      {
+        "code": "stuart_1",
+        "name": "Stuart"
+      },
+      {
+        "code": "stuart_2",
+        "name": "Stuart Trò đùa tử vong"
+      },
+      {
+        "code": "stuart_3",
+        "name": "Stuart Vua hề"
+      },
+      {
+        "code": "stuart_4",
+        "name": "Stuart Gã hề"
+      },
+      {
+        "code": "stuart_5",
+        "name": "Stuart Đạo tặc tử quang"
+      },
+      {
+        "code": "stuart_6",
+        "name": "Stuart Đêm kinh hoàng"
+      },
+      {
+        "code": "stuart_7",
+        "name": "Stuart Dạ Xoa thiếu chủ"
+      },
+      {
+        "code": "stuart_8",
+        "name": "Stuart Siêu trùm phản diện"
+      }
+    ]
+  },
+  "superman": {
+    "game_id": "",
+    "bundle_file": "superman_battle_base_low.assetbundle",
+    "texture_name": "SUPERMAN_SKIN",
+    "skins": [
+      {
+        "code": "superman_1",
+        "name": "Superman"
+      },
+      {
+        "code": "superman_2",
+        "name": "Superman Chúa Tể Công Lý"
+      },
+      {
+        "code": "superman_3",
+        "name": "Superman Bất Công Lý"
+      }
+    ]
+  },
+  "taara": {
+    "game_id": "",
+    "bundle_file": "taara_battle_base_low.assetbundle",
+    "texture_name": "TAARA_SKIN",
+    "skins": [
+      {
+        "code": "taara_1",
+        "name": "Taara"
+      },
+      {
+        "code": "taara_2",
+        "name": "Taara Đại tù trưởng"
+      },
+      {
+        "code": "taara_3",
+        "name": "Taara Hỏa Ngọc Nữ Đế"
+      },
+      {
+        "code": "taara_4",
+        "name": "Taara Tiệc bãi biển"
+      },
+      {
+        "code": "taara_5",
+        "name": "Taara Hồng môn đường chủ"
+      },
+      {
+        "code": "taara_6",
+        "name": "Taara Tư lệnh hải âu"
+      },
+      {
+        "code": "taara_7",
+        "name": "Taara Lam Hải chiến nữ"
+      },
+      {
+        "code": "taara_8",
+        "name": "Taara Thần chiến tranh"
+      },
+      {
+        "code": "taara_9",
+        "name": "Taara Shion"
+      },
+      {
+        "code": "taara_10",
+        "name": "Taara Huyết nộ cấm vệ"
+      }
+    ]
+  },
+  "tachi": {
+    "game_id": "",
+    "bundle_file": "tachi_battle_base_low.assetbundle",
+    "texture_name": "TACHI_SKIN",
+    "skins": [
+      {
+        "code": "tachi_1",
+        "name": "Tachi"
+      },
+      {
+        "code": "tachi_2",
+        "name": "Tachi Lãng khách"
+      },
+      {
+        "code": "tachi_3",
+        "name": "Tachi Đao khách vô tình"
+      },
+      {
+        "code": "tachi_4",
+        "name": "Tachi Xích long hỏa diệm"
+      },
+      {
+        "code": "tachi_5",
+        "name": "Tachi S-Quang Vinh"
+      },
+      {
+        "code": "tachi_6",
+        "name": "Tachi Thần phong Hộ vệ"
+      },
+      {
+        "code": "tachi_7",
+        "name": "Tachi Hỗn mang đao"
+      },
+      {
+        "code": "tachi_8",
+        "name": "Tachi Cần thủ Cyborg"
+      },
+      {
+        "code": "tachi_9",
+        "name": "Tachi Đao Khách Trừ Yêu"
+      }
+    ]
+  },
+  "tamyn": {
+    "game_id": "",
+    "bundle_file": "tamyn_battle_base_low.assetbundle",
+    "texture_name": "TAMYN_SKIN",
+    "skins": [
+      {
+        "code": "tamyn_1",
+        "name": "Tamyn"
+      }
+    ]
+  },
+  "teemee": {
+    "game_id": "",
+    "bundle_file": "teemee_battle_base_low.assetbundle",
+    "texture_name": "TEEMEE_SKIN",
+    "skins": [
+      {
+        "code": "teemee_1",
+        "name": "TeeMee"
+      },
+      {
+        "code": "teemee_2",
+        "name": "TeeMee Xiếc Cung Đình"
+      },
+      {
+        "code": "teemee_3",
+        "name": "Teemee Tay đua siêu tốc"
+      },
+      {
+        "code": "teemee_4",
+        "name": "Teemee Tanuki chiêu tài"
+      },
+      {
+        "code": "teemee_5",
+        "name": "Teemee Thần thoại Hy Lạp"
+      },
+      {
+        "code": "teemee_6",
+        "name": "Teemee Thịt xiên nướng"
+      },
+      {
+        "code": "teemee_7",
+        "name": "Teemee Lẩu nấm"
+      },
+      {
+        "code": "teemee_8",
+        "name": "Teemee Giấc mơ ngọt ngào"
+      },
+      {
+        "code": "teemee_9",
+        "name": "Teemee Fan cuồng Esports"
+      }
+    ]
+  },
+  "teeri": {
+    "game_id": "",
+    "bundle_file": "teeri_battle_base_low.assetbundle",
+    "texture_name": "TEERI_SKIN",
+    "skins": [
+      {
+        "code": "teeri_1",
+        "name": "Teeri"
+      },
+      {
+        "code": "teeri_2",
+        "name": "Teeri Tiểu kì lân"
+      },
+      {
+        "code": "teeri_3",
+        "name": "Teeri Thuyền trưởng song luân"
+      },
+      {
+        "code": "teeri_4",
+        "name": "Teeri Ốc quế ngọt ngào"
+      },
+      {
+        "code": "teeri_5",
+        "name": "Teeri Minh tinh ảo thuật"
+      },
+      {
+        "code": "teeri_6",
+        "name": "Teeri Vân Y Cẩm Tú"
+      },
+      {
+        "code": "teeri_7",
+        "name": "Teeri Lễ hội té nước"
+      }
+    ]
+  },
+  "telannas": {
+    "game_id": "501",
+    "bundle_file": "501_telannas_battle_base_low.assetbundle",
+    "texture_name": "TELANNAS_SKIN",
+    "skins": [
+      {
+        "code": "telannas_1",
+        "name": "Tel'Annas"
+      },
+      {
+        "code": "telannas_2",
+        "name": "Tel'Annas Cảnh Vệ Rừng"
+      },
+      {
+        "code": "telannas_3",
+        "name": "Tel'Annas Chung Tình Tiễn"
+      },
+      {
+        "code": "telannas_4",
+        "name": "Tel'Annas Giám thị thân thiện"
+      },
+      {
+        "code": "telannas_5",
+        "name": "Tel'annas Thánh nữ mật hội"
+      },
+      {
+        "code": "telannas_6",
+        "name": "Tel'Annas Thần sứ F.E.E-X1"
+      },
+      {
+        "code": "telannas_7",
+        "name": "Tel'annas Dạ hội"
+      },
+      {
+        "code": "telannas_8",
+        "name": "Tel'annas Cẩm y vệ: Phi Ưng"
+      },
+      {
+        "code": "telannas_9",
+        "name": "Tel'Annas Thứ nguyên vệ thần"
+      },
+      {
+        "code": "telannas_10",
+        "name": "Tel'Annas Công chúa mộng mơ"
+      },
+      {
+        "code": "telannas_11",
+        "name": "Tel'Annas Vũ khúc yêu hồ"
+      },
+      {
+        "code": "telannas_12",
+        "name": "Tel'Annas Thiên Vũ Thần Long"
+      },
+      {
+        "code": "telannas_13",
+        "name": "Tel'Annas Ô Thước Tiên nữ"
+      },
+      {
+        "code": "telannas_14",
+        "name": "Tel'Annas Quang Vinh"
+      },
+      {
+        "code": "telannas_15",
+        "name": "Tel'Annas Tân niên vệ thần"
+      },
+      {
+        "code": "telannas_16",
+        "name": "Tel'Annas Jujutsu Sorcerer"
+      },
+      {
+        "code": "telannas_17",
+        "name": "Tel'Annas Lân Quang Thánh Điệu"
+      },
+      {
+        "code": "telannas_18",
+        "name": "Tel'Annas Kỷ Nguyên Hổ Phách"
+      },
+      {
+        "code": "telannas_19",
+        "name": "Tel'Annas Tiệc bãi biển"
+      },
+      {
+        "code": "telannas_20",
+        "name": "Tel'Annas S - Quang Vinh"
+      }
+    ]
+  },
+  "thane": {
+    "game_id": "",
+    "bundle_file": "thane_battle_base_low.assetbundle",
+    "texture_name": "THANE_SKIN",
+    "skins": [
+      {
+        "code": "thane_1",
+        "name": "Thane"
+      },
+      {
+        "code": "thane_2",
+        "name": "Thane"
+      },
+      {
+        "code": "thane_3",
+        "name": "Thane Quang vinh"
+      },
+      {
+        "code": "thane_4",
+        "name": "Thane Mật vụ"
+      },
+      {
+        "code": "thane_5",
+        "name": "Thane Kẻ Hủy Diệt"
+      },
+      {
+        "code": "thane_6",
+        "name": "Thane Bác ong bay vừa"
+      },
+      {
+        "code": "thane_7",
+        "name": "Thane Khoảnh khắc vinh quang"
+      },
+      {
+        "code": "thane_8",
+        "name": "Thane Dũng sĩ Diệt Yêu"
+      }
+    ]
+  },
+  "the-flash": {
+    "game_id": "",
+    "bundle_file": "the-flash_battle_base_low.assetbundle",
+    "texture_name": "THE-FLASH_SKIN",
+    "skins": [
+      {
+        "code": "the-flash_1",
+        "name": "The Flash"
+      },
+      {
+        "code": "the-flash_2",
+        "name": "Flash Tia chớp tương lai"
+      }
+    ]
+  },
+  "thorne": {
+    "game_id": "",
+    "bundle_file": "thorne_battle_base_low.assetbundle",
+    "texture_name": "THORNE_SKIN",
+    "skins": [
+      {
+        "code": "thorne_1",
+        "name": "Thorne"
+      },
+      {
+        "code": "thorne_2",
+        "name": "Thorne Cận vệ hoàng gia"
+      },
+      {
+        "code": "thorne_3",
+        "name": "Thorne Giả kim thuật sư"
+      },
+      {
+        "code": "thorne_4",
+        "name": "Thorne Quán quân"
+      },
+      {
+        "code": "thorne_5",
+        "name": "Thorne Tiệc bãi biển"
+      },
+      {
+        "code": "thorne_6",
+        "name": "Thorne Ước nguyện giáng sinh"
+      },
+      {
+        "code": "thorne_7",
+        "name": "Thorne Thám tử trung học"
+      },
+      {
+        "code": "thorne_8",
+        "name": "Thorne Thủy thủ"
+      }
+    ]
+  },
+  "toro": {
+    "game_id": "",
+    "bundle_file": "toro_battle_base_low.assetbundle",
+    "texture_name": "TORO_SKIN",
+    "skins": [
+      {
+        "code": "toro_1",
+        "name": "Toro"
+      },
+      {
+        "code": "toro_2",
+        "name": "Toro Đặc cảnh NYPD"
+      },
+      {
+        "code": "toro_3",
+        "name": "Toro Trung Phong Cắm"
+      },
+      {
+        "code": "toro_4",
+        "name": "Toro Thần thoại Hy Lạp"
+      },
+      {
+        "code": "toro_5",
+        "name": "Toro Bạch mao Ngưu"
+      },
+      {
+        "code": "toro_6",
+        "name": "Toro Ngưu hải vương"
+      },
+      {
+        "code": "toro_7",
+        "name": "Toro Tử Lôi Thần Ngưu"
+      },
+      {
+        "code": "toro_8",
+        "name": "Toro Hiểm họa hỗn mang"
+      },
+      {
+        "code": "toro_9",
+        "name": "Toro Trâu siêu tốc"
+      }
+    ]
+  },
+  "trieu-van": {
+    "game_id": "",
+    "bundle_file": "trieu-van_battle_base_low.assetbundle",
+    "texture_name": "TRIEU-VAN_SKIN",
+    "skins": [
+      {
+        "code": "trieu-van_1",
+        "name": "Triệu Vân"
+      },
+      {
+        "code": "trieu-van_2",
+        "name": "Triệu Vân Đoạt mệnh thương"
+      },
+      {
+        "code": "trieu-van_3",
+        "name": "Triệu Vân Quý Công Tử"
+      },
+      {
+        "code": "trieu-van_4",
+        "name": "Triệu Vân Quang Vinh"
+      },
+      {
+        "code": "trieu-van_5",
+        "name": "Triệu Vân Dũng Sĩ Đồ Long"
+      },
+      {
+        "code": "trieu-van_6",
+        "name": "Triệu Vân Chiến tướng mùa đông"
+      },
+      {
+        "code": "trieu-van_7",
+        "name": "Triệu Vân Kỵ sĩ tận thế"
+      },
+      {
+        "code": "trieu-van_8",
+        "name": "Triệu Vân Cẩm y vệ: Hỏa Long"
+      },
+      {
+        "code": "trieu-van_9",
+        "name": "Triệu Vân Thần Tài"
+      },
+      {
+        "code": "trieu-van_10",
+        "name": "Triệu Vân Minh Chung Long Đế"
+      },
+      {
+        "code": "trieu-van_11",
+        "name": "Triệu Vân Tiến sĩ thiên tài"
+      },
+      {
+        "code": "trieu-van_12",
+        "name": "Triệu Vân Chiến thần vô song"
+      },
+      {
+        "code": "trieu-van_13",
+        "name": "Triệu Vân Phá ma thương"
+      }
+    ]
+  },
+  "tulen": {
+    "game_id": "139",
+    "bundle_file": "139_zhugeliang_battle_base_low.assetbundle",
+    "texture_name": "TULEN_SKIN",
+    "skins": [
+      {
+        "code": "tulen_1",
+        "name": "Tulen"
+      },
+      {
+        "code": "tulen_2",
+        "name": "Tulen Nhà Thám Hiểm"
+      },
+      {
+        "code": "tulen_3",
+        "name": "Tulen Tân Thần Thiên Hà"
+      },
+      {
+        "code": "tulen_4",
+        "name": "Tulen Phù Thủy Kiến Tạo"
+      },
+      {
+        "code": "tulen_5",
+        "name": "Tulen Đông êm đềm"
+      },
+      {
+        "code": "tulen_6",
+        "name": "Tulen Phó kỷ luật"
+      },
+      {
+        "code": "tulen_7",
+        "name": "Tulen Tân thần hoàng kim"
+      },
+      {
+        "code": "tulen_8",
+        "name": "Tulen Chí tôn kiếm tiên"
+      },
+      {
+        "code": "tulen_9",
+        "name": "Tulen Dạ hội"
+      },
+      {
+        "code": "tulen_10",
+        "name": "Tulen Thần sứ ST.L-79"
+      },
+      {
+        "code": "tulen_11",
+        "name": "Tulen Hoả thần long tộc"
+      },
+      {
+        "code": "tulen_12",
+        "name": "Tulen Tiêu Dao Vũ Thần"
+      },
+      {
+        "code": "tulen_13",
+        "name": "Tulen Tân niên vệ thần"
+      },
+      {
+        "code": "tulen_14",
+        "name": "Tulen Đại úy Athanor"
+      },
+      {
+        "code": "tulen_15",
+        "name": "Tulen Satoru Gojo"
+      },
+      {
+        "code": "tulen_16",
+        "name": "Tulen Giám thị sấm sét"
+      },
+      {
+        "code": "tulen_17",
+        "name": "Tulen Thiên Cơ Bạch Trạch"
+      }
+    ]
+  },
+  "valhein": {
+    "game_id": "133",
+    "bundle_file": "133_direnjie_battle_base_low.assetbundle",
+    "texture_name": "VALHEIN_SKIN",
+    "skins": [
+      {
+        "code": "valhein_1",
+        "name": "Valhein"
+      },
+      {
+        "code": "valhein_2",
+        "name": "Valhein Hoàng tử Quạ"
+      },
+      {
+        "code": "valhein_3",
+        "name": "Valhein Vũ khí tối thượng"
+      },
+      {
+        "code": "valhein_4",
+        "name": "Valhein Đại Công Tước"
+      },
+      {
+        "code": "valhein_5",
+        "name": "Valhein Số 7 Thần Sầu"
+      },
+      {
+        "code": "valhein_6",
+        "name": "Valhein Quang Vinh"
+      },
+      {
+        "code": "valhein_7",
+        "name": "Valhein Khiêu chiến"
+      },
+      {
+        "code": "valhein_8",
+        "name": "Valhein Cá mập \"nghiêm túc\""
+      },
+      {
+        "code": "valhein_9",
+        "name": "Valhein Đệ nhất thần thám"
+      },
+      {
+        "code": "valhein_10",
+        "name": "Valhein S-Quang Vinh"
+      },
+      {
+        "code": "valhein_11",
+        "name": "Valhein Xạ thần Kagutsuchi"
+      },
+      {
+        "code": "valhein_12",
+        "name": "Valhein Thần tài"
+      },
+      {
+        "code": "valhein_13",
+        "name": "Valhein Hoàng tử Băng"
+      },
+      {
+        "code": "valhein_14",
+        "name": "Valhein Thứ nguyên vệ thần"
+      },
+      {
+        "code": "valhein_15",
+        "name": "Valhein Mã Hành Vạn Lý"
+      }
+    ]
+  },
+  "veera": {
+    "game_id": "121",
+    "bundle_file": "121_veera_battle_base_low.assetbundle",
+    "texture_name": "VEERA_SKIN",
+    "skins": [
+      {
+        "code": "veera_1",
+        "name": "Veera"
+      },
+      {
+        "code": "veera_2",
+        "name": "Veera Cô giáo hắc ám"
+      },
+      {
+        "code": "veera_3",
+        "name": "Veera Nàng dơi tuyết"
+      },
+      {
+        "code": "veera_4",
+        "name": "Veera Y Tá Bạo Loạn"
+      },
+      {
+        "code": "veera_5",
+        "name": "Veera Thiên nga đen"
+      },
+      {
+        "code": "veera_6",
+        "name": "Veera Vũ hội Bóng đêm"
+      },
+      {
+        "code": "veera_7",
+        "name": "Veera Kimono"
+      },
+      {
+        "code": "veera_8",
+        "name": "Veera Đánh cắp trái tim"
+      },
+      {
+        "code": "veera_9",
+        "name": "Veera A.I Love you"
+      },
+      {
+        "code": "veera_10",
+        "name": "Veera Bách hoa tiên nữ"
+      },
+      {
+        "code": "veera_11",
+        "name": "Veera Phù thủy Hội họa"
+      },
+      {
+        "code": "veera_12",
+        "name": "Veera Thất Sát - Thượng Sinh"
+      },
+      {
+        "code": "veera_13",
+        "name": "Veera Góa phụ giả kim"
+      },
+      {
+        "code": "veera_14",
+        "name": "Veera My Melody‘s Love"
+      },
+      {
+        "code": "veera_15",
+        "name": "Veera Momo"
+      }
+    ]
+  },
+  "veres": {
+    "game_id": "521",
+    "bundle_file": "521_veres_battle_base_low.assetbundle",
+    "texture_name": "VERES_SKIN",
+    "skins": [
+      {
+        "code": "veres_1",
+        "name": "Veres"
+      },
+      {
+        "code": "veres_2",
+        "name": "Veres Đạo tặc"
+      },
+      {
+        "code": "veres_3",
+        "name": "Veres Gián điệp tinh hệ"
+      },
+      {
+        "code": "veres_4",
+        "name": "Veres Thần thoại Hy Lạp"
+      },
+      {
+        "code": "veres_5",
+        "name": "Veres Thuỷ thần kiều diễm"
+      },
+      {
+        "code": "veres_6",
+        "name": "Veres Men Lam Hồn Gốm"
+      },
+      {
+        "code": "veres_7",
+        "name": "Veres Tiệc bãi biển"
+      },
+      {
+        "code": "veres_8",
+        "name": "Veres Phù thủy trang điểm"
+      },
+      {
+        "code": "veres_9",
+        "name": "Veres Chị đại học đường"
+      },
+      {
+        "code": "veres_10",
+        "name": "Veres Kimono"
+      },
+      {
+        "code": "veres_11",
+        "name": "Veres Lưu ly Long mẫu"
+      },
+      {
+        "code": "veres_12",
+        "name": "Veres Thỏ may mắn"
+      },
+      {
+        "code": "veres_13",
+        "name": "Veres Idol Giáng Sinh"
+      },
+      {
+        "code": "veres_14",
+        "name": "Veres Hoa Khôi Khán Đài"
+      }
+    ]
+  },
+  "violet": {
+    "game_id": "111",
+    "bundle_file": "111_sunshangxiang_battle_base_low.assetbundle",
+    "texture_name": "VIOLET_SKIN",
+    "skins": [
+      {
+        "code": "violet_1",
+        "name": "Violet"
+      },
+      {
+        "code": "violet_2",
+        "name": "Violet Thứ nguyên vệ thần"
+      },
+      {
+        "code": "violet_3",
+        "name": "Violet Nữ đặc cảnh"
+      },
+      {
+        "code": "violet_4",
+        "name": "Violet Nữ Hoàng Pháo Hoa"
+      },
+      {
+        "code": "violet_5",
+        "name": "Violet Mèo Siêu Quậy"
+      },
+      {
+        "code": "violet_6",
+        "name": "Violet Phi Công Trẻ"
+      },
+      {
+        "code": "violet_7",
+        "name": "Violet Tiệc bãi biển"
+      },
+      {
+        "code": "violet_8",
+        "name": "Violet Phó học tập"
+      },
+      {
+        "code": "violet_9",
+        "name": "Violet Pháo hoa Neon Tuyệt sắc"
+      },
+      {
+        "code": "violet_10",
+        "name": "Violet Vợ người ta"
+      },
+      {
+        "code": "violet_11",
+        "name": "Violet Đặc dị"
+      },
+      {
+        "code": "violet_12",
+        "name": "Violet Lam Tước"
+      },
+      {
+        "code": "violet_13",
+        "name": "Violet Thần long tỷ tỷ"
+      },
+      {
+        "code": "violet_14",
+        "name": "Violet DJ câu hồn"
+      },
+      {
+        "code": "violet_15",
+        "name": "Violet Vọng nguyệt Long Cơ"
+      },
+      {
+        "code": "violet_16",
+        "name": "Violet Nobara Kugisaki"
+      },
+      {
+        "code": "violet_17",
+        "name": "Violet Tay súng siêu phàm"
+      },
+      {
+        "code": "violet_18",
+        "name": "Violet Huy chương Vàng"
+      },
+      {
+        "code": "violet_19",
+        "name": "Violet Huyết ma thần"
+      },
+      {
+        "code": "violet_20",
+        "name": "Violet Hoa thủy tiên"
+      }
+    ]
+  },
+  "volkath": {
+    "game_id": "",
+    "bundle_file": "volkath_battle_base_low.assetbundle",
+    "texture_name": "VOLKATH_SKIN",
+    "skins": [
+      {
+        "code": "volkath_1",
+        "name": "Volkath"
+      },
+      {
+        "code": "volkath_2",
+        "name": "Volkath Dạ Huyết Tộc"
+      },
+      {
+        "code": "volkath_3",
+        "name": "Volkath Ma kỵ tử sĩ"
+      },
+      {
+        "code": "volkath_4",
+        "name": "Volkath Xung thiên thần tướng"
+      },
+      {
+        "code": "volkath_5",
+        "name": "Volkath Tư lệnh viễn chinh"
+      },
+      {
+        "code": "volkath_6",
+        "name": "Volkath Chiến thần Ai Cập"
+      },
+      {
+        "code": "volkath_7",
+        "name": "Volkath Hắc kỵ thời không"
+      },
+      {
+        "code": "volkath_8",
+        "name": "Volkath S - Quang vinh"
+      },
+      {
+        "code": "volkath_9",
+        "name": "Volkath Ma ảnh thần đao"
+      }
+    ]
+  },
+  "wiro": {
+    "game_id": "",
+    "bundle_file": "wiro_battle_base_low.assetbundle",
+    "texture_name": "WIRO_SKIN",
+    "skins": [
+      {
+        "code": "wiro_1",
+        "name": "Wiro"
+      }
+    ]
+  },
+  "wisp": {
+    "game_id": "",
+    "bundle_file": "wisp_battle_base_low.assetbundle",
+    "texture_name": "WISP_SKIN",
+    "skins": [
+      {
+        "code": "wisp_1",
+        "name": "Wisp"
+      },
+      {
+        "code": "wisp_2",
+        "name": "Wisp Hải Tặc Nhí"
+      },
+      {
+        "code": "wisp_3",
+        "name": "Wisp Thỏ siêu quậy"
+      },
+      {
+        "code": "wisp_4",
+        "name": "Wisp Ếch nhồi bông"
+      },
+      {
+        "code": "wisp_5",
+        "name": "Wisp Cô bé bút chì"
+      },
+      {
+        "code": "wisp_6",
+        "name": "Wisp Rồng đi bộ"
+      },
+      {
+        "code": "wisp_7",
+        "name": "Wisp Máy phát quà"
+      },
+      {
+        "code": "wisp_8",
+        "name": "Wisp Bé hề"
+      },
+      {
+        "code": "wisp_9",
+        "name": "Wisp Tiểu Ronin"
+      },
+      {
+        "code": "wisp_10",
+        "name": "Wisp Hành trình kỳ ảo"
+      },
+      {
+        "code": "wisp_11",
+        "name": "Wisp Te Tò He"
+      }
+    ]
+  },
+  "wonder-woman": {
+    "game_id": "",
+    "bundle_file": "wonder-woman_battle_base_low.assetbundle",
+    "texture_name": "WONDER-WOMAN_SKIN",
+    "skins": [
+      {
+        "code": "wonder-woman_1",
+        "name": "Wonder Woman"
+      },
+      {
+        "code": "wonder-woman_2",
+        "name": "Wonder Woman Thế Chiến"
+      }
+    ]
+  },
+  "xeniel": {
+    "game_id": "",
+    "bundle_file": "xeniel_battle_base_low.assetbundle",
+    "texture_name": "XENIEL_SKIN",
+    "skins": [
+      {
+        "code": "xeniel_1",
+        "name": "Xeniel"
+      },
+      {
+        "code": "xeniel_2",
+        "name": "Xeniel Thiên Sứ Hủy Diệt"
+      },
+      {
+        "code": "xeniel_3",
+        "name": "Xeniel Trung Vệ Thép"
+      },
+      {
+        "code": "xeniel_4",
+        "name": "Xeniel Kim sí điểu"
+      },
+      {
+        "code": "xeniel_5",
+        "name": "Xeniel Tổng lãnh tinh hệ"
+      },
+      {
+        "code": "xeniel_6",
+        "name": "Xeniel Hóa thân Tengu"
+      },
+      {
+        "code": "xeniel_7",
+        "name": "Xeniel Thần thoại Hy Lạp"
+      },
+      {
+        "code": "xeniel_8",
+        "name": "Xeniel Ma sứ tận thế"
+      },
+      {
+        "code": "xeniel_9",
+        "name": "Xeniel Shipper bánh mỳ"
+      },
+      {
+        "code": "xeniel_10",
+        "name": "Xeniel Tay trống ngang tàng"
+      },
+      {
+        "code": "xeniel_11",
+        "name": "Xeniel Cấm vệ"
+      }
+    ]
+  },
+  "ybneth": {
+    "game_id": "",
+    "bundle_file": "ybneth_battle_base_low.assetbundle",
+    "texture_name": "YBNETH_SKIN",
+    "skins": [
+      {
+        "code": "ybneth_1",
+        "name": "Y'bneth"
+      },
+      {
+        "code": "ybneth_2",
+        "name": "Y'bneth Hạt trưởng kiểm lâm"
+      },
+      {
+        "code": "ybneth_3",
+        "name": "Y'Bneth Chiến binh lục bảo"
+      },
+      {
+        "code": "ybneth_4",
+        "name": "Y'bneth Động cơ vĩnh cửu"
+      },
+      {
+        "code": "ybneth_5",
+        "name": "Y'bneth Titan Băng giá"
+      },
+      {
+        "code": "ybneth_6",
+        "name": "Y'Bneth Candy Bear"
+      },
+      {
+        "code": "ybneth_7",
+        "name": "Y'Bneth Đại Thụ Âm Nhạc"
+      }
+    ]
+  },
+  "yan": {
+    "game_id": "",
+    "bundle_file": "yan_battle_base_low.assetbundle",
+    "texture_name": "YAN_SKIN",
+    "skins": [
+      {
+        "code": "yan_1",
+        "name": "Yan"
+      },
+      {
+        "code": "yan_2",
+        "name": "Yan nhà chế tác"
+      },
+      {
+        "code": "yan_3",
+        "name": "Yan Tanjiro Kamado"
+      },
+      {
+        "code": "yan_4",
+        "name": "Yan Công tước Norman"
+      },
+      {
+        "code": "yan_5",
+        "name": "Yan Giấc mơ sao"
+      },
+      {
+        "code": "yan_6",
+        "name": "Yan Bích Hạc Phiên Vân"
+      },
+      {
+        "code": "yan_7",
+        "name": "Yan Nghệ nhân trung thu"
+      }
+    ]
+  },
+  "yena": {
+    "game_id": "524",
+    "bundle_file": "524_yena_battle_base_low.assetbundle",
+    "texture_name": "YENA_SKIN",
+    "skins": [
+      {
+        "code": "yena_1",
+        "name": "Yena"
+      },
+      {
+        "code": "yena_2",
+        "name": "Yena Khuyên Bạc"
+      },
+      {
+        "code": "yena_3",
+        "name": "Yena Thỏ may mắn"
+      },
+      {
+        "code": "yena_4",
+        "name": "Yena Chiến binh nguyệt tộc"
+      },
+      {
+        "code": "yena_5",
+        "name": "Yena Hoạt náo viên"
+      },
+      {
+        "code": "yena_6",
+        "name": "Yena Dạ nguyệt thánh nữ"
+      },
+      {
+        "code": "yena_7",
+        "name": "Yena Giảng viên tình ái"
+      },
+      {
+        "code": "yena_8",
+        "name": "Yena Huyền cửu thiên"
+      },
+      {
+        "code": "yena_9",
+        "name": "Yena Vũ điệu Giáng sinh"
+      },
+      {
+        "code": "yena_10",
+        "name": "Yena WaVe"
+      },
+      {
+        "code": "yena_11",
+        "name": "Yena Nữ cướp biển"
+      },
+      {
+        "code": "yena_12",
+        "name": "Yena Nữ hoàng thể thao"
+      },
+      {
+        "code": "yena_13",
+        "name": "Yena Trấn Yêu Thần Lộc"
+      },
+      {
+        "code": "yena_14",
+        "name": "Yena Thần Sứ kiều diễm"
+      },
+      {
+        "code": "yena_15",
+        "name": "Yena Hoa tiêu mộng giới"
+      }
+    ]
+  },
+  "yorn": {
+    "game_id": "112",
+    "bundle_file": "112_gongshuban_battle_base_low.assetbundle",
+    "texture_name": "YORN_SKIN",
+    "skins": [
+      {
+        "code": "yorn_1",
+        "name": "Yorn"
+      },
+      {
+        "code": "yorn_2",
+        "name": "Yorn Cung thủ bóng đêm"
+      },
+      {
+        "code": "yorn_3",
+        "name": "Yorn Đặc Nhiệm Swat"
+      },
+      {
+        "code": "yorn_4",
+        "name": "Yorn Thế Tử Nguyệt Tộc"
+      },
+      {
+        "code": "yorn_5",
+        "name": "Yorn Long thần soái"
+      },
+      {
+        "code": "yorn_6",
+        "name": "Yorn Nam thần Giáng sinh"
+      },
+      {
+        "code": "yorn_7",
+        "name": "Yorn Soái ca học đường"
+      },
+      {
+        "code": "yorn_8",
+        "name": "Yorn Thần Thoại Hy Lạp"
+      },
+      {
+        "code": "yorn_9",
+        "name": "Yorn Vệ Binh ngân hà"
+      },
+      {
+        "code": "yorn_10",
+        "name": "Yorn Soái ca bãi biển"
+      },
+      {
+        "code": "yorn_11",
+        "name": "Yorn Lục nguyệt cung"
+      },
+      {
+        "code": "yorn_12",
+        "name": "Yorn Phá Vân tiễn"
+      },
+      {
+        "code": "yorn_13",
+        "name": "Yorn Ký giả diệu kỳ"
+      },
+      {
+        "code": "yorn_14",
+        "name": "Yorn Conan Edogawa"
+      },
+      {
+        "code": "yorn_15",
+        "name": "Yorn Thương nhân Sa mạc"
+      }
+    ]
+  },
+  "yue": {
+    "game_id": "",
+    "bundle_file": "yue_battle_base_low.assetbundle",
+    "texture_name": "YUE_SKIN",
+    "skins": [
+      {
+        "code": "yue_1",
+        "name": "Yue"
+      },
+      {
+        "code": "yue_2",
+        "name": "Yue Tiểu công Chúa"
+      },
+      {
+        "code": "yue_3",
+        "name": "Yue Chiêm Tinh gia"
+      },
+      {
+        "code": "yue_4",
+        "name": "Yue Vũ phiến hỏa diệm"
+      },
+      {
+        "code": "yue_5",
+        "name": "Yue Nữ hoàng Băng giá"
+      },
+      {
+        "code": "yue_6",
+        "name": "Yue Hỗn Độn Thần Ma"
+      }
+    ]
+  },
+  "zata": {
+    "game_id": "",
+    "bundle_file": "zata_battle_base_low.assetbundle",
+    "texture_name": "ZATA_SKIN",
+    "skins": [
+      {
+        "code": "zata_1",
+        "name": "Zata"
+      },
+      {
+        "code": "zata_2",
+        "name": "Zata Tư lệnh viễn chinh"
+      },
+      {
+        "code": "zata_3",
+        "name": "Zata Sứ giả tinh hệ"
+      },
+      {
+        "code": "zata_4",
+        "name": "Zata Chí tôn Tà Phượng"
+      },
+      {
+        "code": "zata_5",
+        "name": "Zata Tác gia đương đại"
+      },
+      {
+        "code": "zata_6",
+        "name": "Zata Khiêu chiến"
+      },
+      {
+        "code": "zata_7",
+        "name": "Zata Thần mặt trời"
+      },
+      {
+        "code": "zata_8",
+        "name": "Zata Xích Huyết Bá Tước"
+      },
+      {
+        "code": "zata_9",
+        "name": "Zata Idol Giáng Sinh"
+      }
+    ]
+  },
+  "zephys": {
+    "game_id": "107",
+    "bundle_file": "107_zhaoyun_battle_base_low.assetbundle",
+    "texture_name": "ZEPHYS_SKIN",
+    "skins": [
+      {
+        "code": "zephys_1",
+        "name": "Zephys"
+      },
+      {
+        "code": "zephys_2",
+        "name": "Zephys Oán linh"
+      },
+      {
+        "code": "zephys_3",
+        "name": "Zephys Hiệp Sĩ Bí Ngô"
+      },
+      {
+        "code": "zephys_4",
+        "name": "Zephys Dung Nham"
+      },
+      {
+        "code": "zephys_5",
+        "name": "Zephys Siêu việt"
+      },
+      {
+        "code": "zephys_6",
+        "name": "Zephys Phi thương"
+      },
+      {
+        "code": "zephys_7",
+        "name": "Zephys Tư lệnh viễn chinh"
+      },
+      {
+        "code": "zephys_8",
+        "name": "Zephys Hắc vô thường"
+      },
+      {
+        "code": "zephys_9",
+        "name": "Zephys Inosuke Hashibira"
+      },
+      {
+        "code": "zephys_10",
+        "name": "Zephys Đầu bếp Sashimi"
+      },
+      {
+        "code": "zephys_11",
+        "name": "Zephys Nghệ nhân đồ chơi"
+      },
+      {
+        "code": "zephys_12",
+        "name": "Zephys Kỷ Nguyên Hổ Phách"
+      },
+      {
+        "code": "zephys_13",
+        "name": "Zephys Đại ca đường phố"
+      }
+    ]
+  },
+  "zill": {
+    "game_id": "504",
+    "bundle_file": "504_zill_battle_base_low.assetbundle",
+    "texture_name": "ZILL_SKIN",
+    "skins": [
+      {
+        "code": "zill_1",
+        "name": "Zill"
+      },
+      {
+        "code": "zill_2",
+        "name": "Zill Lốc Địa Ngục"
+      },
+      {
+        "code": "zill_3",
+        "name": "Zill Dung nham"
+      },
+      {
+        "code": "zill_4",
+        "name": "Zill Cựu thần thiên hà"
+      },
+      {
+        "code": "zill_5",
+        "name": "Zill Diệt nguyệt tử sĩ"
+      },
+      {
+        "code": "zill_6",
+        "name": "Zill Quái xế"
+      },
+      {
+        "code": "zill_7",
+        "name": "Zill Phong thần Tu La"
+      },
+      {
+        "code": "zill_8",
+        "name": "Zill Thần mộng mị"
+      },
+      {
+        "code": "zill_9",
+        "name": "Zill Con quay gió"
+      },
+      {
+        "code": "zill_10",
+        "name": "Zill Siêu việt"
+      }
+    ]
+  },
+  "zip": {
+    "game_id": "520",
+    "bundle_file": "520_zip_battle_base_low.assetbundle",
+    "texture_name": "ZIP_SKIN",
+    "skins": [
+      {
+        "code": "zip_1",
+        "name": "Zip"
+      },
+      {
+        "code": "zip_2",
+        "name": "Zip Gà siêu quậy"
+      },
+      {
+        "code": "zip_3",
+        "name": "Zip Tiểu đệ hổ báo"
+      },
+      {
+        "code": "zip_4",
+        "name": "Zip Cá siêu quậy"
+      },
+      {
+        "code": "zip_5",
+        "name": "Zip Vua sân cỏ"
+      },
+      {
+        "code": "zip_6",
+        "name": "Zip Ông trùm giáng sinh"
+      },
+      {
+        "code": "zip_7",
+        "name": "Zip Dây tơ hồng"
+      },
+      {
+        "code": "zip_8",
+        "name": "Zip Tiểu quái gánh xiếc"
+      }
+    ]
+  },
+  "zuka": {
+    "game_id": "",
+    "bundle_file": "zuka_battle_base_low.assetbundle",
+    "texture_name": "ZUKA_SKIN",
+    "skins": [
+      {
+        "code": "zuka_1",
+        "name": "Zuka"
+      },
+      {
+        "code": "zuka_2",
+        "name": "Zuka Đại Phú Ông"
+      },
+      {
+        "code": "zuka_3",
+        "name": "Zuka Giáo Sư Sừng Sỏ"
+      },
+      {
+        "code": "zuka_4",
+        "name": "Zuka Phát Tài"
+      },
+      {
+        "code": "zuka_5",
+        "name": "Zuka Gấu Nhồi Bông"
+      },
+      {
+        "code": "zuka_6",
+        "name": "Zuka Diệt nguyệt nguyên soái"
+      },
+      {
+        "code": "zuka_7",
+        "name": "Zuka Đầu bếp hoàng cung"
+      },
+      {
+        "code": "zuka_8",
+        "name": "Zuka Mãnh hổ"
+      },
+      {
+        "code": "zuka_9",
+        "name": "Zuka Rapper Big Panda"
+      },
+      {
+        "code": "zuka_10",
+        "name": "Zuka Ngư ông đắc lợi"
+      },
+      {
+        "code": "zuka_11",
+        "name": "Zuka Xích Hùng Chiến Giáp"
+      },
+      {
+        "code": "zuka_12",
+        "name": "Zuka Mafia"
+      }
+    ]
+  },
+  "dieu-thuyen": {
+    "game_id": "",
+    "bundle_file": "dieu-thuyen_battle_base_low.assetbundle",
+    "texture_name": "DIEU-THUYEN_SKIN",
+    "skins": [
+      {
+        "code": "dieu-thuyen_1",
+        "name": "Điêu Thuyền"
+      },
+      {
+        "code": "dieu-thuyen_2",
+        "name": "Điêu Thuyền Nữ Vương Anh Đào"
+      },
+      {
+        "code": "dieu-thuyen_3",
+        "name": "Điêu Thuyền Hoa Hậu"
+      },
+      {
+        "code": "dieu-thuyen_4",
+        "name": "Điêu Thuyền Tiệc bãi biển"
+      },
+      {
+        "code": "dieu-thuyen_5",
+        "name": "Điêu thuyền Vũ điệu nghê thường"
+      },
+      {
+        "code": "dieu-thuyen_6",
+        "name": "Điêu Thuyền Phù thủy bí ngô"
+      },
+      {
+        "code": "dieu-thuyen_7",
+        "name": "Điêu Thuyền Tà linh pháp trượng"
+      },
+      {
+        "code": "dieu-thuyen_8",
+        "name": "Điêu Thuyền Mèo công nghệ"
+      },
+      {
+        "code": "dieu-thuyen_9",
+        "name": "Điêu Thuyền Thất Tịch Tiên Tử"
+      },
+      {
+        "code": "dieu-thuyen_10",
+        "name": "Điêu Thuyền Thần Ngọc"
+      },
+      {
+        "code": "dieu-thuyen_11",
+        "name": "Điêu Thuyền Nữ y tá"
+      },
+      {
+        "code": "dieu-thuyen_12",
+        "name": "Điêu Thuyền WaVe"
+      },
+      {
+        "code": "dieu-thuyen_13",
+        "name": "Điêu Thuyền - Eternal Sailor Moon"
+      },
+      {
+        "code": "dieu-thuyen_14",
+        "name": "Điêu Thuyền Mối tình đầu"
+      },
+      {
+        "code": "dieu-thuyen_15",
+        "name": "Điêu Thuyền Tuế Hàn Đỗ Quyên"
+      },
+      {
+        "code": "dieu-thuyen_16",
+        "name": "Điêu Thuyền Nhật Nguyệt Thánh Linh"
+      }
+    ]
+  }
+}
