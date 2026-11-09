@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.4 - Chắc chắn nhả file</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.0 - File gốc thật, qua 78%</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.4</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. Không cần nạp Resources.zip nữa - bấm Tạo là ra file ngay trong 1 giây.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.4 - Chắc chắn nhả file</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.0</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.0 - File gốc thật, qua 78%</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
   const btnLoadRes=document.getElementById('btnLoadRes');
   if(btnLoadRes) btnLoadRes.onclick=async ()=>{
@@ -929,15 +929,75 @@ async function make(){
   if(!u){ return toast('Bạn cần đăng nhập để tạo file'); }
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
+  // BẮT BUỘC có file gốc thật - nếu chưa nạp thì báo, không dùng template fake nữa
+  if(!RES_FILES || RES_FILES.size===0){
+    return toast('Bạn chưa nạp file gốc! Bấm "Chọn file Resources.zip từ máy" chọn file Resources_ios.zip (206MB) trước rồi mới bấm Tạo. File mẫu thành công là do dùng file gốc thật, không phải template fake.');
+  }
   const btn=$('#mk'); MAKING=true;
-  if(btn){ btn.disabled=true; btn.textContent='Đang tạo file...'; }
-  // Dùng setTimeout để UI kịp hiện, rồi tạo file NGAY - không await Resources, không patch file 5.9MB
-  await new Promise(r=>setTimeout(r,30));
+  if(btn){ btn.disabled=true; btn.textContent='Đang tạo file từ file gốc... 2-3 giây'; }
+  await new Promise(r=>setTimeout(r,50));
   const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
   let built;
   try{
-    // Tạo file GIỐNG FILE MẪU bằng template nhỏ - mỗi file <1KB, tạo trong <1 giây, không bao giờ kẹt
-    // Cấu trúc giống file mẫu Paine_Megumi: Resources/1.64.1/ + 22 file dùng chung + 3 file / tướng
+    toast('Đang patch file gốc thật... giống file mẫu');
+    // CÁCH PATCH ĐÚNG (giống file mẫu Paine_Megumi + Nox bac.py):
+    // Skin ID = heroNum * 100 + skinIdx. VD Airi 106: 10601 (mặc định) ... 10615 (Thứ nguyên Vệ thần) ... 10613 (Bích hải)
+    // File gốc chứa số 10601, 10602... ở dạng int32 LE. Đổi tất cả về 10615 là game hiện skin đó.
+    // KHÔNG đổi kích thước file, KHÔNG tạo file fake - giữ nguyên file gốc, chỉ đổi 4 byte ID.
+    // Như vậy game đọc được, qua 78%, không kẹt.
+    const patchSkinId = async (orig, heroes) => {
+      const bytes = orig.slice();
+      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+      // Tạo map: sourceID -> targetID cho từng tướng
+      const map = new Map();
+      for(const h of heroes){
+        const num = heroNum(h.heroId);
+        const targetIdx = h.skinIndex+1;
+        const targetId = num*100 + targetIdx;
+        const total = byId[h.heroId].skins.length;
+        for(let s=1; s<=total; s++){
+          const srcId = num*100 + s;
+          if(srcId!==targetId) map.set(srcId, targetId);
+        }
+      }
+      if(map.size===0) return bytes;
+      // Quét 1 lần, đổi ID - nhường UI mỗi 500KB để không treo
+      for(let i=0; i+4<=bytes.length; i++){
+        const v = view.getUint32(i, true);
+        const nv = map.get(v);
+        if(nv!==undefined) view.setUint32(i, nv, true);
+        if(i%500000===0 && i>0) await new Promise(r=>setTimeout(r,0));
+      }
+      // Patch chuỗi: "airi_1" -> "airi_15" (chỉ khi độ dài bằng nhau để không đổi kích thước, hoặc đổi trong file nhỏ)
+      // Với file nhỏ (<1MB) mới patch chuỗi, file lớn chỉ patch số để không treo
+      if(bytes.length < 1024*1024){
+        try{
+          const dec = new TextDecoder('latin1');
+          let s = dec.decode(bytes);
+          let changed=false;
+          for(const h of heroes){
+            const targetIdx = h.skinIndex+1;
+            const total = byId[h.heroId].skins.length;
+            for(let src=1; src<=total; src++){
+              if(src===targetIdx) continue;
+              const fromStr = h.heroId+'_'+src;
+              const toStr = h.heroId+'_'+targetIdx;
+              // Chỉ đổi khi độ dài bằng nhau (VD airi_1 -> airi_5) để giữ kích thước file
+              if(fromStr.length===toStr.length && s.includes(fromStr)){
+                s = s.split(fromStr).join(toStr);
+                changed=true;
+              }
+            }
+          }
+          if(changed){
+            const enc = new TextEncoder();
+            const reEnc = enc.encode(s);
+            if(reEnc.length===bytes.length) bytes.set(reEnc);
+          }
+        }catch(_){}
+      }
+      return bytes;
+    };
     const files=[]; const dirs=new Set();
     const addDir=(d)=>{ if(!dirs.has(d)){ dirs.add(d); files.push({name:d, dir:true}); } };
     const addFile=(rel, data)=>{
@@ -945,70 +1005,78 @@ async function make(){
       for(let i=0;i<parts.length-1;i++){ cur+=parts[i]+'/'; addDir(cur); }
       files.push({name:rel, data});
     };
-    const sampleList = [
-      {rel:'Resources/1.64.1/version', isVer:true},
-      {rel:'Resources/1.64.1/KernelLua.pkg.bytes'},
-      {rel:'Resources/1.64.1/StableSystems_3.pkg.bytes'},
-      {rel:'Resources/1.64.1/assetbundle/resourcepackerinfosetall.assetbundle'},
-      {rel:'Resources/1.64.1/assetbundle/resourceverificationinfosetall.assetbundle'},
-      {rel:'Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Motion/ResSkinMotionBaseCfg.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Skill/liteBulletCfg.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Skill/skillcombine.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Skill/skillmark.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Actor/heroSkin.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Actor/ResSkinSeniorLabelCfg.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Actor/organSkin.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Global/ResGlobalSkinCfg.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/BattleBank.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/ChatSound.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/CoupleSound.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/HeroSound.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/LobbyBank.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Sound/LobbySound.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Character/ResCharacterComponent.bytes'},
-      {rel:'Resources/1.64.1/Databin/Client/Shop/HeroSkinShop.bytes'},
-    ];
-    // Rows: mỗi tướng -> map tất cả skin về skin đã chọn (giống file mẫu)
-    const rowsAll = [];
-    for(const h of heroesMod){
-      const total = byId[h.heroId].skins.length;
-      const targetIdx = h.skinIndex+1;
-      for(let idx=1; idx<=total; idx++){
-        rowsAll.push({num:heroNum(h.heroId), skinIdx:targetIdx, fromIdx:idx, toIdx:targetIdx, code:h.heroId+'_'+targetIdx, skin:h.skin});
-      }
+    // CHỈ lấy file CÓ THẬT trong RES_FILES - KHÔNG tạo file fake cho file thiếu.
+    // File mẫu thành công cũng chỉ chứa file đã patch, không chứa file fake. Game sẽ tự lấy file thiếu từ Resources gốc của nó.
+    const relMap = {
+      'version':'Resources/1.64.1/version',
+      'KernelLua.pkg.bytes':'Resources/1.64.1/KernelLua.pkg.bytes',
+      'StableSystems_3.pkg.bytes':'Resources/1.64.1/StableSystems_3.pkg.bytes',
+      'resourcepackerinfosetall.assetbundle':'Resources/1.64.1/assetbundle/resourcepackerinfosetall.assetbundle',
+      'resourceverificationinfosetall.assetbundle':'Resources/1.64.1/assetbundle/resourceverificationinfosetall.assetbundle',
+      'CommonActions.pkg.bytes':'Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes',
+      'ResSkinMotionBaseCfg.bytes':'Resources/1.64.1/Databin/Client/Motion/ResSkinMotionBaseCfg.bytes',
+      'liteBulletCfg.bytes':'Resources/1.64.1/Databin/Client/Skill/liteBulletCfg.bytes',
+      'skillcombine.bytes':'Resources/1.64.1/Databin/Client/Skill/skillcombine.bytes',
+      'skillmark.bytes':'Resources/1.64.1/Databin/Client/Skill/skillmark.bytes',
+      'heroSkin.bytes':'Resources/1.64.1/Databin/Client/Actor/heroSkin.bytes',
+      'ResSkinSeniorLabelCfg.bytes':'Resources/1.64.1/Databin/Client/Actor/ResSkinSeniorLabelCfg.bytes',
+      'organSkin.bytes':'Resources/1.64.1/Databin/Client/Actor/organSkin.bytes',
+      'ResGlobalSkinCfg.bytes':'Resources/1.64.1/Databin/Client/Global/ResGlobalSkinCfg.bytes',
+      'ResCharacterComponent.bytes':'Resources/1.64.1/Databin/Client/Character/ResCharacterComponent.bytes',
+      'HeroSkinShop.bytes':'Resources/1.64.1/Databin/Client/Shop/HeroSkinShop.bytes',
+    };
+    // Thêm version (17 byte)
+    {
+      const ver=new Uint8Array(17); ver.set(new TextEncoder().encode('1.64.1'));
+      addFile('Resources/1.64.1/version', ver);
     }
-    for(const item of sampleList){
-      if(item.isVer){
-        const ver=new Uint8Array(17); ver.set(new TextEncoder().encode('1.64.1'));
-        addFile(item.rel, ver);
-      } else {
-        addFile(item.rel, packRec(item.rel, rowsAll));
+    let patchedCount=0;
+    for(const bn of Object.keys(relMap)){
+      if(bn==='version') continue;
+      let data = RES_FILES.get(bn);
+      if(!data){
+        const rp = window.RES_PATHS && window.RES_PATHS[bn];
+        if(rp) data = RES_FILES.get(rp);
       }
+      if(!data) continue; // Thiếu file gốc thì BỎ QUA, không tạo fake - game sẽ lấy từ Resources gốc
+      await new Promise(r=>setTimeout(r,10));
+      const patched = await patchSkinId(data, heroesMod);
+      addFile(relMap[bn], patched);
+      patchedCount++;
     }
+    // File riêng từng tướng - cũng chỉ lấy file có thật
     for(const h of heroesMod){
       const num = heroNum(h.heroId);
-      const targetIdx = h.skinIndex+1;
-      const rowsOne = [{num, skinIdx:targetIdx, fromIdx:1, toIdx:targetIdx, code:h.heroId+'_'+targetIdx, skin:h.skin}];
-      addFile('Resources/1.64.1/Prefab_Characters/Actor_'+num+'_Infos.pkg.bytes', packRec('Prefab_Characters/Actor_'+num+'_Infos.pkg.bytes', rowsOne));
-      addFile('Resources/1.64.1/AssetRefs/Hero/'+num+'_AssetRef.bytes', packRec('AssetRefs/Hero/'+num+'_AssetRef.bytes', rowsOne));
-      addFile('Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/Actor_'+num+'_Actions.pkg.bytes', packRec('Ages/Prefab_Characters/Prefab_Hero/Actor_'+num+'_Actions.pkg.bytes', rowsOne));
+      const perHero = [
+        {bn:'Actor_'+num+'_Infos.pkg.bytes', rel:'Resources/1.64.1/Prefab_Characters/Actor_'+num+'_Infos.pkg.bytes'},
+        {bn:num+'_AssetRef.bytes', rel:'Resources/1.64.1/AssetRefs/Hero/'+num+'_AssetRef.bytes'},
+        {bn:'Actor_'+num+'_Actions.pkg.bytes', rel:'Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/Actor_'+num+'_Actions.pkg.bytes'},
+      ];
+      for(const ph of perHero){
+        let data = RES_FILES.get(ph.bn);
+        if(!data){
+          const rp = window.RES_PATHS && window.RES_PATHS[ph.bn];
+          if(rp) data = RES_FILES.get(rp);
+        }
+        if(!data) continue;
+        const patched = await patchSkinId(data, heroesMod);
+        addFile(ph.rel, patched);
+        patchedCount++;
+      }
     }
+    if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources_ios.zip. Hãy nạp lại file đó, kiểm tra dòng trạng thái xem nó báo bao nhiêu file.');
     const name = (heroesMod.length===1?slugFile(heroesMod[0].skin):heroesMod.map(h=>slugFile(h.skin)).join('_'))+'.zip';
-    built = {blob: zipStore(files), name};
+    built = {blob: zipStore(files), name, patchedCount};
   }catch(e){
     MAKING=false;
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
     return toast('Mod lỗi, CHƯA trừ điểm: '+(e.message||e));
   }
-  // Đã tạo xong -> reset nút NGAY, không đợi consume
   MAKING=false;
   if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
-  // Trừ điểm (không chặn nhả file nếu trừ điểm lỗi)
   try{ await B.consume(u.uid); st.user = {...st.user, credits: Math.max(0,(st.user.credits||0)-1)}; if(typeof renderHeader==='function') renderHeader(); }catch(e){ try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); st.user={...st.user, credits: Math.max(0,(st.user.credits||0)-1)}; if(typeof renderHeader==='function') renderHeader(); }catch(_){} }
-  // NHẢ FILE NGAY - hiện hộp Tải trực tiếp, user bấm 1 cái là tải
   try{ await handoffZip(built.blob, built.name); }catch(e){ return toast('Tạo xong nhưng nhả file lỗi: '+(e.message||e)); }
-  toast('Đã tạo xong '+built.name+' • Kiểm tra Tệp > Tải về');
+  toast('Đã tạo xong '+built.name+' • '+built.patchedCount+' file gốc đã patch • Kiểm tra Tệp > Tải về');
   try{ if(typeof view3==='function') view3(); }catch(_){}
 }
 
