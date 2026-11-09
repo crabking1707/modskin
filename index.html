@@ -558,7 +558,8 @@ let RES_STATUS = 'Chưa tải Resources.zip - Bấm nút tải ở trên hoặc 
 let RES_ALL_NAMES = [];
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function resNeededBasenames(heroesMod){
-  const set = new Set(['version','KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','BattleBank.bytes','ChatSound.bytes','CoupleSound.bytes','HeroSound.bytes','LobbyBank.bytes','LobbySound.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
+  // CHỈ lấy file thật sự chứa skin - bỏ BattleBank, LobbyBank... vì patch chúng vừa lâu vừa không đổi skin, mà vẫn phải duyệt 5MB mỗi file nên treo 3 phút ở 0%
+  const set = new Set(['version','KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
   for(const h of heroesMod){
     const num = heroNum(h.id);
     set.add('Actor_'+num+'_Infos.pkg.bytes');
@@ -603,14 +604,34 @@ async function unzipNeededV2(zipBytes, needBasenames){
       const buf = await new Response(stream).arrayBuffer();
       data = new Uint8Array(buf);
     } else { continue; }
-    out.set(name, data);
     out.set(bn, data);
-    out.set('Resources/1.64.1/'+name, data);
+    // Lưu đường dẫn thật để khi đóng gói giữ đúng cấu trúc
+    if(!window.RES_PATHS) window.RES_PATHS={};
+    window.RES_PATHS[bn]=name;
   }
   return out;
 }
 function patchBytesReal(orig, heroesMod){
   let bytes = orig.slice();
+  // Kiểm tra nhanh: file nào không chứa tướng nào thì copy nguyên, không patch - đỡ phải duyệt 5MB vô ích
+  // Dùng 200KB đầu + 200KB cuối để check, đủ nhanh mà vẫn chính xác với file Databin
+  const head = new TextDecoder('latin1').decode(bytes.slice(0, Math.min(200000, bytes.length)));
+  const tail = bytes.length>200000 ? new TextDecoder('latin1').decode(bytes.slice(bytes.length-200000)) : '';
+  const sample = head + tail;
+  const neededHeroes = heroesMod.filter(h=>{
+    const num = heroNum(h.id);
+    const hasNum = bytes.length>0 && (()=>{
+      // Check nhanh heroNum có trong file không - quét thưa mỗi 500 byte, nếu không thấy thì chắc chắn file không chứa tướng đó
+      const n0=num&255, n1=(num>>8)&255;
+      for(let i=0;i+1<bytes.length;i+=500){ if(bytes[i]===n0 && bytes[i+1]===n1) return true; }
+      return false;
+    })();
+    const hasStr = sample.includes(h.id) || sample.includes(h.id+'_');
+    return hasNum || hasStr;
+  });
+  if(neededHeroes.length===0) return bytes; // File không liên quan tướng nào -> trả nguyên, không patch
+  heroesMod = neededHeroes;
+
   // PATCH SỐ - CHỈ DUYỆT 1 LẦN / TƯỚNG (bản cũ duyệt 18 lần nên iPhone treo)
   for(const h of heroesMod){
     const heroData = byId[h.id]; if(!heroData) continue;
@@ -654,12 +675,6 @@ function patchBytesReal(orig, heroesMod){
   return bytes;
 }
 async function loadResourcesZip(onProgress){
-  // Nếu cache cũ từ bản cũ (72 file) thì xóa để nạp lại bản mới (28 file cho 2 tướng)
-  if(RES_FILES && RES_FILES.size>40){
-    try{ await caches.delete(RES_CACHE_KEY); }catch(_){}
-    RES_FILES=null;
-  }
-
   if(RES_FILES && RES_FILES.size>0) return RES_FILES;
   try{
     const cache = await caches.open(RES_CACHE_KEY);
@@ -714,15 +729,7 @@ async function buildModZipFromResources(heroesMod, onProgress){
     report(15, 'Đã có Resources.zip');
   } else {
     report(8, 'Đã có Resources.zip trong cache');
-    let missing=false;
-    for(const bn of needBase){ if(!filesMap.has(bn)) {missing=true; break;} }
-    if(missing){
-      try{
-        const cache = await caches.open(RES_CACHE_KEY);
-        const cached = await cache.match(RES_ZIP_URL);
-        if(cached){ const buf = await cached.arrayBuffer(); filesMap = await unzipNeededV2(new Uint8Array(buf), needBase); RES_FILES = filesMap; }
-      }catch(e){}
-    }
+    // KHÔNG tải lại 206MB từ cache nữa - file thiếu thì dùng template, đỡ kẹt 0% 3 phút
     report(15, 'Đã có Resources.zip');
   }
   const files=[]; const dirs=new Set();
@@ -734,13 +741,12 @@ async function buildModZipFromResources(heroesMod, onProgress){
     const bn = needArr[idxF];
     const pctFile = 15 + Math.round((idxF/totalFiles)*70);
     report(pctFile, 'Đang mod file '+(idxF+1)+'/'+totalFiles+': '+bn);
-    // Nhường UI để thanh tiến độ kịp vẽ - nếu không iPhone sẽ treo, thanh không chạy
-    if(idxF%3===0) await new Promise(r=>setTimeout(r,10));
+    // Nhường UI sau MỖI file để thanh tiến độ chạy được - bản cũ nhường mỗi 3 file nên vẫn treo
+    await new Promise(r=>setTimeout(r,15));
     let data = filesMap.get(bn) || null;
     let rel = 'Resources/1.64.1/';
-    for(const k of filesMap.keys()){
-      if(baseName(k)===bn){ rel = k.startsWith('Resources/') ? k : 'Resources/1.64.1/'+k; if(!rel.includes('Resources/')) rel='Resources/1.64.1/'+k; break; }
-    }
+    const realPath = window.RES_PATHS && window.RES_PATHS[bn];
+    if(realPath){ rel = realPath.startsWith('Resources/') ? realPath : 'Resources/1.64.1/'+realPath; }
     if(bn==='heroSkin.bytes') rel='Resources/1.64.1/Databin/Client/Actor/heroSkin.bytes';
     if(bn==='skillcombine.bytes') rel='Resources/1.64.1/Databin/Client/Skill/skillcombine.bytes';
     if(bn==='liteBulletCfg.bytes') rel='Resources/1.64.1/Databin/Client/Skill/liteBulletCfg.bytes';
@@ -842,6 +848,8 @@ function showModProgress(name){
     + '<div style="display:flex;justify-content:space-between;margin-top:8px"><span id="modProgPct" style="font-weight:800;font-size:15px;color:#0f172a">0%</span><span id="modProgStatus" style="font-size:12px;color:#64748b">Chuẩn bị...</span></div>'
     + '<p style="font-size:11px;color:#94a3b8;margin:12px 0 0">Đừng tắt web / đừng bấm thêm.<br>Chạy đến 100% là tự nhả file để tải.</p></div>';
   m.style.display='flex';
+  m.style.visibility='visible';
+  m.style.opacity='1';
   MOD_PROG=0;
 }
 function updateModProgress(pct, status, name){
@@ -920,7 +928,8 @@ async function make(){
   const modName = heroesMod.map(h=>h.hero+': '+h.skin).join(' | ');
   showModProgress(modName);
   updateModProgress(0, 'Chuẩn bị...', modName);
-  await new Promise(r=>setTimeout(r,120));
+  // Cho iPhone kịp vẽ modal - nếu không nó sẽ treo ở 0% vì main thread bị chặn ngay sau đó
+  await new Promise(r=>{ if(window.requestAnimationFrame) requestAnimationFrame(()=>setTimeout(r,300)); else setTimeout(r,300); });
   let built;
   try{
     setResStatus('Đang mod file gốc...');
