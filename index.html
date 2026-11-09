@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.2 - Giữ thanh tiến độ</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.3 - Không mất thanh</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -408,13 +408,13 @@ function view2(){
 }
 
 function view3(){
-  if(window.MAKING){ return; } // Đang tạo mod thì không render lại - giữ thanh tiến độ
+  if(typeof MAKING!=='undefined' && MAKING){ return; } // Đang tạo mod thì không render lại - giữ thanh tiến độ
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
   const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.2</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.2 - Giữ thanh tiến độ</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.3</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.3 - Không mất thanh</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -835,6 +835,25 @@ function buildModZip(){
 }
 /* ---------- THANH TIẾN ĐỘ TẠO MOD ---------- */
 let MOD_PROG = 0;
+let MOD_PROG_TIMER = null;
+function startProgKeeper(){
+  if(MOD_PROG_TIMER) clearInterval(MOD_PROG_TIMER);
+  MOD_PROG_TIMER = setInterval(()=>{
+    if(!MAKING){ clearInterval(MOD_PROG_TIMER); MOD_PROG_TIMER=null; return; }
+    const curBtn = document.getElementById('mk');
+    if(curBtn && !curBtn.textContent.includes('Đang tạo mod')){
+      curBtn.disabled=true;
+      curBtn.textContent='Đang tạo mod... '+MOD_PROG+'% - Đang mod...';
+      curBtn.style.background='linear-gradient(90deg, #6366f1 '+MOD_PROG+'%, #1e293b '+MOD_PROG+'%)';
+    }
+    const m=document.getElementById('modProgressModal');
+    if(m && m.style.display==='none' && MAKING){
+      m.style.display='flex';
+      m.style.visibility='visible';
+    }
+  }, 300);
+}
+function stopProgKeeper(){ if(MOD_PROG_TIMER){ clearInterval(MOD_PROG_TIMER); MOD_PROG_TIMER=null; } }
 function showModProgress(name){
   let m = document.getElementById('modProgressModal');
   if(!m){
@@ -942,6 +961,7 @@ async function make(){
   };
   if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0% - Chuẩn bị...'; }
   showModProgress(modName);
+  startProgKeeper();
   setProg(0, 'Chuẩn bị...');
   await new Promise(r=>setTimeout(r,200));
   let built;
@@ -963,6 +983,7 @@ async function make(){
     if(timeoutHit) console.warn('build quá 25s, nhưng vẫn xong');
   }catch(e){
     hideModProgress();
+    stopProgKeeper();
     MAKING=false;
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
     console.warn('build from Resources loi:', e);
@@ -981,6 +1002,7 @@ async function make(){
   setProg(100, 'Xong! Đang nhả file...');
   await new Promise(r=>setTimeout(r,400));
   hideModProgress();
+  stopProgKeeper();
   try{ await B.consume(u.uid); }catch(e){
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); }catch(e2){}
   }
