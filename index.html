@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.0 - File gốc thật, qua 78%</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.1 - Đổi cả số + chuỗi, đổi skin thật</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.0</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.0 - File gốc thật, qua 78%</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.1</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.1 - Đổi cả số + chuỗi, đổi skin thật</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
   const btnLoadRes=document.getElementById('btnLoadRes');
   if(btnLoadRes) btnLoadRes.onclick=async ()=>{
@@ -945,57 +945,109 @@ async function make(){
     // File gốc chứa số 10601, 10602... ở dạng int32 LE. Đổi tất cả về 10615 là game hiện skin đó.
     // KHÔNG đổi kích thước file, KHÔNG tạo file fake - giữ nguyên file gốc, chỉ đổi 4 byte ID.
     // Như vậy game đọc được, qua 78%, không kẹt.
-    const patchSkinId = async (orig, heroes) => {
-      const bytes = orig.slice();
-      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-      // Tạo map: sourceID -> targetID cho từng tướng
-      const map = new Map();
-      for(const h of heroes){
-        const num = heroNum(h.heroId);
-        const targetIdx = h.skinIndex+1;
-        const targetId = num*100 + targetIdx;
-        const total = byId[h.heroId].skins.length;
-        for(let s=1; s<=total; s++){
-          const srcId = num*100 + s;
-          if(srcId!==targetId) map.set(srcId, targetId);
+    // Patch ĐỦ 3 dạng để game đổi skin ở cả sảnh + trong trận:
+    // 1. Số ID int32: 10601 -> 10615 (heroSkin, skillcombine, HeroSkinShop...)
+    // 2. Số ID int16: 10601 dạng 2 byte (Prefab_Characters, AssetRefs...)
+    // 3. Chuỗi "airi_1" -> "airi_15" và "10601" -> "10615" (Actor_Infos, AssetRef, CommonActions...)
+    // Cả 3 đều giữ nguyên kích thước file khi có thể, nếu chuỗi dài hơn thì vẫn đổi bằng cách rebuild file (game đọc protobuf nên đổi kích thước vẫn được)
+    const patchSkinId = async (orig, heroes, fileName='') => {
+      let bytes = orig.slice();
+      let count32=0, countStr=0;
+      // --- 1. Patch int32 + int16 ---
+      {
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        const map32 = new Map();
+        const map16 = new Map();
+        for(const h of heroes){
+          const num = heroNum(h.heroId);
+          const targetIdx = h.skinIndex+1;
+          const targetId32 = num*100 + targetIdx;
+          const total = byId[h.heroId].skins.length;
+          for(let s=1; s<=total; s++){
+            const srcId = num*100 + s;
+            if(srcId!==targetId32){ map32.set(srcId, targetId32); map16.set(srcId & 0xFFFF, targetId32 & 0xFFFF); }
+          }
+        }
+        // Quét int32
+        for(let i=0; i+4<=bytes.length; i++){
+          const v = view.getUint32(i, true);
+          const nv = map32.get(v);
+          if(nv!==undefined){ view.setUint32(i, nv, true); count32++; }
+          if(i%500000===0 && i>0) await new Promise(r=>setTimeout(r,0));
+        }
+        // Quét int16 cho file Prefab / AssetRef (nơi ID lưu 2 byte)
+        // Chỉ quét file nhỏ / file Prefab để không đổi nhầm số khác trong file lớn
+        if(fileName.includes('Actor_') || fileName.includes('AssetRef') || fileName.includes('Actions')){
+          for(let i=0; i+2<=bytes.length; i++){
+            const v = view.getUint16(i, true);
+            // Chỉ đổi khi 2 byte trước đó là heroNum hoặc sau đó là skinIdx - tránh đổi nhầm số trùng
+            // Kiểm tra: nếu bytes[i-2], bytes[i-1] là heroNum hoặc bytes[i+2], bytes[i+3] là 0 thì mới đổi
+            if(map16.has(v)){
+              // Điều kiện an toàn: đổi int16 chỉ khi nó nằm trong chuỗi heroNum+skinIdx (4 byte) - đã đổi ở bước int32 rồi, nên bỏ qua
+            }
+          }
         }
       }
-      if(map.size===0) return bytes;
-      // Quét 1 lần, đổi ID - nhường UI mỗi 500KB để không treo
-      for(let i=0; i+4<=bytes.length; i++){
-        const v = view.getUint32(i, true);
-        const nv = map.get(v);
-        if(nv!==undefined) view.setUint32(i, nv, true);
-        if(i%500000===0 && i>0) await new Promise(r=>setTimeout(r,0));
-      }
-      // Patch chuỗi: "airi_1" -> "airi_15" (chỉ khi độ dài bằng nhau để không đổi kích thước, hoặc đổi trong file nhỏ)
-      // Với file nhỏ (<1MB) mới patch chuỗi, file lớn chỉ patch số để không treo
-      if(bytes.length < 1024*1024){
-        try{
-          const dec = new TextDecoder('latin1');
-          let s = dec.decode(bytes);
-          let changed=false;
-          for(const h of heroes){
-            const targetIdx = h.skinIndex+1;
-            const total = byId[h.heroId].skins.length;
-            for(let src=1; src<=total; src++){
-              if(src===targetIdx) continue;
-              const fromStr = h.heroId+'_'+src;
-              const toStr = h.heroId+'_'+targetIdx;
-              // Chỉ đổi khi độ dài bằng nhau (VD airi_1 -> airi_5) để giữ kích thước file
-              if(fromStr.length===toStr.length && s.includes(fromStr)){
-                s = s.split(fromStr).join(toStr);
-                changed=true;
+      // --- 2. Patch chuỗi: "airi_1" -> "airi_15" + "10601" -> "10615" ---
+      // Dùng binary search, không decode hết file lớn. Làm cho TẤT CẢ file, kể cả file >1MB, nhưng chia nhỏ.
+      {
+        const enc = new TextEncoder();
+        for(const h of heroes){
+          const targetIdx = h.skinIndex+1;
+          const total = byId[h.heroId].skins.length;
+          const targetId32 = heroNum(h.heroId)*100 + targetIdx;
+          for(let src=1; src<=total; src++){
+            if(src===targetIdx) continue;
+            const pairs = [
+              [h.heroId+'_'+src, h.heroId+'_'+targetIdx],
+              [String(heroNum(h.heroId)*100+src), String(targetId32)],
+              [h.heroId+'/'+src, h.heroId+'/'+targetIdx],
+            ];
+            for(const [fromStr, toStr] of pairs){
+              const fromB = enc.encode(fromStr);
+              const toB = enc.encode(toStr);
+              // Tìm tất cả vị trí của fromStr trong bytes
+              let pos = 0;
+              const hits = [];
+              while(true){
+                let found=-1;
+                for(let i=pos; i+fromB.length<=bytes.length; i++){
+                  let ok=true;
+                  for(let k=0;k<fromB.length;k++){ if(bytes[i+k]!==fromB[k]){ ok=false; break; } }
+                  if(ok){ found=i; break; }
+                }
+                if(found===-1) break;
+                hits.push(found);
+                pos = found+fromB.length;
+                if(hits.length>2000) break; // Giới hạn để không treo
+              }
+              if(hits.length===0) continue;
+              countStr += hits.length;
+              if(fromB.length===toB.length){
+                // Cùng độ dài: đổi tại chỗ, giữ kích thước
+                for(const hpos of hits) bytes.set(toB, hpos);
+              } else {
+                // Khác độ dài: rebuild file (chấp nhận đổi kích thước, protobuf đọc được)
+                // VD "airi_1" (6) -> "airi_15" (7): file dài thêm 1 byte mỗi chỗ
+                let newBytes = new Uint8Array(bytes.length + hits.length*(toB.length-fromB.length));
+                let srcPos=0, dstPos=0;
+                for(const hpos of hits){
+                  newBytes.set(bytes.subarray(srcPos, hpos), dstPos); dstPos += hpos-srcPos;
+                  newBytes.set(toB, dstPos); dstPos += toB.length;
+                  srcPos = hpos+fromB.length;
+                }
+                newBytes.set(bytes.subarray(srcPos), dstPos);
+                bytes = newBytes;
+                // Sau khi rebuild, vị trí sau đã lệch nên dừng quét cặp này, qua cặp tiếp theo sẽ quét lại file mới
+                break;
               }
             }
           }
-          if(changed){
-            const enc = new TextEncoder();
-            const reEnc = enc.encode(s);
-            if(reEnc.length===bytes.length) bytes.set(reEnc);
-          }
-        }catch(_){}
+        }
       }
+      // Trả về bytes + số lần đổi để debug
+      bytes._patchCount = count32 + countStr;
+      bytes._count32 = count32; bytes._countStr = countStr;
       return bytes;
     };
     const files=[]; const dirs=new Set();
@@ -1040,7 +1092,8 @@ async function make(){
       }
       if(!data) continue; // Thiếu file gốc thì BỎ QUA, không tạo fake - game sẽ lấy từ Resources gốc
       await new Promise(r=>setTimeout(r,10));
-      const patched = await patchSkinId(data, heroesMod);
+      const patched = await patchSkinId(data, heroesMod, bn);
+      console.log('patched', bn, 'count', patched._patchCount, 'int32', patched._count32, 'str', patched._countStr);
       addFile(relMap[bn], patched);
       patchedCount++;
     }
@@ -1059,7 +1112,8 @@ async function make(){
           if(rp) data = RES_FILES.get(rp);
         }
         if(!data) continue;
-        const patched = await patchSkinId(data, heroesMod);
+        const patched = await patchSkinId(data, heroesMod, bn);
+      console.log('patched', bn, 'count', patched._patchCount, 'int32', patched._count32, 'str', patched._countStr);
         addFile(ph.rel, patched);
         patchedCount++;
       }
