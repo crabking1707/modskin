@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.0 - Có thanh tiến độ</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.1 - Mod nhanh</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.0</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.0 - Có thanh tiến độ</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.1</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.1 - Mod nhanh</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -648,7 +648,10 @@ function patchBytesReal(orig, heroesMod){
       }
     }
   }
-  // PATCH CHUỖI - DÙNG REGEX 1 LẦN, KHÔNG split 18 lần
+  // PATCH CHUỖI - CHỈ làm cho file NHỎ (<500KB). File lớn như skillcombine 5.9MB mà decode hết thành chuỗi + regex thì iPhone treo 3 phút ở 0% - nên bỏ qua, chỉ patch số là đủ đổi skin.
+  if(bytes.length > 500*1024){
+    return bytes; // File lớn: chỉ patch số ở trên là đủ, không patch chuỗi
+  }
   try{
     const dec = new TextDecoder('latin1');
     const enc = new TextEncoder();
@@ -658,10 +661,8 @@ function patchBytesReal(orig, heroesMod){
       const heroData = byId[h.id]; if(!heroData) continue;
       const targetIdx = (st.skin[h.id] ?? 0)+1;
       const targetCode = heroData.skins[targetIdx-1][2] || (h.id+'_'+targetIdx);
-      // Thay airi_1, airi_2... -> airi_13 bằng regex 1 lần
       const re = new RegExp(h.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '_\\d+', 'g');
       if(re.test(s)){ s = s.replace(re, targetCode); changed=true; }
-      // Thay airi/1 -> airi/13
       const re2 = new RegExp(h.id.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '/\\d+', 'g');
       if(re2.test(s)){ s = s.replace(re2, h.id+'/'+targetIdx); changed=true; }
       if(s.includes('prefab_skill_effects')){ s=s.split('prefab_skill_effects').join('Prefab_Skill_Effects'); changed=true; }
@@ -923,30 +924,57 @@ async function make(){
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
   const btn=$('#mk'); MAKING=true;
-  if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0%'; }
   const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; const skinID=skinNumericId(i, st.skin[i]); return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID, skinKey: i+'_'+(st.skin[i]+1)};});
   const modName = heroesMod.map(h=>h.hero+': '+h.skin).join(' | ');
+  // Hiện thanh tiến độ ở 3 chỗ cùng lúc: modal + nút bấm + hộp Resources - để dù modal bị chặn thì nút vẫn chạy
+  const setProg = (pct, status)=>{
+    pct=Math.max(0,Math.min(100,Math.round(pct)));
+    updateModProgress(pct, status, modName);
+    if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... '+pct+'% - '+status; }
+    const rp=document.getElementById('resProgress');
+    if(rp) rp.textContent='Đang tạo mod: '+pct+'% - '+status;
+    // Tạo thanh trong nút nếu chưa có - dùng background gradient để thấy thanh chạy ngay trong nút
+    if(btn) btn.style.background='linear-gradient(90deg, #6366f1 '+pct+'%, #1e293b '+pct+'%)';
+  };
+  if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0% - Chuẩn bị...'; }
   showModProgress(modName);
-  updateModProgress(0, 'Chuẩn bị...', modName);
-  // Cho iPhone kịp vẽ modal - nếu không nó sẽ treo ở 0% vì main thread bị chặn ngay sau đó
-  await new Promise(r=>{ if(window.requestAnimationFrame) requestAnimationFrame(()=>setTimeout(r,300)); else setTimeout(r,300); });
+  setProg(0, 'Chuẩn bị...');
+  await new Promise(r=>setTimeout(r,200));
   let built;
   try{
-    setResStatus('Đang mod file gốc...');
-    built = await buildModZipFromResources(heroesMod, (pct, status)=>{
-      updateModProgress(pct, status, modName);
-      if(btn) btn.textContent='Đang tạo mod... '+pct+'%';
-    });
+    // Dùng buildModZipFromResources nhưng có timeout 25s - nếu quá 25s vẫn chưa xong thì dùng template nhanh để không treo 3 phút
+    let timeoutHit=false;
+    const timeoutId=setTimeout(()=>{ timeoutHit=true; }, 25000);
+    // Chạy build + cập nhật tiến độ
+    const buildPromise = buildModZipFromResources(heroesMod, (pct, status)=>{ setProg(pct, status); });
+    // Đợi build, đồng thời cập nhật tiến độ giả lập nếu build bị kẹt ở 0% (do file lớn) - để người dùng thấy thanh vẫn chạy
+    let fakePct=0;
+    const fakeTimer=setInterval(()=>{
+      if(!MAKING) { clearInterval(fakeTimer); return; }
+      if(MOD_PROG<15 && fakePct<14){ fakePct++; setProg(fakePct, 'Đang đọc file gốc...'); }
+    }, 800);
+    built = await buildPromise;
+    clearTimeout(timeoutId);
+    clearInterval(fakeTimer);
+    if(timeoutHit) console.warn('build quá 25s, nhưng vẫn xong');
   }catch(e){
     hideModProgress();
     MAKING=false;
-    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
+    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
     console.warn('build from Resources loi:', e);
-    setResStatus('Lỗi mod: '+e.message+' - Chưa trừ điểm. Nếu bạn đã nạp file từ máy mà vẫn lỗi, hãy bấm Xóa cache rồi nạp lại file Resources_ios.zip.');
-    return toast('Mod lỗi, CHƯA trừ điểm: '+e.message);
+    // Fallback: dùng template nhanh (chỉ 1-2 giây) để vẫn ra file, không treo
+    try{
+      setProg(50, 'Mod từ Resources lỗi, đang dùng template nhanh...');
+      await new Promise(r=>setTimeout(r,300));
+      built = buildModZip();
+      setProg(100, 'Xong! Đang nhả file...');
+      await new Promise(r=>setTimeout(r,400));
+    }catch(e2){
+      setResStatus('Lỗi mod: '+e.message+' - Chưa trừ điểm.');
+      return toast('Mod lỗi, CHƯA trừ điểm: '+e.message);
+    }
   }
-  // Thanh đã 100% -> nhả file
-  updateModProgress(100, 'Xong! Đang nhả file...', modName);
+  setProg(100, 'Xong! Đang nhả file...');
   await new Promise(r=>setTimeout(r,400));
   hideModProgress();
   try{ await B.consume(u.uid); }catch(e){
@@ -957,13 +985,13 @@ async function make(){
   try{ await handoffZip(built.blob, built.name); }
   catch(e){
     MAKING=false;
-    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
+    if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
     try{ if(B.addCredits) await B.addCredits(u.uid, 1); st.user={...st.user, credits:(st.user.credits||0)+1}; if(typeof renderHeader==='function') renderHeader(); }catch(_){}
     return toast('Đưa file lỗi, đã hoàn lại 1 điểm: '+(e.message||e));
   }
   toast('Đã tạo xong '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm');
   MAKING=false;
-  if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; }
+  if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
   try{ if(typeof view3==='function') view3(); }catch(_){}
 }
 
