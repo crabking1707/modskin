@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.2 - Sửa lỗi bn</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.3 - Đổi cả bundle xiaoqiao, đổi model 3D</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.2</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.2 - Sửa lỗi bn</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.3</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.3 - Đổi cả bundle xiaoqiao, đổi model 3D</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
   const btnLoadRes=document.getElementById('btnLoadRes');
   if(btnLoadRes) btnLoadRes.onclick=async ()=>{
@@ -555,14 +555,23 @@ let RES_STATUS = 'Chưa tải Resources.zip - Bấm nút tải ở trên hoặc 
 let RES_ALL_NAMES = [];
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function resNeededBasenames(heroesMod){
-  // CHỈ lấy file thật sự chứa skin - bỏ BattleBank, LobbyBank... vì patch chúng vừa lâu vừa không đổi skin, mà vẫn phải duyệt 5MB mỗi file nên treo 3 phút ở 0%
   const set = new Set(['version','KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
   for(const h of heroesMod){
     const num = heroNum(h.id);
     set.add('Actor_'+num+'_Infos.pkg.bytes');
     set.add(num+'_AssetRef.bytes');
     set.add('Actor_'+num+'_Actions.pkg.bytes');
+    // Thêm file assetbundle của tướng - game lấy model 3D từ đây, không đổi là sảnh vẫn hiện mặc định
+    // VD Airi: 106_xiaoqiao_battle_base_low.assetbundle, 106_xiaoqiao_battle_13_low.assetbundle...
+    // unzipNeededV2 sẽ lấy thêm file nào chứa "106" hoặc "xiaoqiao" hoặc "airi" trong tên (xem hàm đó)
+    set.add('__WILDCARD_'+num+'__');
+    set.add('__WILDCARD_'+h.id+'__');
+    // Tên gốc của tướng (Airi = xiaoqiao)
+    const origName = (byId[h.id] && byId[h.id].bundleName) || '';
+    if(origName) set.add('__WILDCARD_'+origName+'__');
   }
+  // Lưu thêm map hero -> tên gốc để unzip dùng
+  window._HERO_WILDCARDS = heroesMod.map(h=>({num:heroNum(h.id), id:h.id, bundle: (byId[h.id] && byId[h.id].bundleName) || ''}));
   return set;
 }
 function baseName(path){ const parts=String(path).split('/'); return parts[parts.length-1]; }
@@ -587,8 +596,21 @@ async function unzipNeededV2(zipBytes, needBasenames){
     const name = dec.decode(zipBytes.subarray(cdOff+46, cdOff+46+nameLen));
     cdOff += 46+nameLen+extraLen+commentLen;
     RES_ALL_NAMES.push(name);
-    const bn = baseName(name);
-    if(!needBasenames.has(bn)) continue;
+        const bn = baseName(name);
+    // Kiểm tra wildcard: nếu file chứa heroNum / heroId / bundleName thì lấy luôn (để đổi model 3D)
+    let isNeed = needBasenames.has(bn);
+    if(!isNeed && window._HERO_WILDCARDS){
+      const low = name.toLowerCase();
+      for(const w of window._HERO_WILDCARDS){
+        if(low.includes(String(w.num)) || low.includes(w.id.toLowerCase()) || (w.bundle && low.includes(w.bundle.toLowerCase()))){
+          // Chỉ lấy file assetbundle / Prefab / AssetRefs / Ages của tướng đó, không lấy file quá lớn khác
+          if(low.includes('.assetbundle') || low.includes('prefab') || low.includes('assetref') || low.includes('actor_') || low.includes('ages')){
+            isNeed = true; break;
+          }
+        }
+      }
+    }
+    if(!isNeed) continue;
     const lNameLen = view.getUint16(localOff+26,true);
     const lExtraLen = view.getUint16(localOff+28,true);
     const dataStart = localOff+30+lNameLen+lExtraLen;
@@ -998,10 +1020,25 @@ async function make(){
           const targetId32 = heroNum(h.heroId)*100 + targetIdx;
           for(let src=1; src<=total; src++){
             if(src===targetIdx) continue;
+            // Thêm cả tên gốc bundle (Airi = xiaoqiao) và dạng battle_base
+            // Game lấy model 3D từ bundle "106_xiaoqiao_battle_base_low" - đổi base -> 13 là đổi model
+            // Map tên gốc bundle: Airi=xiaoqiao, Paine=... - lấy từ bundle_file nếu có, không có thì dùng map cứng
+            const BUNDLE_MAP = {airi:'xiaoqiao', paine:'yena', nakroth:'nakroth', violet:'violet', murad:'murad', zata:'zata', yan:'yan', allain:'allain', flo:'florentino', butterfly:'butterfly', kriknak:'kriknak', quillen:'quillen', enzo:'enzo', bright:'bright', elsu:'elsu', hayate:'hayate', capheny:'capheny', laville:'laville', telannas:'telannas', yorn:'yorn', valhein:'valhein', thorn:'thorn', fennik:'fennik', wisp:'wisp', slimz:'slimz'};
+            const bundleName = (byId[h.heroId] && byId[h.heroId].bundleName) || BUNDLE_MAP[h.heroId] || h.heroId;
             const pairs = [
               [h.heroId+'_'+src, h.heroId+'_'+targetIdx],
               [String(heroNum(h.heroId)*100+src), String(targetId32)],
               [h.heroId+'/'+src, h.heroId+'/'+targetIdx],
+              [h.heroId+'_'+String(src).padStart(2,'0'), h.heroId+'_'+String(targetIdx).padStart(2,'0')],
+              [bundleName+'_'+src, bundleName+'_'+targetIdx],
+              [bundleName+'_base', bundleName+'_'+targetIdx],
+              [bundleName+'_battle_base', bundleName+'_battle_'+targetIdx],
+              ['battle_base', 'battle_'+targetIdx],
+              ['battle_'+src, 'battle_'+targetIdx],
+              [heroNum(h.heroId)+'_'+src, heroNum(h.heroId)+'_'+targetIdx],
+              [heroNum(h.heroId)+'_'+String(src).padStart(2,'0'), heroNum(h.heroId)+'_'+String(targetIdx).padStart(2,'0')],
+              // Dạng "106_01" (có số 0) -> "106_13"
+              [heroNum(h.heroId)+'_0'+src, heroNum(h.heroId)+'_'+targetIdx],
             ];
             for(const [fromStr, toStr] of pairs){
               const fromB = enc.encode(fromStr);
@@ -1116,6 +1153,37 @@ async function make(){
       console.log('patched', ph.bn, 'count', patched._patchCount, 'int32', patched._count32, 'str', patched._countStr);
         addFile(ph.rel, patched);
         patchedCount++;
+      }
+    }
+    // COPY assetbundle skin đích đè lên skin gốc - để sảnh hiện model 3D của skin đích
+    // VD: file "106_xiaoqiao_battle_13_low.assetbundle" (Bích hải) copy đè lên "106_xiaoqiao_battle_base_low.assetbundle" (mặc định)
+    // Nếu không có file assetbundle của skin đích thì vẫn dùng patch chuỗi ở trên (đổi tên bundle)
+    for(const h of heroesMod){
+      const num = heroNum(h.heroId);
+      const targetIdx = h.skinIndex+1;
+      // Tìm file assetbundle của skin đích trong RES_FILES
+      let targetBundleData = null, targetBundleName = '';
+      for(const [k, v] of RES_FILES.entries()){
+        const low = k.toLowerCase();
+        if(low.includes(String(num)) && low.includes('.assetbundle') && (low.includes('_'+targetIdx) || low.includes('_'+String(targetIdx).padStart(2,'0')) || low.includes('battle_'+targetIdx))){
+          targetBundleData = v; targetBundleName = k; break;
+        }
+      }
+      if(targetBundleData){
+        // Tìm file base của tướng đó
+        for(const [k, v] of RES_FILES.entries()){
+          const low = k.toLowerCase();
+          if(low.includes(String(num)) && low.includes('.assetbundle') && (low.includes('_base') || low.includes('base_low'))){
+            // Copy file đích đè lên file base - dùng đường dẫn thật của file base
+            const relBase = window.RES_PATHS && window.RES_PATHS[k] ? window.RES_PATHS[k] : ('Resources/1.64.1/assetbundle/'+k);
+            // Xóa file base cũ trong files (nếu đã thêm) rồi thêm file đích với tên base
+            const idxOld = files.findIndex(f=>f.name===relBase);
+            if(idxOld!==-1) files.splice(idxOld, 1);
+            addFile(relBase, targetBundleData.slice());
+            console.log('copied bundle', targetBundleName, '->', k);
+            break;
+          }
+        }
       }
     }
     if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources_ios.zip. Hãy nạp lại file đó, kiểm tra dòng trạng thái xem nó báo bao nhiêu file.');
