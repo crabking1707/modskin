@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.3 - Không mất thanh</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.0 - Tạo nhanh 1s</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -408,13 +408,12 @@ function view2(){
 }
 
 function view3(){
-  if(typeof MAKING!=='undefined' && MAKING){ return; } // Đang tạo mod thì không render lại - giữ thanh tiến độ
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
   const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.3</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.3 - Không mất thanh</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.0</h3><p class="sub" style="margin:0 0 8px">Tạo file dùng <b>template nhanh</b> - bấm Tạo là ra file trong 1-2 giây, không cần đợi tải Resources.zip 242MB. File mod ra chỉ chứa file đã mod, bạn giải nén đè lên Resources là chơi được.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.0 - Tạo nhanh 1s</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -947,62 +946,20 @@ async function make(){
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
   const btn=$('#mk'); MAKING=true;
-  const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; const skinID=skinNumericId(i, st.skin[i]); return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID, skinKey: i+'_'+(st.skin[i]+1)};});
-  const modName = heroesMod.map(h=>h.hero+': '+h.skin).join(' | ');
-  // Hiện thanh tiến độ ở 3 chỗ cùng lúc: modal + nút bấm + hộp Resources - để dù modal bị chặn thì nút vẫn chạy
-  const setProg = (pct, status)=>{
-    pct=Math.max(0,Math.min(100,Math.round(pct)));
-    updateModProgress(pct, status, modName);
-    // Lấy nút MỚI NHẤT mỗi lần, vì nút cũ có thể đã bị render lại
-    const curBtn=document.getElementById('mk') || btn;
-    if(curBtn){ curBtn.disabled=true; curBtn.textContent='Đang tạo mod... '+pct+'% - '+status; curBtn.style.background='linear-gradient(90deg, #6366f1 '+pct+'%, #1e293b '+pct+'%)'; }
-    const rp=document.getElementById('resProgress');
-    if(rp) rp.textContent='Đang tạo mod: '+pct+'% - '+status;
-  };
-  if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0% - Chuẩn bị...'; }
-  showModProgress(modName);
-  startProgKeeper();
-  setProg(0, 'Chuẩn bị...');
-  await new Promise(r=>setTimeout(r,200));
+  if(btn){ btn.disabled=true; btn.textContent='Đang tạo file...'; }
+  // Cho UI kịp hiện "Đang tạo" trước khi tạo file
+  await new Promise(r=>setTimeout(r,50));
   let built;
   try{
-    // Dùng buildModZipFromResources nhưng có timeout 25s - nếu quá 25s vẫn chưa xong thì dùng template nhanh để không treo 3 phút
-    let timeoutHit=false;
-    const timeoutId=setTimeout(()=>{ timeoutHit=true; }, 25000);
-    // Chạy build + cập nhật tiến độ
-    const buildPromise = buildModZipFromResources(heroesMod, (pct, status)=>{ setProg(pct, status); });
-    // Đợi build, đồng thời cập nhật tiến độ giả lập nếu build bị kẹt ở 0% (do file lớn) - để người dùng thấy thanh vẫn chạy
-    let fakePct=0;
-    const fakeTimer=setInterval(()=>{
-      if(!MAKING) { clearInterval(fakeTimer); return; }
-      if(MOD_PROG<15 && fakePct<14){ fakePct++; setProg(fakePct, 'Đang đọc file gốc...'); }
-    }, 800);
-    built = await buildPromise;
-    clearTimeout(timeoutId);
-    clearInterval(fakeTimer);
-    if(timeoutHit) console.warn('build quá 25s, nhưng vẫn xong');
+    // BỎ mod từ Resources.zip - nó patch file 5.9MB nên iPhone treo, đợi mãi không ra file.
+    // Dùng template nhanh: tạo file chỉ vài KB, xong trong 1 giây, game vẫn nhận skin.
+    built = buildModZip();
   }catch(e){
-    hideModProgress();
-    stopProgKeeper();
     MAKING=false;
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
-    console.warn('build from Resources loi:', e);
-    // Fallback: dùng template nhanh (chỉ 1-2 giây) để vẫn ra file, không treo
-    try{
-      setProg(50, 'Mod từ Resources lỗi, đang dùng template nhanh...');
-      await new Promise(r=>setTimeout(r,300));
-      built = buildModZip();
-      setProg(100, 'Xong! Đang nhả file...');
-      await new Promise(r=>setTimeout(r,400));
-    }catch(e2){
-      setResStatus('Lỗi mod: '+e.message+' - Chưa trừ điểm.');
-      return toast('Mod lỗi, CHƯA trừ điểm: '+e.message);
-    }
+    return toast('Không tạo được file: '+(e.message||e)+' - Chưa trừ điểm');
   }
-  setProg(100, 'Xong! Đang nhả file...');
-  await new Promise(r=>setTimeout(r,400));
-  hideModProgress();
-  stopProgKeeper();
+  // Tạo xong mới trừ điểm
   try{ await B.consume(u.uid); }catch(e){
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); }catch(e2){}
   }
@@ -1028,7 +985,7 @@ B.onUser(u=>{
   st.user=u;
   if(!u){st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
   renderHeader();
-  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3 && !MAKING)view3(); // KHÔNG render lại khi đang tạo mod - nếu render lại sẽ mất thanh tiến độ + nút bị mở khóa lại
+  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3)view3();
   if(st.topup&&!$('#cd'))renderTopup(); // làm mới số điểm trong popup
 });
 </script>
