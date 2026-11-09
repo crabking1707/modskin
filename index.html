@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.2 - Giống file mẫu + Tải trực tiếp</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.3 - Đã xóa Cam xa + Tải trực tiếp</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,9 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.2</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. Bạn <b>bắt buộc</b> phải nạp file Resources_ios.zip trước rồi mới bấm Tạo.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.2 - Giống file mẫu + Tải trực tiếp</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
-  <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
-  <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.3</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. Bạn <b>bắt buộc</b> phải nạp file Resources_ios.zip trước rồi mới bấm Tạo.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.3 - Đã xóa Cam xa + Tải trực tiếp</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
   const btnLoadRes=document.getElementById('btnLoadRes');
   if(btnLoadRes) btnLoadRes.onclick=async ()=>{
@@ -449,9 +447,8 @@ function view3(){
 
   document.querySelectorAll('.skins').forEach(g=>g.onclick=e=>{const b=e.target.closest('.sk');if(!b)return;st.skin[g.dataset.hero]=+b.dataset.i;
     g.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',x===b));foot()});
-  document.querySelectorAll('[data-c]').forEach(b=>b.onclick=()=>{st.cam=+b.dataset.c;document.querySelectorAll('[data-c]').forEach(x=>x.classList.toggle('on',x===b));foot()});
   function foot(){const d=st.picked.filter(i=>st.skin[i]!=null),u=st.user;
-    bar(`<div class="row"><div class="logo" style="background:#fff;color:#0f172a">✨</div><div class="s"><b>${st.device==='ios'?'iOS':'Android'} • ${all} tướng • ${d.length} skin đã chọn</b><span>${d.length?d.map(i=>byId[i].name+': '+byId[i].skins[st.skin[i]][0]).join(' | '):'Chọn skin cho từng tướng để tạo file'} • Cam xa ${st.cam}%</span></div></div>
+    bar(`<div class="row"><div class="logo" style="background:#fff;color:#0f172a">✨</div><div class="s"><b>${st.device==='ios'?'iOS':'Android'} • ${all} tướng • ${d.length} skin đã chọn</b><span>${d.length?d.map(i=>byId[i].name+': '+byId[i].skins[st.skin[i]][0]).join(' | '):'Chọn skin cho từng tướng để tạo file'}</span></div></div>
     <button class="go full" id="mk" ${d.length?'':'disabled'}>Tạo file ZIP ✨ ${u.credits<1?'(cần ≥ 1 điểm)':'(−1 điểm)'}</button>`);
     $('#mk').onclick=make}
   foot();
@@ -897,20 +894,33 @@ let MAKING=false;
 let LAST_MOD_URL=null;
 let LAST_MOD_NAME='';
 function handoffZip(blob,name){
-  // TẢI TRỰC TIẾP - như file mẫu: bấm Tạo là tải luôn, không qua hộp Chia sẻ
+  // TẢI TRỰC TIẾP - Safari chặn <a>.click() sau await nên phải hiện nút để user bấm (đúng gesture mới tải được)
+  // Đây vẫn là tải trực tiếp bằng <a download>, không phải Chia sẻ
   if(window.LAST_MOD_URL){ try{ URL.revokeObjectURL(window.LAST_MOD_URL); }catch(_){} }
   const url = URL.createObjectURL(blob);
   window.LAST_MOD_URL=url; window.LAST_MOD_NAME=name;
-  // Cách 1: tạo thẻ <a> tải trực tiếp - iPhone sẽ lưu vào Tệp > Tải về
-  const a=document.createElement('a');
-  a.href=url; a.download=name;
-  a.style.display='none';
-  document.body.appendChild(a);
-  a.click();
-  // Giữ URL 30s để iPhone kịp tải, không revoke ngay
-  setTimeout(()=>{ try{ URL.revokeObjectURL(url); }catch(_){} }, 30000);
-  // Xóa thẻ sau 1s
-  setTimeout(()=>{ try{ a.remove(); }catch(_){} }, 1000);
+  const sizeMB = (blob.size/1024/1024).toFixed(1);
+  let m = document.getElementById('modModal');
+  if(!m){
+    m=document.createElement('div'); m.id='modModal';
+    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+    document.body.appendChild(m);
+  }
+  m.innerHTML = '<div style="background:#fff;border-radius:18px;padding:22px;max-width:360px;width:100%;text-align:center">'
+    + '<div style="font-size:32px">✅</div><h3 style="margin:8px 0 4px">File mod đã xong!</h3>'
+    + '<p style="font-size:13px;color:#64748b;margin:0 0 14px;word-break:break-all">'+name+'<br>'+sizeMB+' MB</p>'
+    + '<a id="modDownloadBtn" href="'+url+'" download="'+name+'" style="display:block;background:#0f172a;color:#fff;padding:14px;border-radius:12px;text-decoration:none;font-weight:800;margin-bottom:8px">⬇️ Bấm để Tải file về</a>'
+    + '<button id="modCloseBtn" style="display:block;width:100%;background:#f1f5f9;color:#0f172a;padding:10px;border-radius:12px;border:0">Đóng</button>'
+    + '<p style="font-size:11px;color:#94a3b8;margin:10px 0 0">Bấm nút trên 1 lần, file sẽ lưu vào <b>Tệp &gt; Tải về</b>.</p></div>';
+  m.style.display='flex';
+  const dl = document.getElementById('modDownloadBtn');
+  if(dl) dl.onclick = ()=>{ setTimeout(()=>{ try{ toast('Đang tải '+name+'... Kiểm tra Tệp > Tải về'); }catch(_){} }, 200); };
+  const cl = document.getElementById('modCloseBtn');
+  if(cl) cl.onclick = ()=>{ m.style.display='none'; };
+  // Thử tải tự động 1 lần (Android/PC được, iPhone sẽ chặn nhưng vẫn còn nút để bấm tay)
+  try{
+    const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  }catch(_){}
   return Promise.resolve();
 }
 async function make(){
@@ -923,7 +933,7 @@ async function make(){
     return toast('Bạn chưa nạp Resources gốc! Bấm "Chọn file Resources.zip từ máy" chọn file Resources_ios.zip trước rồi mới bấm Tạo.');
   }
   const btn=$('#mk'); MAKING=true;
-  if(btn){ btn.disabled=true; btn.textContent='Đang tạo file...'; }
+  if(btn){ btn.disabled=true; btn.textContent='Đang tạo file... Đợi 2-3 giây'; }
   await new Promise(r=>setTimeout(r,50));
   const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID:skinNumericId(i, st.skin[i])};});
   let built;
@@ -1036,6 +1046,9 @@ async function make(){
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
     return toast('Mod lỗi, CHƯA trừ điểm: '+(e.message||e));
   }
+  // Reset MAKING trước khi nhả file - để dù Safari chặn tải thì nút cũng không kẹt ở "Đang tạo file..."
+  MAKING=false;
+  if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
   try{ await B.consume(u.uid); }catch(e){
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); }catch(e2){}
   }
