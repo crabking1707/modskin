@@ -413,20 +413,48 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc Resources_ios.zip (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại 2.67MB. Chọn file Resources_ios.zip (206MB) từ máy.</p><label class="pill" style="cursor:pointer">📂 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc Resources.zip (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại 2.67MB. Chọn file Resources.zip (206MB) từ máy.</p><label class="pill" style="cursor:pointer">📂 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy Resources từ GitHub (bản mới nhất)</button><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>Resources.zip</b> bạn up lên repo (crabking1707.github.io) - lúc game cập nhật bạn chỉ cần up file mới lên repo là web tự lấy bản mới, không cần tải 206MB về máy rồi up lại.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
-  const fileRes=document.getElementById('fileResZip');
+    const fileRes=document.getElementById('fileResZip');
   if(fileRes) fileRes.onchange=async (e)=>{
     const f=e.target.files[0]; if(!f) return;
     setResStatus('Đang đọc file '+f.name+' ('+Math.round(f.size/1024/1024)+'MB)...');
     try{
       const buf = await f.arrayBuffer();
+      RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = f.name;
       const need = resNeededBasenames(st.picked.map(id=>({id})));
-      // Cần cả file kiểm tra hash + file của tướng đã chọn, nếu chưa chọn tướng thì lấy tất cả file kiểm tra trước
-      RES_FILES = await unzipNeededV2(new Uint8Array(buf), need);
-      setResStatus('Đã nạp Resources_ios.zip: '+RES_FILES.size+' file - Sẵn sàng mod! Nếu bạn đổi tướng, nạp lại file này.');
-      toast('Đã nạp Resources_ios.zip xong');
+      RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
+      setResStatus('Đã nạp Resources.zip: '+RES_FILES.size+' file - Sẵn sàng mod! Nếu bạn đổi tướng, không cần nạp lại, lúc Tạo file nó tự lấy thêm file của tướng.');
+      toast('Đã nạp Resources.zip xong');
     }catch(err){ setResStatus('Lỗi: '+err.message); toast(err.message); }
+  };
+  // Nút lấy từ GitHub - thử GitHub Pages trước (có CORS), rồi raw, rồi Release
+  const btnGit=document.getElementById('btnGitRes');
+  if(btnGit) btnGit.onclick=async ()=>{
+    setResStatus('Đang lấy Resources.zip từ GitHub (bản mới nhất)...');
+    const urls = [
+      'https://crabking1707.github.io/modskin/Resources.zip',
+      'https://raw.githubusercontent.com/crabking1707/modskin/main/Resources.zip',
+      'https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip',
+    ];
+    let lastErr = '';
+    for(const u of urls){
+      try{
+        setResStatus('Đang thử '+u+' ...');
+        const r = await fetch(u);
+        if(!r.ok){ lastErr = 'HTTP '+r.status+' ở '+u; continue; }
+        const buf = await r.arrayBuffer();
+        if(buf.byteLength < 1000000){ lastErr = 'File tải về quá nhỏ ('+buf.byteLength+') ở '+u; continue; }
+        RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = 'Resources.zip (GitHub)';
+        const need = resNeededBasenames(st.picked.map(id=>({id})));
+        RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
+        setResStatus('Đã lấy từ GitHub: '+RES_FILES.size+' file ('+Math.round(buf.byteLength/1024/1024)+'MB) - Sẵn sàng mod! Lúc game cập nhật bạn up file mới lên repo là web tự lấy bản mới.');
+        toast('Đã lấy Resources từ GitHub xong');
+        return;
+      }catch(e){ lastErr = e.message; continue; }
+    }
+    setResStatus('Lấy từ GitHub lỗi: '+lastErr+' - Hãy dùng nút "Chọn file từ máy" hoặc kiểm tra file Resources.zip đã up lên repo chưa.');
+    toast('Lấy từ GitHub lỗi, thử chọn file từ máy');
   };
   const btnClear=document.getElementById('btnClearRes');
   if(btnClear) btnClear.onclick=()=>{ RES_FILES=null; RES_PATHS={}; setResStatus('Đã xóa cache Resources - Hãy nạp lại file.'); toast('Đã xóa cache'); };
@@ -527,9 +555,24 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v6.0: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v6.1: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
-let RES_STATUS = 'Chưa nạp Resources_ios.zip';
+let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
+let RES_ZIP_NAME = '';
+async function ensureResForHeroes(heroesMod){
+  // Nếu đã nạp zip mà thiếu file của tướng đang chọn (VD nạp trước khi chọn tướng -> chỉ có 17 file chung), thì giải nén lại từ zip gốc
+  if(!RES_ZIP_BYTES) return;
+  const need = resNeededBasenames(heroesMod.map(h=>({id:h.heroId})));
+  let missing = false;
+  for(const bn of need){ if(!RES_FILES || !RES_FILES.get(bn)) { missing = true; break; } }
+  if(!missing) return;
+  setResStatus('Đang lấy thêm file của tướng từ zip gốc...');
+  const extra = await unzipNeededV2(RES_ZIP_BYTES, need);
+  if(!RES_FILES) RES_FILES = new Map();
+  for(const [k,v] of extra.entries()){ RES_FILES.set(k,v); }
+  setResStatus('Đã nạp Resources.zip: '+RES_FILES.size+' file - Sẵn sàng mod!');
+}
+let RES_STATUS = 'Chưa nạp Resources.zip';
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function baseName(path){ const parts=String(path).split('/'); return parts[parts.length-1]; }
 function resNeededBasenames(heroesMod){
@@ -636,13 +679,14 @@ async function unzipNeededV2(zipBytes, needBasenames){
 async function loadResourcesZip(onProgress){
   // Đã có thì dùng lại
   if(RES_FILES && RES_FILES.size>0) return RES_FILES;
-  throw new Error('Chưa nạp Resources_ios.zip - bấm "Chọn file Resources.zip từ máy" trước');
+  throw new Error('Chưa nạp Resources.zip - bấm "Chọn file Resources.zip từ máy" trước');
 }
 
 async function buildModZip(){
   const sel=st.picked.filter(i=>st.skin[i]!=null);
-  if(!RES_FILES || RES_FILES.size===0) throw new Error('Bạn chưa nạp file gốc! Bấm "Chọn file Resources.zip từ máy" chọn file Resources_ios.zip (206MB) trước rồi mới bấm Tạo.');
   const heroesMod = sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
+  await ensureResForHeroes(heroesMod);
+  if(!RES_FILES || RES_FILES.size===0) throw new Error('Ban chua nap file goc!');
   // Patch an toàn: chỉ đổi cùng độ dài, giữ nguyên kích thước file
   const patchSkinId = async (orig, heroes, fileName='') => {
     let bytes = orig.slice();
@@ -787,7 +831,7 @@ async function buildModZip(){
     }
     add(base+'assetbundle/'+vBn, vBytes);
   }
-  if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources_ios.zip. Hãy nạp lại file đó.');
+  if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó.');
   const uniqSkins=[...new Map(heroesMod.map(r=>[r.heroId, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip';
   return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs};
 }
