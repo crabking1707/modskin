@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.4 - Chỉ đổi cùng độ dài, qua 78%</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v5.5 - Bỏ patch base chung, hết vỡ hình</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.4</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.4 - Chỉ đổi cùng độ dài, qua 78%</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v5.5</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. BẮT BUỘC nạp file gốc Resources_ios.zip trước. File ra là file gốc thật chỉ đổi ID skin (10601 -> 10615), giống hệt file mẫu, giữ nguyên kích thước nên game qua 78%, không kẹt như template fake.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v5.5 - Bỏ patch base chung, hết vỡ hình</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
   const btnLoadRes=document.getElementById('btnLoadRes');
   if(btnLoadRes) btnLoadRes.onclick=async ()=>{
@@ -971,7 +971,7 @@ async function make(){
     // Nguyên tắc: file gốc bao nhiêu byte thì file mod cũng bấy nhiêu byte, không rebuild, không copy bundle khác kích thước
     // 1. Số ID int32: 10601 -> 10613 (4 byte -> 4 byte, cùng kích thước)
     // 2. Chuỗi cùng độ dài: "airi_10" (7) -> "airi_13" (7), "xiaoqiao_10" -> "xiaoqiao_13", "battle_10" -> "battle_13"
-    // 3. Chuỗi "base" (4) -> "0013" (4) - cùng độ dài, game đọc 0013 = 13, đổi model 3D mà không lệch file
+    // 3. Chuỗi bundle đầy đủ "xiaoqiao_battle_base" (20) -> "xiaoqiao_battle_0013" (20) - cùng độ dài, đổi model 3D mà không chạm chỗ khác
     // KHÔNG đổi chuỗi khác độ dài ("airi_1" 6 -> "airi_13" 7) vì rebuild làm lệch file -> kẹt 78% như bản v5.3
     const patchSkinId = async (orig, heroes, fileName='') => {
       let bytes = orig.slice();
@@ -1019,11 +1019,11 @@ async function make(){
             addPair('battle_'+String(src).padStart(2,'0'), 'battle_'+String(targetIdx).padStart(2,'0'));
             addPair('battle_'+src, 'battle_'+targetIdx);
             addPair(heroNum(h.heroId)+'_'+String(src).padStart(2,'0'), heroNum(h.heroId)+'_'+String(targetIdx).padStart(2,'0'));
-            // "base" (4) -> "0013" (4) - cùng độ dài, game đọc 0013 = 13
+            // KHÔNG đổi "base" chung nữa - "base" xuất hiện trong "database", "base_low", "base_url", "www" ... đổi hết là vỡ texture (hình vuông trắng), mất model 3D, vỡ sảnh
+            // Chỉ đổi tên bundle đầy đủ của tướng, VD "xiaoqiao_battle_base" -> "xiaoqiao_battle_0013" (cùng độ dài 20) - an toàn, không chạm chỗ khác
             if(src===1){
-              addPair('base', String(targetIdx).padStart(4,'0')); // base -> 0013
-              addPair('Base', String(targetIdx).padStart(4,'0'));
-              addPair('BASE', String(targetIdx).padStart(4,'0'));
+              addPair(bundleName+'_battle_base', bundleName+'_battle_'+String(targetIdx).padStart(4,'0')); // xiaoqiao_battle_base -> xiaoqiao_battle_0013
+              addPair(bundleName+'_base', bundleName+'_'+String(targetIdx).padStart(4,'0'));
             }
             for(const [fromStr, toStr] of pairs){
               const fromB = enc.encode(fromStr);
