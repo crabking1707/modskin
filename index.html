@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.1 - Mod nhanh</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v3.2 - Giữ thanh tiến độ</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -408,12 +408,13 @@ function view2(){
 }
 
 function view3(){
+  if(window.MAKING){ return; } // Đang tạo mod thì không render lại - giữ thanh tiến độ
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
   const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.1</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.1 - Mod nhanh</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Nguồn mod - Resources.zip (242MB) • v3.2</h3><p class="sub" style="margin:0 0 8px">Web sẽ tự lấy file gốc từ <b>GitHub Releases v1 > Resources.zip</b> để mod. <b>GitHub chặn tải trực tiếp là bình thường - không phải lỗi.</b> Bạn chỉ cần dùng nút <b>Chọn file từ máy</b> 1 lần, web nhớ luôn, lần sau bấm Tạo file là chạy. File mod ra chỉ chứa file đã mod.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v3.2 - Giữ thanh tiến độ</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -851,6 +852,9 @@ function showModProgress(name){
   m.style.display='flex';
   m.style.visibility='visible';
   m.style.opacity='1';
+  m.style.zIndex='99999';
+  // Đưa modal lên đầu body để không bị view3() xóa
+  try{ document.body.appendChild(m); }catch(_){}
   MOD_PROG=0;
 }
 function updateModProgress(pct, status, name){
@@ -930,11 +934,11 @@ async function make(){
   const setProg = (pct, status)=>{
     pct=Math.max(0,Math.min(100,Math.round(pct)));
     updateModProgress(pct, status, modName);
-    if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... '+pct+'% - '+status; }
+    // Lấy nút MỚI NHẤT mỗi lần, vì nút cũ có thể đã bị render lại
+    const curBtn=document.getElementById('mk') || btn;
+    if(curBtn){ curBtn.disabled=true; curBtn.textContent='Đang tạo mod... '+pct+'% - '+status; curBtn.style.background='linear-gradient(90deg, #6366f1 '+pct+'%, #1e293b '+pct+'%)'; }
     const rp=document.getElementById('resProgress');
     if(rp) rp.textContent='Đang tạo mod: '+pct+'% - '+status;
-    // Tạo thanh trong nút nếu chưa có - dùng background gradient để thấy thanh chạy ngay trong nút
-    if(btn) btn.style.background='linear-gradient(90deg, #6366f1 '+pct+'%, #1e293b '+pct+'%)';
   };
   if(btn){ btn.disabled=true; btn.textContent='Đang tạo mod... 0% - Chuẩn bị...'; }
   showModProgress(modName);
@@ -1002,7 +1006,7 @@ B.onUser(u=>{
   st.user=u;
   if(!u){st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
   renderHeader();
-  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3)view3(); // cập nhật nút khi điểm đổi
+  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3 && !MAKING)view3(); // KHÔNG render lại khi đang tạo mod - nếu render lại sẽ mất thanh tiến độ + nút bị mở khóa lại
   if(st.topup&&!$('#cd'))renderTopup(); // làm mới số điểm trong popup
 });
 </script>
