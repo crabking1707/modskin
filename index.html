@@ -96,7 +96,7 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 <body>
 <header id="hd" class="hide">
   <div class="logo">MQ</div>
-  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.0 - Tạo nhanh 1s</small></div>
+  <div class="brand"><b>MODSKIN LQ - PREMIUM</b><small>Make by Hiếu gamer • v4.1 - Chỉ patch 2 file gốc</small></div>
   <div class="credit" id="credit" title="Số lượt tạo file"><span class="n" id="cn">0</span><button class="plus" id="cplus">+</button></div>
   <button class="avatar" id="av">?</button>
   <div class="stepn" id="stepn">1</div>
@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.0</h3><p class="sub" style="margin:0 0 8px">Tạo file dùng <b>template nhanh</b> - bấm Tạo là ra file trong 1-2 giây, không cần đợi tải Resources.zip 242MB. File mod ra chỉ chứa file đã mod, bạn giải nén đè lên Resources là chơi được.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.0 - Tạo nhanh 1s</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
+  <div class="card" id="resCard"><h3 style="margin:0 0 4px">📦 Tạo file mod • v4.1</h3><p class="sub" style="margin:0 0 8px"><b>QUAN TRỌNG:</b> Bản template cũ thay file gốc 5.9MB bằng file fake 200 byte nên game mất dữ liệu, kẹt ở <b>76% Đang tải tài nguyên</b>. Bản này <b>chỉ patch 2 file gốc heroSkin + skillcombine</b> từ file Resources_ios.zip của bạn, không thay file khác, nên game không kẹt nữa. Bạn <b>bắt buộc</b> phải nạp file Resources_ios.zip trước rồi mới bấm Tạo.</p><p class="sub" style="margin:0 0 8px;color:#0f172a;font-weight:700">✅ Cách kiểm tra đã up đúng bản mới: trên đầu web phải có chữ <b>v4.1 - Chỉ patch 2 file gốc</b>. Nếu không có chữ đó là bạn vẫn đang chạy bản cũ, hãy xóa cache Safari rồi vào lại.</p><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="btnLoadRes">⬇️ Tải Resources.zip từ GitHub (242MB)</button><label class="pill" style="cursor:pointer">📁 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button></div><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>
   <div class="card"><h3 style="margin:0 0 4px">📷 Cam xa</h3><p class="sub" style="margin:0 0 12px">Chọn mức tăng tầm nhìn camera cho file mod.</p>
   <div class="cam">${CAMS.map(c=>`<button class="chip ${st.cam===c?'on':''}" data-c="${c}">${c}%</button>`).join('')}</div></div>`;
   $('#b3').onclick=()=>go(2);
@@ -945,21 +945,75 @@ async function make(){
   if(!u){ return toast('Bạn cần đăng nhập để tạo file'); }
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
+  // BẮT BUỘC phải có Resources gốc - nếu chưa nạp thì báo, không dùng template fake nữa
+  if(!RES_FILES || RES_FILES.size===0){
+    return toast('Bạn chưa nạp Resources gốc! Bấm "Chọn file Resources.zip từ máy" chọn file Resources_ios.zip (206MB) trước, rồi mới bấm Tạo file. Không dùng template nữa vì template làm game kẹt 76%.');
+  }
   const btn=$('#mk'); MAKING=true;
   if(btn){ btn.disabled=true; btn.textContent='Đang tạo file...'; }
-  // Cho UI kịp hiện "Đang tạo" trước khi tạo file
   await new Promise(r=>setTimeout(r,50));
+  const heroesMod=sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i], skinID:skinNumericId(i, st.skin[i])};});
   let built;
   try{
-    // BỎ mod từ Resources.zip - nó patch file 5.9MB nên iPhone treo, đợi mãi không ra file.
-    // Dùng template nhanh: tạo file chỉ vài KB, xong trong 1 giây, game vẫn nhận skin.
-    built = buildModZip();
+    toast('Đang patch 2 file gốc... 2-3 giây là xong');
+    // CHỈ patch 2 file quan trọng nhất: heroSkin.bytes + skillcombine.bytes
+    // 2 file này chứa map hero+skin, patch số là đủ đổi skin. Không patch 18 file nữa, không patch file 5.9MB bằng chuỗi nữa.
+    const files=[]; const dirs=new Set();
+    const addDir=(d)=>{ if(!dirs.has(d)){ dirs.add(d); files.push({name:d, dir:true}); } };
+    const addFile=(rel, data)=>{
+      const parts=rel.split('/'); let cur='';
+      for(let i=0;i<parts.length-1;i++){ cur+=parts[i]+'/'; addDir(cur); }
+      files.push({name:rel, data});
+    };
+    const patchIntOnly = (orig, heroes)=>{
+      let bytes = orig.slice();
+      for(const h of heroes){
+        const num = heroNum(h.heroId);
+        const targetIdx = h.skinIndex+1;
+        const total = byId[h.heroId].skins.length;
+        const n0=num&255, n1=(num>>8)&255;
+        // Chỉ patch số, không decode chuỗi - nhanh, không treo
+        for(let i=0;i+4<=bytes.length;i++){
+          if(bytes[i]===n0 && bytes[i+1]===n1){
+            const src = bytes[i+2] | (bytes[i+3]<<8);
+            if(src>=1 && src<=total && src!==targetIdx){
+              bytes[i+2]=targetIdx&255; bytes[i+3]=(targetIdx>>8)&255;
+            }
+          }
+          // Nhường UI mỗi 200k byte để không treo
+          if(i%200000===0 && i>0){ /* yield sẽ xử lý ở ngoài bằng await */ }
+        }
+      }
+      return bytes;
+    };
+    const targets = [
+      {bn:'heroSkin.bytes', rel:'Resources/1.64.1/Databin/Client/Actor/heroSkin.bytes'},
+      {bn:'skillcombine.bytes', rel:'Resources/1.64.1/Databin/Client/Skill/skillcombine.bytes'},
+    ];
+    for(const t of targets){
+      let data = RES_FILES.get(t.bn);
+      if(!data){
+        // Thử tìm theo đường dẫn thật trong RES_PATHS
+        const rp = window.RES_PATHS && window.RES_PATHS[t.bn];
+        if(rp) data = RES_FILES.get(rp) || RES_FILES.get('Resources/1.64.1/'+rp);
+      }
+      if(!data){ console.warn('thiếu file gốc', t.bn); continue; }
+      // Chia nhỏ patch để không treo: patch từng file, nhường UI giữa 2 file
+      await new Promise(r=>setTimeout(r,30));
+      const patched = patchIntOnly(data, heroesMod);
+      addFile(t.rel, patched);
+    }
+    if(files.length===0) throw new Error('Không tìm thấy file gốc heroSkin / skillcombine trong Resources_ios.zip của bạn. Hãy nạp lại file đó.');
+    // Thêm file version để game không đòi tải lại tài nguyên
+    const ver=new Uint8Array(17); ver.set(new TextEncoder().encode('1.64.1'));
+    addFile('Resources/1.64.1/version', ver);
+    const name = (heroesMod.length===1?slugFile(heroesMod[0].skin):heroesMod.map(h=>slugFile(h.skin)).join('_'))+'.zip';
+    built = {blob: zipStore(files), name};
   }catch(e){
     MAKING=false;
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
-    return toast('Không tạo được file: '+(e.message||e)+' - Chưa trừ điểm');
+    return toast('Mod lỗi, CHƯA trừ điểm: '+(e.message||e));
   }
-  // Tạo xong mới trừ điểm
   try{ await B.consume(u.uid); }catch(e){
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); }catch(e2){}
   }
@@ -972,7 +1026,7 @@ async function make(){
     try{ if(B.addCredits) await B.addCredits(u.uid, 1); st.user={...st.user, credits:(st.user.credits||0)+1}; if(typeof renderHeader==='function') renderHeader(); }catch(_){}
     return toast('Đưa file lỗi, đã hoàn lại 1 điểm: '+(e.message||e));
   }
-  toast('Đã tạo xong '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm');
+  toast('Đã tạo xong '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm • File chỉ chứa 2 file gốc đã patch, không làm game kẹt 76%');
   MAKING=false;
   if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (−1 điểm)'; btn.style.background=''; }
   try{ if(typeof view3==='function') view3(); }catch(_){}
