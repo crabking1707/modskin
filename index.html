@@ -576,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v7.4: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.5: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -1009,6 +1009,53 @@ async function buildModZip(){
     }
   }
   // (Đã bỏ block COPY FILE SKIN cũ - skin nằm trong pkg, không phải file riêng, quét tên zip không tìm thấy)
+  // 3c. PATCH TẤT CẢ FILE CÒN LẠI TRONG RES_FILES - File mod mẫu đổi rất nhiều file, không phải chỉ 2 + 11 file.
+  // RES_FILES hiện chỉ có ~20 file do resNeededBasenames giới hạn, nhưng trong 20 file đó có thể còn file khác chứa skin ID (KernelLua, StableSystems, CommonActions, ResCharacterComponent...)
+  // Patch tất cả file còn lại trong RES_FILES mà chưa được thêm vào files, nếu nó chứa skin ID thì thêm vào zip.
+  {
+    const alreadyAdded = new Set(files.map(f=>f.name));
+    for(const [bn, fData] of RES_FILES.entries()){
+      // Bỏ qua file đã xử lý ở trên (Actor, Databin, AllActorInfos, Sound, verification)
+      if(bn.startsWith('Actor_') && (bn.includes('_Infos') || bn.includes('_Actions'))) continue;
+      if(['heroSkin.bytes','skillcombine.bytes','skillmark.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes','CommonActions.pkg.bytes'].includes(bn)) continue;
+      if(bn.toLowerCase()==='allactorinfos.assetbundle') continue;
+      if(bn.toLowerCase()==='resourceverificationinfosetall.assetbundle') continue;
+      if(bn.includes('_SFX') || bn.includes('_VO')) continue;
+      // Chỉ patch file có khả năng chứa skin ID: .bytes, .pkg.bytes, .assetbundle, .cfg
+      if(!bn.endsWith('.bytes') && !bn.endsWith('.assetbundle') && !bn.endsWith('.cfg')) continue;
+      const oH2 = md5Hex(fData);
+      let p2 = patchSkinIds(fData, heroesMod, actorMapForHeroes);
+      // Patch thêm code string airi_1 -> airi_13 (giữ SIZE)
+      try{
+        const encX = new TextEncoder();
+        for(const h of heroesMod){
+          const dst = h.heroId + '_' + (h.skinIndex+1);
+          const toB = encX.encode(dst);
+          for(let s=1;s<=byId[h.heroId].skins.length;s++){
+            if(s===h.skinIndex+1) continue;
+            const sC = h.heroId + '_' + s;
+            const sB = encX.encode(sC);
+            if(toB.length===sB.length){ for(let i=0;i+sB.length<=p2.length;i++){ let ok=true; for(let k=0;k<sB.length;k++){ if(p2[i+k]!==sB[k]){ ok=false; break; } } if(ok) p2.set(toB,i); } }
+            else if(toB.length===sB.length+1){ for(let i=0;i+sB.length+1<=p2.length;i++){ let ok=true; for(let k=0;k<sB.length;k++){ if(p2[i+k]!==sB[k]){ ok=false; break; } } if(ok && p2[i+sB.length]===0){ p2.set(toB,i); p2[i+toB.length]=0; } } }
+          }
+        }
+      }catch(e){}
+      const nH2 = md5Hex(p2);
+      if(oH2!==nH2){
+        hashPairs.push({origHex: oH2, newHex: nH2, bn: bn, origSize: fData.length, newSize: p2.length});
+        let outP = RES_PATHS[bn] || bn;
+        if(!outP.startsWith(base)){
+          if(outP.includes('Resources/')) outP = outP.slice(outP.indexOf('Resources/'));
+          else outP = base + outP;
+        }
+        if(!alreadyAdded.has(outP)){
+          add(outP, p2);
+          alreadyAdded.add(outP);
+          patchedCount++;
+        }
+      }
+    }
+  }
   // SỬA FILE KIỂM TRA HASH - CHỈ sửa resourceverificationinfosetall, KHÔNG sửa resourcepackerinfosetall và KHÔNG thêm version
   // Lỗi cũ: chỉ sửa dạng HEX chữ (32 ký tự), còn game nó check dạng RAW MD5 16 byte nhị phân + SIZE (4 byte) nên vẫn phát hiện file đã đổi và tải lại đúng 0.46MB (Actor_106_Actions)
   // Sửa đúng: sửa cả 3 thứ trong verification: 1) HEX (32 ký tự, cả thường + hoa), 2) RAW MD5 (16 byte), 3) SIZE (LE32 + BE32) gần vị trí hash
@@ -1093,17 +1140,22 @@ async function buildModZip(){
     throw new Error('Thiếu '+missingHeroFiles.length+' file riêng của tướng ('+missingHeroFiles.join(', ')+') - Có thể do ActorID sai (Florentino ActorID là 521, không phải 129) hoặc dùng file Android cho iOS. Hãy nạp file iOS 206MB rồi tạo lại. CHƯA trừ điểm.');
   }
   const uniqSkins=[...new Map(heroesMod.map(r=>[r.heroId, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip';
-  return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs};
+  // DEBUG: tính tổng size + danh sách file để hiện ở dialog (biết vì sao vẫn 82KB)
+  const fileList = files.filter(f=>!f.dir).map(f=>({name: f.name, size: f.data ? f.data.length : 0}));
+  const totalSize = fileList.reduce((s,f)=>s+f.size,0);
+  const debugInfo = {resFilesCount: RES_FILES ? RES_FILES.size : 0, outFilesCount: fileList.length, totalSize, fileList, hashPairsCount: hashPairs.length};
+  return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs, debugInfo};
 }
 let MAKING = false; // Khóa chống bấm liên tục / bấm 2 lần -> trừ 2 điểm
 let PENDING_BUILD = null; // File đã tạo xong, chờ user bấm "Tải file" (giữ gesture cho iOS share)
-function handoffZip(blob,name){
+function handoffZip(blob,name,debugInfo){
   // Không tự share ngay sau await (mất gesture -> Safari báo "not allowed by user agent")
   // Hiện dialog "File mod đã xong!" với nút Tải - user bấm nút đó là gesture mới, share sẽ được
-  PENDING_BUILD = {blob, name};
+  PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px"><div style="background:#fff;border-radius:16px;padding:20px;max-width:360px;width:100%;text-align:center"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 16px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p><button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.5<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
       const cur = PENDING_BUILD; if(!cur) return;
@@ -1171,7 +1223,7 @@ async function make(){
   // Giữ MAKING=true cho tới khi dialog đóng, để ghost-click không lọt 2 lần tạo file
   // Set PENDING_BUILD TRƯỚC khi mở dialog, để bấm lại không tạo file mới
   PENDING_BUILD = {blob: built.blob, name: built.name};
-  try{ await handoffZip(built.blob, built.name); }
+  try{ await handoffZip(built.blob, built.name, built.debugInfo); }
   catch(e){ MAKING=false; PENDING_BUILD=null; return toast('Không tải được file: '+(e.message||e)); }
   toast('Đã tạo '+built.name+' • Đã trừ 1 điểm (điểm sẽ cập nhật sau 1-2s) • Bấm "⬇️ Bấm để Tải file về" để tải');
   // KHÔNG gọi view3() ngay ở đây - view3() sẽ re-render nút và làm mất MAKING lock + PENDING_BUILD
