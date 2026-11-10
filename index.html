@@ -576,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v7.2: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.3: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -696,6 +696,27 @@ async function unzipNeededV2(zipBytes, needBasenames){
     if(n%20===0) await new Promise(r=>setTimeout(r,0));
   }
   return out;
+}
+// Quét tên tất cả file trong Resources.zip (chỉ đọc Central Directory, không giải nén) - để tìm file skin 10613, 10601, xiaoqiao_13...
+function listZipNames(zipBytes){
+  const view = new DataView(zipBytes.buffer, zipBytes.byteOffset, zipBytes.byteLength);
+  let eocd=-1;
+  for(let i=zipBytes.length-22;i>=Math.max(0, zipBytes.length-66000);i--){ if(view.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd===-1) return [];
+  const total = view.getUint16(eocd+10,true);
+  let cdOff = view.getUint32(eocd+16,true);
+  const dec = new TextDecoder();
+  const names = [];
+  for(let n=0;n<total;n++){
+    if(view.getUint32(cdOff,true)!==0x02014b50) break;
+    const nameLen = view.getUint16(cdOff+28,true);
+    const extraLen = view.getUint16(cdOff+30,true);
+    const commentLen = view.getUint16(cdOff+32,true);
+    const name = dec.decode(zipBytes.subarray(cdOff+46, cdOff+46+nameLen));
+    names.push(name);
+    cdOff += 46+nameLen+extraLen+commentLen;
+  }
+  return names;
 }
 async function loadResourcesZip(onProgress){
   // Đã có thì dùng lại
@@ -897,6 +918,85 @@ async function buildModZip(){
       // Ghi hash cho file âm thanh mới (để game không tải lại)
       // File âm thanh mới có tên khác file gốc nên không cần hashPairs cho nó, nhưng cần thêm vào verification? Bỏ qua, vì file mới không có trong verification cũ
     }
+  }
+  // 3b. COPY FILE SKIN - Cách file mod mẫu làm: copy nguyên file của skin đích (10613) đè lên file của skin mặc định (10601) và các skin khác
+  // Không patch, không nén lại ZSTD (nén lại là teo còn 82KB và sai SIZE nên game tải lại). Copy nguyên file thì giữ nguyên kích thước, chỉ cần sửa verification cho file đích.
+  // File skin nằm rải rác: vd Resources/1.64.1/Ages/.../10613_*.pkg.bytes, .../xiaoqiao_13_*.assetbundle, .../10613_*.bytes, ...
+  // Quét tên file trong Resources.zip gốc, tìm file chứa ID skin đích, rồi copy đè lên file chứa ID skin gốc
+  {
+    try{
+      const allNames = RES_ZIP_BYTES ? listZipNames(RES_ZIP_BYTES) : [];
+      // Map basename -> full path trong zip gốc
+      const nameToPath = new Map();
+      for(const n of allNames){ const bn = n.split('/').pop(); if(!nameToPath.has(bn)) nameToPath.set(bn, n); }
+      for(const h of heroesMod){
+        const actorId = actorMapForHeroes[h.heroId];
+        const bundle = bundleOf(h.heroId);
+        const targetIdx = h.skinIndex+1;
+        const targetIdStr = String(actorId*100 + targetIdx); // vd 10613
+        const targetBundle1 = bundle + '_' + String(targetIdx).padStart(2,'0'); // xiaoqiao_13
+        const targetBundle2 = bundle + '_' + targetIdx; // xiaoqiao_13 (không pad)
+        const total = byId[h.heroId].skins.length;
+        for(let s=1; s<=total; s++){
+          if(s===targetIdx) continue;
+          const srcIdStr = String(actorId*100 + s); // vd 10601
+          const srcBundle1 = bundle + '_' + String(s).padStart(2,'0'); // xiaoqiao_01
+          const srcBundle2 = bundle + '_' + s; // xiaoqiao_1
+          // Tìm tất cả file trong zip chứa targetIdStr hoặc targetBundle (vd .../10613_..., .../xiaoqiao_13_...)
+          for(const fullName of allNames){
+            const bn = fullName.split('/').pop();
+            const isTargetFile = fullName.includes(targetIdStr) || fullName.includes(targetBundle1) || (targetBundle1!==targetBundle2 && fullName.includes(targetBundle2));
+            if(!isTargetFile) continue;
+            // Bỏ qua file đã xử lý ở trên (Actor_Infos, Actor_Actions, Sound) - chỉ lấy file model/effect của skin
+            if(bn.startsWith('Actor_') && (bn.includes('_Infos') || bn.includes('_Actions'))) continue;
+            if(bn.includes('_SFX') || bn.includes('_VO') || bn.includes('_Show')) continue;
+            if(bn.includes('AllActorInfos')) continue;
+            // Tên file gốc tương ứng: thay targetId -> srcId, targetBundle -> srcBundle
+            let srcFull = fullName.split(targetIdStr).join(srcIdStr);
+            if(srcFull===fullName){
+              srcFull = fullName.split(targetBundle1).join(srcBundle1);
+              if(srcFull===fullName && targetBundle1!==targetBundle2) srcFull = fullName.split(targetBundle2).join(srcBundle2);
+            }
+            if(srcFull===fullName) continue;
+            const srcBn = srcFull.split('/').pop();
+            // Nếu file gốc (src) không có trong zip thì bỏ qua (không tạo file fake)
+            if(!nameToPath.has(srcBn) && !allNames.includes(srcFull)) continue;
+            // Lấy data của file đích (target) từ RES_FILES nếu đã có, không thì giải nén từ zip gốc
+            let targetData = RES_FILES.get(bn);
+            if(!targetData){
+              const needOne = new Set([bn]);
+              const got = await unzipNeededV2(RES_ZIP_BYTES, needOne);
+              targetData = got.get(bn);
+            }
+            if(!targetData) continue;
+            // Lấy data gốc của file src để tính hash gốc (để sửa verification: src entry -> target hash/size)
+            let srcData = RES_FILES.get(srcBn);
+            if(!srcData){
+              const needOne2 = new Set([srcBn]);
+              const got2 = await unzipNeededV2(RES_ZIP_BYTES, needOne2);
+              srcData = got2.get(srcBn);
+            }
+            // Thêm file đích đè lên đường dẫn của file gốc (srcFull) - game tưởng nó đang load skin gốc nhưng thực ra là skin đích
+            // Đường dẫn đích trong zip mod: giữ nguyên đường dẫn của file gốc (srcFull), nhưng nội dung là file đích
+            let outPath = srcFull;
+            if(!outPath.startsWith(base)){
+              // srcFull dạng: Resources/1.64.1/... thì giữ nguyên, nếu không có base thì thêm base
+              if(outPath.includes('Resources/')) outPath = outPath.slice(outPath.indexOf('Resources/'));
+              else outPath = base + outPath;
+            }
+            // Tránh trùng với file đã thêm ở trên (Infos/Actions) - nếu đã có thì bỏ qua
+            if(files.some(f=>f.name===outPath)) continue;
+            add(outPath, targetData.slice());
+            patchedCount++;
+            // Ghi hashPair cho file src: orig = hash/size của src, new = hash/size của target (để verification sửa src entry thành target)
+            if(srcData){
+              const oH = md5Hex(srcData), nH = md5Hex(targetData);
+              if(oH!==nH) hashPairs.push({origHex: oH, newHex: nH, bn: srcBn, origSize: srcData.length, newSize: targetData.length});
+            }
+          }
+        }
+      }
+    }catch(e){ console.warn('Copy file skin lỗi (không chặn tạo file)', e); }
   }
   // SỬA FILE KIỂM TRA HASH - CHỈ sửa resourceverificationinfosetall, KHÔNG sửa resourcepackerinfosetall và KHÔNG thêm version
   // Lỗi cũ: chỉ sửa dạng HEX chữ (32 ký tự), còn game nó check dạng RAW MD5 16 byte nhị phân + SIZE (4 byte) nên vẫn phát hiện file đã đổi và tải lại đúng 0.46MB (Actor_106_Actions)
