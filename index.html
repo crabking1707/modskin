@@ -576,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v7.3: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.4: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -862,23 +862,112 @@ async function buildModZip(){
       if(!data){ const rp = RES_PATHS[ph.bn]; if(rp) data = RES_FILES.get(rp); }
       if(!data) continue;
       const origHex = md5Hex(data);
-      // Thử giải nén ZSTD -> patch file đã giải nén -> nén lại (đúng cách video làm bằng giaima_mahoa.py)
-      let patched = null;
-      const dec = await tryDecompressPkg(data);
-      if(dec){
-        const patchedDec = patchSkinIds(dec.data, heroesMod, actorMapForHeroes);
-        const recomp = await tryCompressPkg(dec.header, patchedDec);
-        if(recomp) patched = recomp;
-        else patched = patchSkinIds(data, heroesMod, actorMapForHeroes); // fallback: patch trực tiếp nếu nén lại lỗi
-      } else {
-        // File không nén ZSTD (hoặc trình duyệt không hỗ trợ zstd) -> patch trực tiếp như cũ
-        patched = patchSkinIds(data, heroesMod, actorMapForHeroes);
-      }
+      // FIX 84KB: KHÔNG giải nén/nén lại ZSTD nữa - CompressionStream nén sai level, file 0.46MB teo còn ~40KB, game check SIZE thấy sai nên tải lại.
+      // Patch trực tiếp file gốc: header của .pkg.bytes chứa skin ID dạng plain text (không nén), patch header là đủ để game load đúng skin, giữ nguyên SIZE (origSize==newSize).
+      // Ngoài ra patch thêm dạng "airi_1" -> "airi_13" trong file gốc (dạng string có padding, giữ nguyên độ dài bằng cách pad 0).
+      let patched = patchSkinIds(data, heroesMod, actorMapForHeroes);
+      // Patch thêm dạng code string: "airi_1" (6 ký tự) -> "airi_13" (7 ký tự) - phải giữ nguyên độ dài file bằng cách patch cả vùng padding 0 phía sau
+      try{
+        const enc2 = new TextEncoder();
+        for(const h of heroesMod){
+          const srcCode = h.heroId + '_' + '1'; // vd airi_1 (mặc định)
+          const dstCode = h.heroId + '_' + (h.skinIndex+1); // vd airi_13
+          // Chỉ patch nếu độ dài khác nhau thì dùng cách: tìm "airi_1\0" (6+1) và thay bằng "airi_13" (7) - cùng 7 byte, giữ nguyên SIZE
+          // Tìm tất cả "airi_1" rồi xem byte sau nó có phải 0 không, nếu có thì thay 7 byte "airi_1\0" -> "airi_13"
+          const fromB = enc2.encode(srcCode);
+          const toB = enc2.encode(dstCode);
+          // Nếu toB dài hơn fromB 1 byte, cần 1 byte 0 phía sau để bù
+          if(toB.length === fromB.length+1){
+            for(let i=0;i+fromB.length+1<=patched.length;i++){
+              let ok=true; for(let k=0;k<fromB.length;k++){ if(patched[i+k]!==fromB[k]){ ok=false; break; } }
+              if(ok && patched[i+fromB.length]===0){ patched.set(toB, i); patched[i+toB.length]=0; }
+            }
+          } else if(toB.length===fromB.length){
+            for(let i=0;i+fromB.length<=patched.length;i++){
+              let ok=true; for(let k=0;k<fromB.length;k++){ if(patched[i+k]!==fromB[k]){ ok=false; break; } }
+              if(ok) patched.set(toB, i);
+            }
+          }
+          // Patch tất cả skin gốc -> đích: "airi_2" -> "airi_13", "airi_3" -> "airi_13", ... (cùng logic, để dù user chọn skin nào trong game cũng hiện skin đích)
+          const totalSk = byId[h.heroId].skins.length;
+          for(let s=1;s<=totalSk;s++){
+            if(s===h.skinIndex+1) continue;
+            const sCode = h.heroId + '_' + s;
+            const sB = enc2.encode(sCode);
+            if(toB.length===sB.length){
+              for(let i=0;i+sB.length<=patched.length;i++){
+                let ok=true; for(let k=0;k<sB.length;k++){ if(patched[i+k]!==sB[k]){ ok=false; break; } }
+                if(ok) patched.set(toB, i);
+              }
+            } else if(toB.length===sB.length+1){
+              for(let i=0;i+sB.length+1<=patched.length;i++){
+                let ok=true; for(let k=0;k<sB.length;k++){ if(patched[i+k]!==sB[k]){ ok=false; break; } }
+                if(ok && patched[i+sB.length]===0){ patched.set(toB, i); patched[i+toB.length]=0; }
+              }
+            } else if(sB.length===toB.length+1){
+              // s dài hơn đích 1 byte: vd "airi_13" (7) -> "airi_1" (6) thì cần pad 0
+              for(let i=0;i+sB.length<=patched.length;i++){
+                let ok=true; for(let k=0;k<sB.length;k++){ if(patched[i+k]!==sB[k]){ ok=false; break; } }
+                if(ok){ patched.set(toB, i); patched[i+toB.length]=0; }
+              }
+            }
+          }
+        }
+      }catch(e){}
       const newHex = md5Hex(patched);
       if(origHex!==newHex) hashPairs.push({origHex, newHex, bn:ph.bn, origSize: data.length, newSize: patched.length});
       add(ph.rel, patched);
       patchedCount++;
       await new Promise(r=>setTimeout(r,5));
+    }
+    // 2b. DATABIN - File mod mẫu đổi rất nhiều file Databin (heroSkin, skillcombine, ...), không phải chỉ 2 file Actor.
+    // Databin là file plain binary (không nén ZSTD), patch trực tiếp giữ nguyên SIZE, game đọc Databin để hiện skin ở sảnh + trong trận.
+    // Nếu chỉ patch Actor mà không patch Databin thì sảnh vẫn hiện Ninja rồng.
+    {
+      const databinNames = ['heroSkin.bytes','skillcombine.bytes','skillmark.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes','CommonActions.pkg.bytes'];
+      for(const dbn of databinNames){
+        let dbData = RES_FILES.get(dbn);
+        if(!dbData){ const rp = RES_PATHS[dbn]; if(rp) dbData = RES_FILES.get(rp); }
+        if(!dbData) continue;
+        const oH = md5Hex(dbData);
+        let pDb = patchSkinIds(dbData, heroesMod, actorMapForHeroes);
+        // Patch thêm code string "airi_1" -> "airi_13" trong Databin (cùng logic như Actor, giữ nguyên SIZE bằng pad 0)
+        try{
+          const enc3 = new TextEncoder();
+          for(const h of heroesMod){
+            const dstCode = h.heroId + '_' + (h.skinIndex+1);
+            const toB3 = enc3.encode(dstCode);
+            const totalSk2 = byId[h.heroId].skins.length;
+            for(let s=1;s<=totalSk2;s++){
+              if(s===h.skinIndex+1) continue;
+              const sCode = h.heroId + '_' + s;
+              const sB3 = enc3.encode(sCode);
+              if(toB3.length===sB3.length){
+                for(let i=0;i+sB3.length<=pDb.length;i++){ let ok=true; for(let k=0;k<sB3.length;k++){ if(pDb[i+k]!==sB3[k]){ ok=false; break; } } if(ok) pDb.set(toB3, i); }
+              } else if(toB3.length===sB3.length+1){
+                for(let i=0;i+sB3.length+1<=pDb.length;i++){ let ok=true; for(let k=0;k<sB3.length;k++){ if(pDb[i+k]!==sB3[k]){ ok=false; break; } } if(ok && pDb[i+sB3.length]===0){ pDb.set(toB3, i); pDb[i+toB3.length]=0; } }
+              } else if(sB3.length===toB3.length+1){
+                for(let i=0;i+sB3.length<=pDb.length;i++){ let ok=true; for(let k=0;k<sB3.length;k++){ if(pDb[i+k]!==sB3[k]){ ok=false; break; } } if(ok){ pDb.set(toB3, i); pDb[i+toB3.length]=0; } }
+              }
+            }
+          }
+        }catch(e){}
+        const nH = md5Hex(pDb);
+        if(oH!==nH){
+          hashPairs.push({origHex: oH, newHex: nH, bn: dbn, origSize: dbData.length, newSize: pDb.length});
+          // Databin nằm ở Resources/1.64.1/Databin/ (iOS) hoặc Resources/1.64.1/Databin/ (Android) - tìm đường dẫn gốc
+          let dbPath = RES_PATHS[dbn] || ('Databin/'+dbn);
+          if(!dbPath.startsWith(base)){
+            if(dbPath.includes('Databin/')) dbPath = base + dbPath.slice(dbPath.indexOf('Databin/'));
+            else dbPath = base + 'Databin/' + dbn;
+          }
+          // Tránh trùng: nếu đã có file này trong files thì bỏ qua
+          if(!files.some(f=>f.name===dbPath)){
+            add(dbPath, pDb);
+            patchedCount++;
+          }
+        }
+      }
     }
     // 3. Âm thanh: tìm file SFX/VO của skin đích trong Resources.zip, copy đổi tên bỏ _Skin_<SkinID>
     // Video: Hero_Florentino_Skin_52102_SFX.bnk -> Hero_Florentino_SFX.bnk, Hero_Florentino_Skin_52102_VO.bnk -> Hero_Florentino_VO.bnk
@@ -919,85 +1008,7 @@ async function buildModZip(){
       // File âm thanh mới có tên khác file gốc nên không cần hashPairs cho nó, nhưng cần thêm vào verification? Bỏ qua, vì file mới không có trong verification cũ
     }
   }
-  // 3b. COPY FILE SKIN - Cách file mod mẫu làm: copy nguyên file của skin đích (10613) đè lên file của skin mặc định (10601) và các skin khác
-  // Không patch, không nén lại ZSTD (nén lại là teo còn 82KB và sai SIZE nên game tải lại). Copy nguyên file thì giữ nguyên kích thước, chỉ cần sửa verification cho file đích.
-  // File skin nằm rải rác: vd Resources/1.64.1/Ages/.../10613_*.pkg.bytes, .../xiaoqiao_13_*.assetbundle, .../10613_*.bytes, ...
-  // Quét tên file trong Resources.zip gốc, tìm file chứa ID skin đích, rồi copy đè lên file chứa ID skin gốc
-  {
-    try{
-      const allNames = RES_ZIP_BYTES ? listZipNames(RES_ZIP_BYTES) : [];
-      // Map basename -> full path trong zip gốc
-      const nameToPath = new Map();
-      for(const n of allNames){ const bn = n.split('/').pop(); if(!nameToPath.has(bn)) nameToPath.set(bn, n); }
-      for(const h of heroesMod){
-        const actorId = actorMapForHeroes[h.heroId];
-        const bundle = bundleOf(h.heroId);
-        const targetIdx = h.skinIndex+1;
-        const targetIdStr = String(actorId*100 + targetIdx); // vd 10613
-        const targetBundle1 = bundle + '_' + String(targetIdx).padStart(2,'0'); // xiaoqiao_13
-        const targetBundle2 = bundle + '_' + targetIdx; // xiaoqiao_13 (không pad)
-        const total = byId[h.heroId].skins.length;
-        for(let s=1; s<=total; s++){
-          if(s===targetIdx) continue;
-          const srcIdStr = String(actorId*100 + s); // vd 10601
-          const srcBundle1 = bundle + '_' + String(s).padStart(2,'0'); // xiaoqiao_01
-          const srcBundle2 = bundle + '_' + s; // xiaoqiao_1
-          // Tìm tất cả file trong zip chứa targetIdStr hoặc targetBundle (vd .../10613_..., .../xiaoqiao_13_...)
-          for(const fullName of allNames){
-            const bn = fullName.split('/').pop();
-            const isTargetFile = fullName.includes(targetIdStr) || fullName.includes(targetBundle1) || (targetBundle1!==targetBundle2 && fullName.includes(targetBundle2));
-            if(!isTargetFile) continue;
-            // Bỏ qua file đã xử lý ở trên (Actor_Infos, Actor_Actions, Sound) - chỉ lấy file model/effect của skin
-            if(bn.startsWith('Actor_') && (bn.includes('_Infos') || bn.includes('_Actions'))) continue;
-            if(bn.includes('_SFX') || bn.includes('_VO') || bn.includes('_Show')) continue;
-            if(bn.includes('AllActorInfos')) continue;
-            // Tên file gốc tương ứng: thay targetId -> srcId, targetBundle -> srcBundle
-            let srcFull = fullName.split(targetIdStr).join(srcIdStr);
-            if(srcFull===fullName){
-              srcFull = fullName.split(targetBundle1).join(srcBundle1);
-              if(srcFull===fullName && targetBundle1!==targetBundle2) srcFull = fullName.split(targetBundle2).join(srcBundle2);
-            }
-            if(srcFull===fullName) continue;
-            const srcBn = srcFull.split('/').pop();
-            // Nếu file gốc (src) không có trong zip thì bỏ qua (không tạo file fake)
-            if(!nameToPath.has(srcBn) && !allNames.includes(srcFull)) continue;
-            // Lấy data của file đích (target) từ RES_FILES nếu đã có, không thì giải nén từ zip gốc
-            let targetData = RES_FILES.get(bn);
-            if(!targetData){
-              const needOne = new Set([bn]);
-              const got = await unzipNeededV2(RES_ZIP_BYTES, needOne);
-              targetData = got.get(bn);
-            }
-            if(!targetData) continue;
-            // Lấy data gốc của file src để tính hash gốc (để sửa verification: src entry -> target hash/size)
-            let srcData = RES_FILES.get(srcBn);
-            if(!srcData){
-              const needOne2 = new Set([srcBn]);
-              const got2 = await unzipNeededV2(RES_ZIP_BYTES, needOne2);
-              srcData = got2.get(srcBn);
-            }
-            // Thêm file đích đè lên đường dẫn của file gốc (srcFull) - game tưởng nó đang load skin gốc nhưng thực ra là skin đích
-            // Đường dẫn đích trong zip mod: giữ nguyên đường dẫn của file gốc (srcFull), nhưng nội dung là file đích
-            let outPath = srcFull;
-            if(!outPath.startsWith(base)){
-              // srcFull dạng: Resources/1.64.1/... thì giữ nguyên, nếu không có base thì thêm base
-              if(outPath.includes('Resources/')) outPath = outPath.slice(outPath.indexOf('Resources/'));
-              else outPath = base + outPath;
-            }
-            // Tránh trùng với file đã thêm ở trên (Infos/Actions) - nếu đã có thì bỏ qua
-            if(files.some(f=>f.name===outPath)) continue;
-            add(outPath, targetData.slice());
-            patchedCount++;
-            // Ghi hashPair cho file src: orig = hash/size của src, new = hash/size của target (để verification sửa src entry thành target)
-            if(srcData){
-              const oH = md5Hex(srcData), nH = md5Hex(targetData);
-              if(oH!==nH) hashPairs.push({origHex: oH, newHex: nH, bn: srcBn, origSize: srcData.length, newSize: targetData.length});
-            }
-          }
-        }
-      }
-    }catch(e){ console.warn('Copy file skin lỗi (không chặn tạo file)', e); }
-  }
+  // (Đã bỏ block COPY FILE SKIN cũ - skin nằm trong pkg, không phải file riêng, quét tên zip không tìm thấy)
   // SỬA FILE KIỂM TRA HASH - CHỈ sửa resourceverificationinfosetall, KHÔNG sửa resourcepackerinfosetall và KHÔNG thêm version
   // Lỗi cũ: chỉ sửa dạng HEX chữ (32 ký tự), còn game nó check dạng RAW MD5 16 byte nhị phân + SIZE (4 byte) nên vẫn phát hiện file đã đổi và tải lại đúng 0.46MB (Actor_106_Actions)
   // Sửa đúng: sửa cả 3 thứ trong verification: 1) HEX (32 ký tự, cả thường + hoa), 2) RAW MD5 (16 byte), 3) SIZE (LE32 + BE32) gần vị trí hash
