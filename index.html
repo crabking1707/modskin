@@ -576,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v7.6: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.5: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -678,10 +678,10 @@ async function unzipNeededV2(zipBytes, needBasenames){
     const name = dec.decode(zipBytes.subarray(cdOff+46, cdOff+46+nameLen));
     cdOff += 46+nameLen+extraLen+commentLen;
     const bn0 = baseName(name);
-    const needLower = new Map([...needBasenames].map(x=>[x.toLowerCase(), x]));
-    const canonical = needLower.get(bn0.toLowerCase());
-    if(!canonical) continue;
-    const bn = canonical;
+const needLower = new Map([...needBasenames].map(x=>[x.toLowerCase(), x]));
+const canonical = needLower.get(bn0.toLowerCase());
+if(!canonical) continue;
+const bn = canonical;
     // Đọc local header để lấy data
     const lh = new DataView(zipBytes.buffer, zipBytes.byteOffset+localOff, 30);
     const lhNameLen = lh.getUint16(26,true);
@@ -868,23 +868,23 @@ async function buildModZip(){
       // FIX 84KB: KHÔNG giải nén/nén lại ZSTD nữa - CompressionStream nén sai level, file 0.46MB teo còn ~40KB, game check SIZE thấy sai nên tải lại.
       // Patch trực tiếp file gốc: header của .pkg.bytes chứa skin ID dạng plain text (không nén), patch header là đủ để game load đúng skin, giữ nguyên SIZE (origSize==newSize).
       // Ngoài ra patch thêm dạng "airi_1" -> "airi_13" trong file gốc (dạng string có padding, giữ nguyên độ dài bằng cách pad 0).
-            let patched;
-      const decPkg = await tryDecompressPkg(data);
-      if(decPkg){
-        const patchedDec = patchSkinIds(decPkg.data, heroesMod, actorMapForHeroes);
-        const recompressed = await tryCompressPkg(decPkg.header, patchedDec);
-        if(recompressed && recompressed.length<=data.length){
-          const padLen = data.length - recompressed.length;
-          if(padLen===0){ patched = recompressed; }
-          else if(padLen>=8){
-            patched = new Uint8Array(data.length);
-            patched.set(recompressed, 0);
-            const dvPad = new DataView(patched.buffer);
-            dvPad.setUint32(recompressed.length, 0x184D2A50, true);
-            dvPad.setUint32(recompressed.length+4, padLen-8, true);
-          } else { patched = recompressed; }
-        } else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
-      } else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
+      let patched;
+const decPkg = await tryDecompressPkg(data);
+if(decPkg){
+  const patchedDec = patchSkinIds(decPkg.data, heroesMod, actorMapForHeroes);
+  const recompressed = await tryCompressPkg(decPkg.header, patchedDec);
+  if(recompressed && recompressed.length<=data.length){
+    const padLen = data.length - recompressed.length;
+    if(padLen===0){ patched = recompressed; }
+    else if(padLen>=8){
+      patched = new Uint8Array(data.length);
+      patched.set(recompressed, 0);
+      const dvPad = new DataView(patched.buffer);
+      dvPad.setUint32(recompressed.length, 0x184D2A50, true);
+      dvPad.setUint32(recompressed.length+4, padLen-8, true);
+    } else { patched = recompressed; }
+  } else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
+} else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
       // Patch thêm dạng code string: "airi_1" (6 ký tự) -> "airi_13" (7 ký tự) - phải giữ nguyên độ dài file bằng cách patch cả vùng padding 0 phía sau
       try{
         const enc2 = new TextEncoder();
@@ -1173,7 +1173,7 @@ function handoffZip(blob,name,debugInfo){
   PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.5<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
