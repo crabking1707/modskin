@@ -376,6 +376,11 @@ async function adminPanel(){
 function bar(html){$('#barwrap').innerHTML=html?`<div class="bar">${html}</div>`:''}
 function go(s){st.step=s;renderHeader();[view1,view2,view3][s-1]();scrollTo(0,0)}
 
+// File Resources theo thiết bị - Release v1 có 2 file riêng, tên phải đúng y như trên GitHub (chú ý: file Android bạn đặt tên là Resources_adroi.zip, không phải android)
+function resFileForDevice(){
+  if(st.device==='ios') return {name:'Resources_ios.zip', size:'196MB', label:'iOS • 196MB', url:'https://github.com/crabking1707/modskin/releases/download/v1/Resources_ios.zip'};
+  return {name:'Resources_adroi.zip', size:'241MB', label:'Android • 241MB', url:'https://github.com/crabking1707/modskin/releases/download/v1/Resources_adroi.zip'};
+}
 function view1(){
   const D=(k,ic,t,d,tags)=>`<button class="card dev ${st.device===k?'on':''}" data-d="${k}"><div class="ic">${ic}</div><div><h3>${t}</h3><p>${d}</p>${tags}</div><div class="chk">${st.device===k?'✓':''}</div></button>`;
   $('#app').innerHTML=`<div style="text-align:center"><span class="pill"><span class="dot" style="background:#10b981"></span>BƯỚC 1 / 3</span></div>
@@ -383,7 +388,7 @@ function view1(){
   ${D('ios','🍎','iOS • iPhone / iPad','Hỗ trợ IPA, TrollStore, Sideloaded. Tối ưu 120FPS cho dòng ProMotion.','<span class="tag">AN TOÀN</span><span class="tag l">iOS 16-18</span>')}
   ${D('android','🤖','Android • APK Mod','Cài trực tiếp APK, hỗ trợ 32/64bit. Tự động bypass kiểm tra file.','<span class="tag">NHẸ NHẤT</span><span class="tag l">Android 10+</span>')}
   <button class="cta" id="n1">Tiếp tục →</button><p class="foot">Không thu thập dữ liệu game • Make by Hiếu gamer</p>`;
-  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{st.device=b.dataset.d;view1()});
+  document.querySelectorAll('[data-d]').forEach(b=>b.onclick=()=>{const nd=b.dataset.d; if(nd!==st.device && typeof RES_FILES!=='undefined' && RES_FILES && RES_FILES.size>0){ RES_FILES=null; RES_ZIP_BYTES=null; RES_ZIP_NAME=''; if(typeof setResStatus==='function') setResStatus('Đã đổi sang '+(nd==='ios'?'iOS':'Android')+' - Cần nạp lại file '+(nd==='ios'?'Resources_ios.zip':'Resources_adroi.zip')+' cho đúng thiết bị.'); toast('Đổi thiết bị - Cần nạp lại file Resources cho đúng'); } st.device=nd; view1();});
   $('#n1').onclick=()=>go(2);bar('');
 }
 
@@ -413,19 +418,25 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc Resources.zip (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại 2.67MB. Chọn file Resources.zip (242MB bản Android / 206MB bản iOS) từ máy.</p><label class="pill" style="cursor:pointer">📂 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy Resources từ GitHub (bản mới nhất)</button><a class="pill" href="https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip" target="_blank" style="text-decoration:none">📥 Tải Resources.zip (242MB) về Tệp</a><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>Resources.zip</b> ở <b>Release v1</b> (242MB) - lúc game cập nhật bạn chỉ cần up file mới lên Release là link tải tự lấy bản mới. <b>Cách dùng đúng trên iPhone:</b> Bấm <b>"📥 Tải Resources.zip về Tệp"</b> để Safari tải về, rồi bấm <b>"Chọn file từ máy"</b> chọn file đó. Không bấm nút GitHub rồi đợi nó tự tải 242MB qua web (iPhone chặn CORS nên sẽ báo 404 / Load failed). Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release mới.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc ${resFileForDevice().name} (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">Bạn đang chọn <b>${st.device==='ios'?'iOS':'Android'}</b> - phải nạp đúng file <b>${resFileForDevice().name} (${resFileForDevice().size})</b> cho thiết bị đó, nạp sai file (iOS lấy file Android hoặc ngược lại) thì mod sẽ không đổi được model. File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại.</p><label class="pill" style="cursor:pointer">📂 Chọn file ${resFileForDevice().name} từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy ${resFileForDevice().name} từ GitHub (bản mới nhất)</button><a class="pill" href="${resFileForDevice().url}" target="_blank" style="text-decoration:none">📥 Tải ${resFileForDevice().name} (${resFileForDevice().size}) về Tệp</a><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>${resFileForDevice().name}</b> ở <b>Release v1</b> (${resFileForDevice().size}) - lúc game cập nhật bạn chỉ cần up file mới lên Release là link tải tự lấy bản mới. <b>Cách dùng đúng:</b> Bấm <b>"📥 Tải ${resFileForDevice().name} về Tệp"</b> để Safari tải về, rồi bấm <b>"Chọn file từ máy"</b> chọn file đó. Chú ý: file Android bạn đặt tên là <b>Resources_adroi.zip</b> (không phải android), phải đúng tên này mới tải được.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
     const fileRes=document.getElementById('fileResZip');
   if(fileRes) fileRes.onchange=async (e)=>{
     const f=e.target.files[0]; if(!f) return;
+    // Kiểm tra đúng file theo thiết bị: iOS phải là Resources_ios.zip, Android phải là Resources_adroi.zip
+    const want = resFileForDevice();
+    const low = f.name.toLowerCase();
+    if(st.device==='ios' && (low.includes('adroi') || low.includes('android'))){ toast('⚠️ Bạn chọn iOS nhưng file là bản Android - sẽ không đổi được model! Hãy tải Resources_ios.zip'); setResStatus('⚠️ Sai file: bạn chọn iOS nhưng file là bản Android ('+f.name+') - Hãy tải Resources_ios.zip'); return; }
+    if(st.device!=='ios' && low.includes('ios') && !low.includes('adroi')){ toast('⚠️ Bạn chọn Android nhưng file là bản iOS - sẽ không đổi được model! Hãy tải Resources_adroi.zip'); setResStatus('⚠️ Sai file: bạn chọn Android nhưng file là bản iOS ('+f.name+') - Hãy tải Resources_adroi.zip'); return; }
+    if(f.name!==want.name){ toast('Bạn nạp file '+f.name+' - Đúng ra nên là '+want.name+' cho '+(st.device==='ios'?'iOS':'Android')); }
     setResStatus('Đang đọc file '+f.name+' ('+Math.round(f.size/1024/1024)+'MB)...');
     try{
       const buf = await f.arrayBuffer();
       RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = f.name;
       const need = resNeededBasenames(st.picked.map(id=>({id})));
       RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
-      setResStatus('Đã nạp Resources.zip: '+RES_FILES.size+' file - Sẵn sàng mod! Nếu bạn đổi tướng, không cần nạp lại, lúc Tạo file nó tự lấy thêm file của tướng.');
-      toast('Đã nạp Resources.zip xong');
+      setResStatus('Đã nạp '+f.name+': '+RES_FILES.size+' file - Sẵn sàng mod! Nếu bạn đổi tướng, không cần nạp lại, lúc Tạo file nó tự lấy thêm file của tướng.');
+      toast('Đã nạp '+f.name+' xong');
     }catch(err){ setResStatus('Lỗi: '+err.message); toast(err.message); }
   };
   // Nút lấy từ GitHub - File Resources.zip ở RELEASE v1 (242MB) - iPhone KHÔNG fetch trực tiếp được qua fetch (chặn CORS + 242MB quá lớn -> Load failed / 404)
@@ -433,7 +444,11 @@ function view3(){
   const btnGit=document.getElementById('btnGitRes');
   if(btnGit) btnGit.onclick=async ()=>{
     // 1. Thử fetch chỉ file nhỏ ở repo root (GitHub Pages / raw) - nếu bạn up file nhỏ lên repo thì lấy được ngay
+    const wantGit = resFileForDevice();
     const smallUrls = [
+      'https://crabking1707.github.io/modskin/'+wantGit.name,
+      'https://raw.githubusercontent.com/crabking1707/modskin/main/'+wantGit.name,
+      // Fallback tên cũ Resources.zip (nếu bạn vẫn còn file cũ ở repo)
       'https://crabking1707.github.io/modskin/Resources.zip',
       'https://raw.githubusercontent.com/crabking1707/modskin/main/Resources.zip',
     ];
@@ -447,19 +462,19 @@ function view3(){
           if(!r2.ok) continue;
           const buf = await r2.arrayBuffer();
           if(buf.byteLength < 1000000) continue;
-          RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = 'Resources.zip (GitHub repo)';
+          RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = wantGit.name + ' (GitHub repo)';
           const need = resNeededBasenames(st.picked.map(id=>({id})));
           RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
-          setResStatus('Đã lấy từ GitHub repo: '+RES_FILES.size+' file - Sẵn sàng mod!');
+          setResStatus('Đã lấy từ GitHub repo: '+wantGit.name+' - '+RES_FILES.size+' file - Sẵn sàng mod!');
           toast('Đã lấy Resources từ GitHub xong');
           return;
         }
       }catch(e){ /* bỏ qua, qua bước tải về máy */ }
     }
     // 2. File ở Release (242MB) - không fetch, mà hiện link tải trực tiếp bằng Safari
-    setResStatus('File Resources.zip ở Release v1 (242MB) - iPhone không tải trực tiếp qua web được (chặn CORS + file quá lớn). Hãy tải về Tệp rồi chọn từ máy.');
+    setResStatus('File '+wantGit.name+' ở Release v1 ('+wantGit.size+') - iPhone không tải trực tiếp qua web được (chặn CORS + file quá lớn). Hãy tải về Tệp rồi chọn từ máy.');
     const el = document.getElementById('resProgress');
-    if(el) el.innerHTML = 'File ở <b>Release v1 (242MB)</b> - iPhone không tải trực tiếp qua web được.<br><br><b>Làm 2 bước này (chắc chắn được):</b><br>1. Bấm <a href="https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip" target="_blank" style="color:#2563eb;font-weight:700">📥 Bấm để tải Resources.zip (242MB) về Tệp</a> - Safari sẽ tải về, đợi tải xong.<br>2. Bấm <b>"Chọn file Resources.zip từ máy"</b> chọn file vừa tải trong Tệp.<br><br>Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release mới. Lúc game cập nhật bạn chỉ cần up file mới lên Release là link này tự lấy bản mới nhất.';
+    if(el) el.innerHTML = 'File ở <b>Release v1 ('+wantGit.size+')</b> - iPhone không tải trực tiếp qua web được.<br><br><b>Làm 2 bước này (chắc chắn được):</b><br>1. Bấm <a href="'+wantGit.url+'" target="_blank" style="color:#2563eb;font-weight:700">📥 Bấm để tải '+wantGit.name+' ('+wantGit.size+') về Tệp</a> - Safari sẽ tải về, đợi tải xong.<br>2. Bấm <b>"Chọn file '+wantGit.name+' từ máy"</b> chọn file vừa tải trong Tệp.<br><br>Bạn đang chọn <b>'+(st.device==='ios'?'iOS':'Android')+'</b> nên phải tải đúng file <b>'+wantGit.name+'</b>. Lúc game cập nhật bạn chỉ cần up file mới lên Release là link này tự lấy bản mới nhất.';
     toast('Bấm link tải về Tệp rồi chọn từ máy');
   };
   const btnClear=document.getElementById('btnClearRes');
@@ -561,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v6.4: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.1: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -693,66 +708,113 @@ async function buildModZip(){
   const heroesMod = sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
   await ensureResForHeroes(heroesMod);
   if(!RES_FILES || RES_FILES.size===0) throw new Error('Ban chua nap file goc!');
-  // Patch an toàn: chỉ đổi cùng độ dài, giữ nguyên kích thước file
-  const patchSkinId = async (orig, heroes, fileName='') => {
-    let bytes = orig.slice();
-    let count32=0, countStr=0;
-    {
-      const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-      const map32 = new Map();
-      for(const h of heroes){
-        const num = heroNum(h.heroId);
-        const targetIdx = h.skinIndex+1;
-        const targetId32 = num*100 + targetIdx;
-        const total = byId[h.heroId].skins.length;
-        for(let s=1; s<=total; s++){ const srcId = num*100 + s; if(srcId!==targetId32) map32.set(srcId, targetId32); }
-      }
-      for(let i=0; i+4<=bytes.length; i++){
-        const v = view.getUint32(i, true);
-        const nv = map32.get(v);
-        if(nv!==undefined){ view.setUint32(i, nv, true); count32++; }
-        if(i%500000===0 && i>0) await new Promise(r=>setTimeout(r,0));
-      }
-    }
-    {
-      const enc = new TextEncoder();
-      const BUNDLE_MAP = {airi:'xiaoqiao', paine:'yena', nakroth:'nakroth', violet:'violet', murad:'murad', zata:'zata', yan:'yan', allain:'allain', flo:'florentino', butterfly:'butterfly', kriknak:'kriknak', quillen:'quillen', enzo:'enzo', bright:'bright', elsu:'elsu', hayate:'hayate', capheny:'capheny', laville:'laville', telannas:'telannas', yorn:'yorn', valhein:'valhein', thorn:'thorn', fennik:'fennik', wisp:'wisp', slimz:'slimz'};
-      for(const h of heroes){
-        const targetIdx = h.skinIndex+1;
-        const total = byId[h.heroId].skins.length;
-        const targetId32 = heroNum(h.heroId)*100 + targetIdx;
-        const bundleName = (byId[h.heroId] && byId[h.heroId].bundleName) || BUNDLE_MAP[h.heroId] || h.heroId;
-        for(let src=1; src<=total; src++){
-          if(src===targetIdx) continue;
-          const pairs = [];
-          const addPair = (a,b)=>{ if(a.length===b.length) pairs.push([a,b]); };
-          addPair(h.heroId+'_'+String(src).padStart(2,'0'), h.heroId+'_'+String(targetIdx).padStart(2,'0'));
-          addPair(h.heroId+'_'+src, h.heroId+'_'+targetIdx);
-          addPair(String(heroNum(h.heroId)*100+src), String(targetId32));
-          addPair(bundleName+'_'+String(src).padStart(2,'0'), bundleName+'_'+String(targetIdx).padStart(2,'0'));
-          addPair(bundleName+'_'+src, bundleName+'_'+targetIdx);
-          addPair('battle_'+String(src).padStart(2,'0'), 'battle_'+String(targetIdx).padStart(2,'0'));
-          addPair('battle_'+src, 'battle_'+targetIdx);
-          addPair(heroNum(h.heroId)+'_'+String(src).padStart(2,'0'), heroNum(h.heroId)+'_'+String(targetIdx).padStart(2,'0'));
-          // Chỉ đổi bundle đầy đủ, KHÔNG đổi "base" chung (đổi "base" là vỡ texture + mất model + vỡ sảnh)
-          if(src===1){
-            addPair(bundleName+'_battle_base', bundleName+'_battle_'+String(targetIdx).padStart(4,'0'));
-            addPair(bundleName+'_base', bundleName+'_'+String(targetIdx).padStart(4,'0'));
-          }
-          for(const [fromStr, toStr] of pairs){
-            const fromB = enc.encode(fromStr);
-            const toB = enc.encode(toStr);
-            for(let i=0; i+fromB.length<=bytes.length; i++){
-              let ok=true;
-              for(let k=0;k<fromB.length;k++){ if(bytes[i+k]!==fromB[k]){ ok=false; break; } }
-              if(ok){ bytes.set(toB, i); countStr++; i+=fromB.length-1; }
-            }
-          }
+  // ===== VIDEO METHOD (P MOD) - Học từ video hướng dẫn =====
+  // Video: 1. Ngoại hình: chỉ sửa Actor_<ActorID>_Infos.pkg.bytes - tìm 52101 -> 52102 (HeroID*100+Skin)
+  //        2. Hiệu ứng: chỉ sửa Actor_<ActorID>_Actions.pkg.bytes - giải mã ra skill/*.xml, tìm playherosound / prefab_skill_effects/... rồi đổi 52101 -> 52102
+  //        3. Âm thanh: chỉ copy Hero_<Bundle>_Skin_<SkinID>_SFX.bnk + VO.bnk trong Sound_DLC, đổi tên bỏ _Skin_<SkinID> đi
+  // KHÔNG patch Databin/heroSkin.bytes nữa - patch Databin là sai, game không đọc chỗ đó để đổi model, nên mod không có tác dụng.
+  // File .pkg.bytes là ZSTD nén: phải giải nén trước, sửa, rồi nén lại. Patch trực tiếp file nén là không tìm thấy chuỗi, nên mod không đổi.
+  const BUNDLE_MAP2 = {airi:'xiaoqiao', paine:'yena', nakroth:'nakroth', violet:'violet', murad:'murad', zata:'zata', yan:'yan', allain:'allain', flo:'florentino', butterfly:'butterfly', kriknak:'kriknak', quillen:'quillen', enzo:'enzo', bright:'bright', elsu:'elsu', hayate:'hayate', capheny:'capheny', laville:'laville', telannas:'telannas', yorn:'yorn', valhein:'valhein', thorn:'thorn', fennik:'fennik', wisp:'wisp', slimz:'slimz'};
+  const bundleOf = (heroId)=>{
+    const h = byId[heroId];
+    if(h && h.bundleName) return h.bundleName;
+    if(BUNDLE_MAP2[heroId]) return BUNDLE_MAP2[heroId];
+    return heroId;
+  };
+  // --- Tìm ActorID đúng từ Resources.zip (không dùng GID cũ, vì GID 129 của Florentino là HeroID, còn ActorID là 521) ---
+  // Quét file Actor_*_Infos.pkg.bytes trong zip, đọc header chứa "521_Florentino_actorinfo" để map Bundle -> ActorID
+  let ACTOR_MAP = {};
+  try{
+    for(const [bn, data] of RES_FILES.entries()){
+      const m = bn.match(/^Actor_(\d+)_Infos\.pkg\.bytes$/);
+      if(!m) continue;
+      const actorId = parseInt(m[1],10);
+      // Đọc header 8KB đầu file để tìm "521_Florentino_actorinfo" hoặc "Florentino"
+      const head = data.slice(0, 8192);
+      let headStr = '';
+      try{ headStr = new TextDecoder('latin1').decode(head); }catch(e){}
+      // Tìm pattern ActorID_Bundle_actorinfo
+      const mm = headStr.match(/(\d+)_([A-Za-z]+)_actorinfo/i);
+      if(mm){
+        const b = mm[2].toLowerCase();
+        ACTOR_MAP[b] = parseInt(mm[1],10);
+      } else {
+        // Fallback: tìm tên bundle trong header
+        for(const hid of Object.keys(byId)){
+          const b = bundleOf(hid).toLowerCase();
+          if(headStr.toLowerCase().includes(b)) { ACTOR_MAP[b] = actorId; break; }
         }
       }
     }
-    bytes._patchCount = count32 + countStr;
-    return bytes;
+  }catch(e){ console.warn('Actor map scan lỗi', e); }
+  const actorIdOf = (heroId)=>{
+    const b = bundleOf(heroId).toLowerCase();
+    if(ACTOR_MAP[b]) return ACTOR_MAP[b];
+    // Fallback: GID (cho Airi 106 thì đúng, cho Florentino 129 thì sai nhưng vẫn thử, sẽ báo thiếu file nếu sai)
+    return heroNum(heroId);
+  };
+  // --- ZSTD giải nén / nén lại (dùng DecompressionStream native, có từ Chrome 130+ / Safari 18+) ---
+  const ZSTD_MAGIC = [0x28,0xB5,0x2F,0xFD];
+  const findZstd = (u8)=>{
+    for(let i=0;i+4<=u8.length;i++){ if(u8[i]===0x28 && u8[i+1]===0xB5 && u8[i+2]===0x2F && u8[i+3]===0xFD) return i; }
+    return -1;
+  };
+  async function tryDecompressPkg(u8){
+    const off = findZstd(u8);
+    if(off===-1) return null;
+    try{
+      const ds = new DecompressionStream('zstd');
+      const dec = await new Response(new Blob([u8.slice(off)]).stream().pipeThrough(ds)).arrayBuffer();
+      return {header: u8.slice(0,off), data: new Uint8Array(dec), off};
+    }catch(e){ return null; }
+  }
+  async function tryCompressPkg(header, data){
+    try{
+      const cs = new CompressionStream('zstd');
+      const comp = await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer();
+      const out = new Uint8Array(header.length + comp.byteLength);
+      out.set(header,0); out.set(new Uint8Array(comp), header.length);
+      return out;
+    }catch(e){ return null; }
+  }
+  // --- Patch skin ID theo video: HeroID*100+Skin (vd 52101 -> 52102, 10601 -> 10613) ---
+  // Patch cả dạng ASCII ("52101") và dạng số nguyên 32-bit LE (52101) trong file đã giải nén
+  const patchSkinIds = (bytes, heroes, actorMap)=>{
+    let out = bytes.slice();
+    let count = 0;
+    const enc = new TextEncoder();
+    for(const h of heroes){
+      const actorId = actorMap[h.heroId] || actorIdOf(h.heroId);
+      const targetIdx = h.skinIndex+1;
+      const targetId = actorId*100 + targetIdx;
+      const total = byId[h.heroId].skins.length;
+      // ASCII: "52101" -> "52102" (cùng độ dài 5-6 ký tự, giữ nguyên kích thước file)
+      for(let s=1; s<=total; s++){
+        if(s===targetIdx) continue;
+        const srcId = actorId*100 + s;
+        const fromStr = String(srcId), toStr = String(targetId);
+        if(fromStr.length!==toStr.length) continue; // Khác độ dài thì bỏ qua để không vỡ file (vd 1061 -> 10613)
+        const fromB = enc.encode(fromStr), toB = enc.encode(toStr);
+        for(let i=0;i+fromB.length<=out.length;i++){
+          let ok=true; for(let k=0;k<fromB.length;k++){ if(out[i+k]!==fromB[k]){ ok=false; break; } }
+          if(ok){ out.set(toB,i); count++; i+=fromB.length-1; }
+        }
+      }
+      // LE32: số nguyên 52101 (4 byte) -> 52102
+      const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+      const map32 = new Map();
+      for(let s=1; s<=total; s++){ if(s!==targetIdx) map32.set(actorId*100+s, targetId); }
+      for(let i=0;i+4<=out.length;i++){
+        const v = view.getUint32(i, true);
+        const nv = map32.get(v);
+        if(nv!==undefined){ view.setUint32(i, nv, true); count++; }
+      }
+      // Hiệu ứng: thêm dạng "521_Florentino" + skin - trong file Actions, effect path là "prefab_skill_effects/521_Florentino/52101_..." 
+      // Đã đổi 52101 -> 52102 ở trên là đủ, vì effect path chứa skin ID 52101
+      // Âm thanh: trong Actions còn có "Play_521_Florentino_..._52101" - cũng đã đổi ở trên
+    }
+    out._patchCount = count;
+    return out;
   };
   const base='Resources/1.64.1/';
   const dirs=new Set(); const files=[];
@@ -763,58 +825,81 @@ async function buildModZip(){
   };
   const ver=new Uint8Array(17); ver.set(new TextEncoder().encode('1.64.1'));
   add(base+'version', ver);
-  // Danh sách file cần patch - CHỈ lấy file có thật trong RES_FILES, không tạo file fake
-  const relMap = {
-    'KernelLua.pkg.bytes':base+'KernelLua.pkg.bytes',
-    'StableSystems_3.pkg.bytes':base+'StableSystems_3.pkg.bytes',
-    'CommonActions.pkg.bytes':base+'Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes',
-    'ResSkinMotionBaseCfg.bytes':base+'Databin/Client/Motion/ResSkinMotionBaseCfg.bytes',
-    'liteBulletCfg.bytes':base+'Databin/Client/Skill/liteBulletCfg.bytes',
-    'skillcombine.bytes':base+'Databin/Client/Skill/skillcombine.bytes',
-    'skillmark.bytes':base+'Databin/Client/Skill/skillmark.bytes',
-    'heroSkin.bytes':base+'Databin/Client/Actor/heroSkin.bytes',
-    'ResSkinSeniorLabelCfg.bytes':base+'Databin/Client/Actor/ResSkinSeniorLabelCfg.bytes',
-    'organSkin.bytes':base+'Databin/Client/Actor/organSkin.bytes',
-    'ResGlobalSkinCfg.bytes':base+'Databin/Client/Global/ResGlobalSkinCfg.bytes',
-    'ResCharacterComponent.bytes':base+'Databin/Client/Character/ResCharacterComponent.bytes',
-    'HeroSkinShop.bytes':base+'Databin/Client/Shop/HeroSkinShop.bytes',
-  };
-  // Lưu hash gốc -> hash mới để sửa file kiểm tra sau
-  const hashPairs = []; // [{origHex, newHex, fileBn}]
+  const hashPairs = [];
   let patchedCount=0;
-  for(const bn of Object.keys(relMap)){
-    let data = RES_FILES.get(bn);
-    if(!data){ const rp = RES_PATHS[bn]; if(rp) data = RES_FILES.get(rp); }
-    if(!data) continue;
-    const origHex = md5Hex(data);
-    const patched = await patchSkinId(data, heroesMod, bn);
-    const newHex = md5Hex(patched);
-    if(origHex!==newHex) hashPairs.push({origHex, newHex, bn});
-    add(relMap[bn], patched);
-    patchedCount++;
-    await new Promise(r=>setTimeout(r,5));
-  }
+  const actorMapForHeroes = {};
+  for(const h of heroesMod) actorMapForHeroes[h.heroId] = actorIdOf(h.heroId);
+  // 1+2. Ngoại hình + Hiệu ứng: Actor_Infos + Actor_Actions (giải nén ZSTD -> patch -> nén lại)
   for(const h of heroesMod){
-    const num = heroNum(h.heroId);
+    const actorId = actorMapForHeroes[h.heroId];
+    const bundle = bundleOf(h.heroId);
     const perHero = [
-      {bn:'Actor_'+num+'_Infos.pkg.bytes', rel:base+'Prefab_Characters/Actor_'+num+'_Infos.pkg.bytes'},
-      {bn:num+'_AssetRef.bytes', rel:base+'AssetRefs/Hero/'+num+'_AssetRef.bytes'},
-      {bn:'Actor_'+num+'_Actions.pkg.bytes', rel:base+'Ages/Prefab_Characters/Prefab_Hero/Actor_'+num+'_Actions.pkg.bytes'},
+      {bn:'Actor_'+actorId+'_Infos.pkg.bytes', rel:base+'Ages/Prefab_Characters/Prefab_Hero/Actor_'+actorId+'_Infos.pkg.bytes', label:'Ngoại hình'},
+      {bn:'Actor_'+actorId+'_Actions.pkg.bytes', rel:base+'Ages/Prefab_Characters/Prefab_Hero/Actor_'+actorId+'_Actions.pkg.bytes', label:'Hiệu ứng'},
     ];
     for(const ph of perHero){
       let data = RES_FILES.get(ph.bn);
       if(!data){ const rp = RES_PATHS[ph.bn]; if(rp) data = RES_FILES.get(rp); }
       if(!data) continue;
       const origHex = md5Hex(data);
-      const patched = await patchSkinId(data, heroesMod, ph.bn);
+      // Thử giải nén ZSTD -> patch file đã giải nén -> nén lại (đúng cách video làm bằng giaima_mahoa.py)
+      let patched = null;
+      const dec = await tryDecompressPkg(data);
+      if(dec){
+        const patchedDec = patchSkinIds(dec.data, heroesMod, actorMapForHeroes);
+        const recomp = await tryCompressPkg(dec.header, patchedDec);
+        if(recomp) patched = recomp;
+        else patched = patchSkinIds(data, heroesMod, actorMapForHeroes); // fallback: patch trực tiếp nếu nén lại lỗi
+      } else {
+        // File không nén ZSTD (hoặc trình duyệt không hỗ trợ zstd) -> patch trực tiếp như cũ
+        patched = patchSkinIds(data, heroesMod, actorMapForHeroes);
+      }
       const newHex = md5Hex(patched);
       if(origHex!==newHex) hashPairs.push({origHex, newHex, bn:ph.bn});
       add(ph.rel, patched);
       patchedCount++;
+      await new Promise(r=>setTimeout(r,5));
+    }
+    // 3. Âm thanh: tìm file SFX/VO của skin đích trong Resources.zip, copy đổi tên bỏ _Skin_<SkinID>
+    // Video: Hero_Florentino_Skin_52102_SFX.bnk -> Hero_Florentino_SFX.bnk, Hero_Florentino_Skin_52102_VO.bnk -> Hero_Florentino_VO.bnk
+    // Trong zip, file âm thanh ở Extra/2019.V2/Sound_DLC/Android/ và .../Vietnamese/
+    const targetSkinId = actorId*100 + (h.skinIndex+1); // vd 52102
+    const targetSkinIdStr = String(targetSkinId);
+    // Tìm tất cả file âm thanh của hero này trong RES_FILES (tìm theo bundle + SkinID)
+    for(const [bn, sData] of RES_FILES.entries()){
+      // bn dạng: Hero_Florentino_Skin_52102_SFX.bnk, Hero_Florentino_Skin_52102_VO.bnk, Hero_Florentino_Skin_52102_Show.bnk (Show thì bỏ, video nói bỏ)
+      if(!bn.includes('Hero_')) continue;
+      if(!bn.includes(bundle)) continue;
+      if(!bn.includes(targetSkinIdStr)) continue;
+      if(bn.includes('_Show')) continue; // Show thì bỏ, video nói không đụng Show
+      // bn có _SFX hoặc _VO
+      const isSFX = bn.includes('_SFX');
+      const isVO = bn.includes('_VO');
+      if(!isSFX && !isVO) continue;
+      // Tên mới: bỏ _Skin_52102 đi
+      const newBn = bn.replace('_Skin_'+targetSkinIdStr, '').replace('_Skin_'+targetSkinId, '');
+      // Tìm đường dẫn gốc của file này trong zip (RES_PATHS)
+      const origPath = RES_PATHS[bn] || bn;
+      // Đường dẫn đích: giữ nguyên thư mục gốc, chỉ đổi tên file (vd Extra/2019.V2/Sound_DLC/Android/Hero_Florentino_SFX.bnk)
+      // Nếu origPath không có base, thêm base vào
+      let outPath = origPath;
+      if(!outPath.startsWith(base)){
+        // origPath dạng: Extra/2019.V2/Sound_DLC/Android/Hero_...bnk -> thêm base
+        if(outPath.includes('Extra/')) outPath = base + outPath.slice(outPath.indexOf('Extra/'));
+        else outPath = base + 'Extra/2019.V2/Sound_DLC/' + (isSFX?'Android/':'Vietnamese/') + newBn;
+      } else {
+        // Đã có base, chỉ thay tên file
+        outPath = outPath.slice(0, outPath.lastIndexOf('/')+1) + newBn;
+      }
+      // Cần cả 2 file: SFX ở Android, VO ở Vietnamese - video nói SFX ở Android, VO ở Vietnamese
+      // Nếu file gốc ở Android mà là VO, vẫn giữ nguyên thư mục gốc (đừng đổi)
+      add(outPath, sData.slice());
+      patchedCount++;
+      // Ghi hash cho file âm thanh mới (để game không tải lại)
+      // File âm thanh mới có tên khác file gốc nên không cần hashPairs cho nó, nhưng cần thêm vào verification? Bỏ qua, vì file mới không có trong verification cũ
     }
   }
-  // SỬA 2 FILE KIỂM TRA HASH - để game không tải lại 2.67MB
-  // Game check hash trong 2 file này, nếu hash cũ mà file mới thì nó tải lại file gốc. Đổi hash cũ -> hash mới (cùng độ dài 32 ký tự) là game tưởng file đúng, không tải lại.
+  // SỬA FILE KIỂM TRA HASH - để game không tải lại file đã sửa (Actor_Infos + Actor_Actions)
   for(const vBn of ['resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle']){
     let vData = RES_FILES.get(vBn);
     if(!vData){ const rp = RES_PATHS[vBn]; if(rp) vData = RES_FILES.get(rp); }
@@ -822,7 +907,6 @@ async function buildModZip(){
     let vBytes = vData.slice();
     const enc = new TextEncoder();
     for(const hp of hashPairs){
-      // Hash lưu dạng hex chữ thường và chữ hoa - đổi cả 2
       for(const origH of [hp.origHex, hp.origHex.toUpperCase()]){
         const fromB = enc.encode(origH);
         const toB = enc.encode(hp.origHex===origH ? hp.newHex : hp.newHex.toUpperCase());
@@ -831,28 +915,23 @@ async function buildModZip(){
           if(ok){ vBytes.set(toB, i); i+=fromB.length-1; }
         }
       }
-      // Hash lưu dạng raw 16 byte (binary MD5) - cần tính raw từ hex
-      // Tính raw MD5 của file gốc và file mới, đổi raw trong file kiểm tra (nếu có)
-      // (Bỏ qua nếu không tìm thấy, vì hex đã đổi ở trên)
     }
     add(base+'assetbundle/'+vBn, vBytes);
   }
-    if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó.');
-  // Kiểm tra thiếu file riêng của tướng - nếu thiếu thì mod sẽ không đổi được model 3D (hiện Ninja rồng thay vì Bích hải)
-  // Nguyên nhân thường gặp: dùng file Android 242MB để mod cho iOS (file Android không có 3 file iOS này), cần file iOS 206MB
+  if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó.');
+  // Kiểm tra thiếu file: nếu không tìm thấy Actor_Infos/Actions thì báo rõ (do ActorID sai hoặc dùng file Android cho iOS)
   const missingHeroFiles = [];
   for(const h of heroesMod){
-    const num = heroNum(h.heroId);
-    for(const bn of ['Actor_'+num+'_Infos.pkg.bytes', num+'_AssetRef.bytes', 'Actor_'+num+'_Actions.pkg.bytes']){
+    const actorId = actorMapForHeroes[h.heroId];
+    for(const bn of ['Actor_'+actorId+'_Infos.pkg.bytes', 'Actor_'+actorId+'_Actions.pkg.bytes']){
       let has = RES_FILES.get(bn);
       if(!has && RES_PATHS[bn]) has = RES_FILES.get(RES_PATHS[bn]);
-      // Kiểm tra xem file này đã được thêm vào files chưa (đã patch)
       const inFiles = files.some(f=>f.name && f.name.includes(bn));
-      if(!inFiles) missingHeroFiles.push(bn);
+      if(!inFiles) missingHeroFiles.push(bn+' (ActorID '+actorId+' cho '+h.hero+')');
     }
   }
   if(missingHeroFiles.length>0){
-    throw new Error('Thiếu '+missingHeroFiles.length+' file riêng của tướng ('+missingHeroFiles.join(', ')+') - File Resources.zip bạn nạp là bản Android 242MB, không có 3 file iOS này nên mod sẽ không đổi được model 3D (hiện Ninja rồng thay vì Bích hải). Hãy nạp file iOS 206MB (up lên Release mới) rồi tạo lại. CHƯA trừ điểm.');
+    throw new Error('Thiếu '+missingHeroFiles.length+' file riêng của tướng ('+missingHeroFiles.join(', ')+') - Có thể do ActorID sai (Florentino ActorID là 521, không phải 129) hoặc dùng file Android cho iOS. Hãy nạp file iOS 206MB rồi tạo lại. CHƯA trừ điểm.');
   }
   const uniqSkins=[...new Map(heroesMod.map(r=>[r.heroId, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip';
   return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs};
@@ -869,6 +948,7 @@ function handoffZip(blob,name){
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
       const cur = PENDING_BUILD; if(!cur) return;
+      // Khi bấm Tải thì mới cho phép tạo file mới (reset sau khi tải, không reset trước để chống bấm 2 lần)
       try{
         const file = new File([cur.blob], cur.name, {type:'application/zip'});
         const ios = st.device==='ios' || /iPhone|iPad|iPod/.test(navigator.userAgent||'');
@@ -880,6 +960,8 @@ function handoffZip(blob,name){
           setTimeout(()=>URL.revokeObjectURL(url),20000);
         }
         toast('Đã tải '+cur.name);
+        PENDING_BUILD=null; MAKING=false; LAST_MAKE_AT=0;
+        try{ if(typeof view3==='function') view3(); }catch(_){}
       }catch(e){
         // User hủy share -> không hoàn điểm (đã trừ vì file đã tạo xong), chỉ báo
         if(e && e.name!=='AbortError') toast('Không tải được file: '+(e.message||e));
@@ -888,13 +970,16 @@ function handoffZip(blob,name){
       if(m) m.innerHTML='';
     };
     const btnClose = document.getElementById('btnCloseMod');
-    if(btnClose) btnClose.onclick = ()=>{ if(m) m.innerHTML=''; };
+    if(btnClose) btnClose.onclick = ()=>{ if(m) m.innerHTML=''; PENDING_BUILD=null; MAKING=false; LAST_MAKE_AT=0; try{ if(typeof view3==='function') view3(); }catch(_){} };
   }
   return Promise.resolve();
 }
+let LAST_MAKE_AT = 0; // Chống ghost-click iOS: bấm 1 cái mà Safari gửi 2 click
 async function make(){
-  // CHỐNG BẤM 2 LẦN / BẤM LIÊN TỤC: nếu đang tạo thì bỏ qua, không trừ điểm
+  const now = Date.now();
+  // Chống bấm 2 lần / ghost-click: nếu vừa bấm < 3s trước thì bỏ qua, không trừ điểm
   if(MAKING){ toast('Đang tạo file, đợi xíu đừng bấm thêm...'); return; }
+  if(now - LAST_MAKE_AT < 3000){ toast('Vừa bấm rồi, đợi xíu...'); return; }
   // Nếu đã có file chờ tải (vừa tạo xong mà chưa tải), bấm lại thì mở lại dialog tải, KHÔNG trừ điểm nữa
   if(PENDING_BUILD){
     await handoffZip(PENDING_BUILD.blob, PENDING_BUILD.name);
@@ -904,34 +989,34 @@ async function make(){
   if(!u){ return toast('Bạn cần đăng nhập để tạo file'); }
   if(u.credits<1){const c=$('#credit');c.classList.remove('shake');void c.offsetWidth;c.classList.add('shake');return toast('Bạn cần ít nhất 1 điểm để tạo file - Hãy nạp điểm');}
   const sel=st.picked.filter(i=>st.skin[i]!=null);if(!sel.length)return;
-  const btn=$('#mk'); MAKING=true;
+  const btn=$('#mk'); MAKING=true; LAST_MAKE_AT=now;
   if(btn){ btn.disabled=true; btn.textContent='Đang tạo file... đừng bấm thêm'; }
   await new Promise(r=>setTimeout(r,50));
   // TẠO FILE TRƯỚC, TRỪ ĐIỂM SAU - nếu tạo lỗi thì KHÔNG trừ điểm
   let built;
   try{ built=await buildModZip(); }
   catch(e){
-    MAKING=false;
+    MAKING=false; LAST_MAKE_AT=0;
     if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (-1 điểm)'; }
     return toast('Không tạo được file (CHƯA trừ điểm): '+(e.message||e));
   }
-  // Tạo xong mới trừ 1 điểm - chỉ trừ 1 lần duy nhất
+  // Tạo xong mới trừ 1 điểm - CHỈ trừ ở Firebase, KHÔNG trừ ở local nữa
+  // Lỗi cũ: vừa B.consume (Firebase -1) vừa st.user.credits -1 (local -1) rồi onSnapshot về lại làm lệch nhau -> 9 -> 7 (trừ 2)
+  // Sửa: chỉ B.consume, để onSnapshot tự cập nhật điểm hiển thị (1 nguồn duy nhất), không tự trừ local
   let deducted=false;
   try{ await B.consume(u.uid); deducted=true; }catch(e){
     console.warn('consume Firebase lỗi, fallback local:', e);
     try{ if(B.setCredits) await B.setCredits(u.uid, Math.max(0,(u.credits||0)-1)); deducted=true; }catch(e2){ console.warn('fallback setCredits lỗi', e2); }
   }
-  if(deducted){
-    st.user = {...st.user, credits: Math.max(0,(st.user.credits||0)-1)};
-    if(typeof renderHeader==='function') renderHeader();
-  }
-  MAKING=false;
-  if(btn){ btn.disabled=false; btn.textContent='Tạo file ZIP ✨ (-1 điểm)'; }
-  // Hiện dialog tải (giữ gesture) - không tự share ngay
+  // KHÔNG làm st.user.credits -1 ở đây nữa - đợi Firebase onSnapshot trả về điểm mới (8) rồi renderHeader sẽ hiện đúng
+  // Giữ MAKING=true cho tới khi dialog đóng, để ghost-click không lọt 2 lần tạo file
+  // Set PENDING_BUILD TRƯỚC khi mở dialog, để bấm lại không tạo file mới
+  PENDING_BUILD = {blob: built.blob, name: built.name};
   try{ await handoffZip(built.blob, built.name); }
-  catch(e){ return toast('Không tải được file: '+(e.message||e)); }
-  toast('Đã tạo '+built.name+' • Đã trừ 1 điểm, còn '+st.user.credits+' điểm • Bấm "⬇️ Bấm để Tải file về" để tải');
-  try{ if(typeof view3==='function') view3(); }catch(_){}
+  catch(e){ MAKING=false; PENDING_BUILD=null; return toast('Không tải được file: '+(e.message||e)); }
+  toast('Đã tạo '+built.name+' • Đã trừ 1 điểm (điểm sẽ cập nhật sau 1-2s) • Bấm "⬇️ Bấm để Tải file về" để tải');
+  // KHÔNG gọi view3() ngay ở đây - view3() sẽ re-render nút và làm mất MAKING lock + PENDING_BUILD
+  // Điểm sẽ tự cập nhật khi Firebase onSnapshot về (B.onUser -> renderHeader)
 }
 
 
@@ -942,7 +1027,9 @@ B.onUser(u=>{
   st.user=u;
   if(!u){st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
   renderHeader();
-  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3)view3(); // cập nhật nút khi điểm đổi
+  // Khi đang tạo file (MAKING=true) thì KHÔNG gọi view3() - view3() re-render nút sẽ làm mất lock + gây ghost-click trừ 2 điểm
+  // Điểm vẫn cập nhật qua renderHeader ở trên, chỉ không re-render nút
+  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3 && !MAKING)view3(); // cập nhật nút khi điểm đổi, trừ lúc đang tạo
   if(st.topup&&!$('#cd'))renderTopup(); // làm mới số điểm trong popup
 });
 </script>
