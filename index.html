@@ -413,7 +413,7 @@ function view3(){
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <h1>Chọn skin</h1>${secs}
-  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc Resources.zip (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại 2.67MB. Chọn file Resources.zip (242MB bản Android / 206MB bản iOS) từ máy.</p><label class="pill" style="cursor:pointer">📂 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy Resources từ GitHub (bản mới nhất)</button><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>Resources.zip</b> ở <b>Release v1</b> (242MB) - lúc game cập nhật bạn chỉ cần up file mới lên Release là web tự lấy bản mới. Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release mới. Nếu nút GitHub báo Load failed do file quá lớn, hãy tải file từ <a href="https://github.com/crabking1707/modskin/releases/tag/v1" target="_blank" style="color:#2563eb">Release v1</a> về máy rồi bấm "Chọn file từ máy".</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
+  <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc Resources.zip (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại 2.67MB. Chọn file Resources.zip (242MB bản Android / 206MB bản iOS) từ máy.</p><label class="pill" style="cursor:pointer">📂 Chọn file Resources.zip từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy Resources từ GitHub (bản mới nhất)</button><a class="pill" href="https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip" target="_blank" style="text-decoration:none">📥 Tải Resources.zip (242MB) về Tệp</a><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>Resources.zip</b> ở <b>Release v1</b> (242MB) - lúc game cập nhật bạn chỉ cần up file mới lên Release là link tải tự lấy bản mới. <b>Cách dùng đúng trên iPhone:</b> Bấm <b>"📥 Tải Resources.zip về Tệp"</b> để Safari tải về, rồi bấm <b>"Chọn file từ máy"</b> chọn file đó. Không bấm nút GitHub rồi đợi nó tự tải 242MB qua web (iPhone chặn CORS nên sẽ báo 404 / Load failed). Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release mới.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
     const fileRes=document.getElementById('fileResZip');
   if(fileRes) fileRes.onchange=async (e)=>{
@@ -428,57 +428,39 @@ function view3(){
       toast('Đã nạp Resources.zip xong');
     }catch(err){ setResStatus('Lỗi: '+err.message); toast(err.message); }
   };
-  // Nút lấy từ GitHub - File Resources.zip hiện ở RELEASE v1 (242MB), KHÔNG ở repo root nên GitHub Pages + raw đều 404
-  // Release download bị chặn CORS trên iPhone + file 242MB quá lớn nên fetch trực tiếp hay bị "Load failed"
-  // Sửa: thử Release trực tiếp trước (đúng chỗ file), rồi qua proxy CORS, rồi mở trang Release để tải về máy
+  // Nút lấy từ GitHub - File Resources.zip ở RELEASE v1 (242MB) - iPhone KHÔNG fetch trực tiếp được qua fetch (chặn CORS + 242MB quá lớn -> Load failed / 404)
+  // Cách đúng trên iPhone: bấm link tải trực tiếp để Safari tải về Tệp, rồi bấm "Chọn file từ máy" chọn file đó. Không cố fetch 242MB nữa.
   const btnGit=document.getElementById('btnGitRes');
   if(btnGit) btnGit.onclick=async ()=>{
-    setResStatus('Đang lấy Resources.zip từ GitHub Release v1 (242MB)...');
-    const urls = [
-      // 1. Release v1 - đúng chỗ file đang ở (ảnh 2: Assets -> Resources.zip 242MB)
-      'https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip',
-      // 2. Proxy CORS - để vượt chặn CORS của objects.githubusercontent.com trên iPhone
-      'https://corsproxy.io/?url=' + encodeURIComponent('https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip'),
-      'https://api.allorigins.win/raw?url=' + encodeURIComponent('https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip'),
-      // 3. GitHub Pages / raw - chỉ có nếu bạn up file lên repo root (hiện chưa có, chỉ có ở Release)
+    // 1. Thử fetch chỉ file nhỏ ở repo root (GitHub Pages / raw) - nếu bạn up file nhỏ lên repo thì lấy được ngay
+    const smallUrls = [
       'https://crabking1707.github.io/modskin/Resources.zip',
       'https://raw.githubusercontent.com/crabking1707/modskin/main/Resources.zip',
     ];
-    let lastErr = '';
-    for(let ui=0; ui<urls.length; ui++){
-      const u = urls[ui];
+    for(const u of smallUrls){
       try{
-        setResStatus('Đang thử '+(ui+1)+'/'+urls.length+': '+(ui===0?'Release v1':ui<3?'Proxy CORS':'Repo root')+' ... File 242MB, đợi 1-2 phút, đừng tắt web.');
-        const r = await fetch(u, {redirect:'follow'});
-        if(!r.ok){ lastErr = 'HTTP '+r.status+' ở '+u; continue; }
-        // Đọc theo stream để hiện % và tránh iPhone báo Load failed do đợi lâu không có phản hồi
-        const total = +r.headers.get('content-length') || 242*1024*1024;
-        let received = 0; const chunks = [];
-        const reader = r.body.getReader();
-        while(true){
-          const {done, value} = await reader.read();
-          if(done) break;
-          chunks.push(value); received += value.length;
-          if(received % (10*1024*1024) < value.length) setResStatus('Đang tải từ GitHub: '+Math.round(received/1024/1024)+'MB / '+Math.round(total/1024/1024)+'MB ...');
+        setResStatus('Đang thử lấy từ repo root: '+u+' ...');
+        const r = await fetch(u, {method:'HEAD'});
+        if(r.ok){
+          // File ở repo root thì mới fetch GET (file nhỏ mới fetch được, file lớn thì vẫn phải tải về máy)
+          const r2 = await fetch(u);
+          if(!r2.ok) continue;
+          const buf = await r2.arrayBuffer();
+          if(buf.byteLength < 1000000) continue;
+          RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = 'Resources.zip (GitHub repo)';
+          const need = resNeededBasenames(st.picked.map(id=>({id})));
+          RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
+          setResStatus('Đã lấy từ GitHub repo: '+RES_FILES.size+' file - Sẵn sàng mod!');
+          toast('Đã lấy Resources từ GitHub xong');
+          return;
         }
-        const buf = new Uint8Array(received);
-        let off=0; for(const c of chunks){ buf.set(c, off); off+=c.length; }
-        if(buf.byteLength < 1000000){ lastErr = 'File tải về quá nhỏ ('+buf.byteLength+') ở '+u; continue; }
-        RES_ZIP_BYTES = buf; RES_ZIP_NAME = 'Resources.zip (GitHub Release v1)';
-        const need = resNeededBasenames(st.picked.map(id=>({id})));
-        RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
-        setResStatus('Đã lấy từ GitHub: '+RES_FILES.size+' file ('+Math.round(buf.byteLength/1024/1024)+'MB) - Sẵn sàng mod! Lúc game cập nhật bạn up file mới lên Release là web tự lấy bản mới.');
-        toast('Đã lấy Resources từ GitHub xong');
-        return;
-      }catch(e){ lastErr = e.message || 'Load failed'; continue; }
+      }catch(e){ /* bỏ qua, qua bước tải về máy */ }
     }
-    setResStatus('Lấy từ GitHub lỗi: '+lastErr+' - File ở Release v1 (242MB) quá lớn, iPhone hay bị Load failed. Cách chắc chắn: bấm link Release bên dưới để tải file về máy, rồi bấm "Chọn file Resources.zip từ máy".');
-    toast('Lấy từ GitHub lỗi, thử tải về máy rồi chọn từ máy');
-    // Hiện link tải trực tiếp Release để user tải về máy
-    setTimeout(()=>{
-      const el = document.getElementById('resProgress');
-      if(el) el.innerHTML = 'Lấy từ GitHub lỗi: '+lastErr+'<br><br><b>Cách chắc chắn:</b> 1. Bấm <a href="https://github.com/crabking1707/modskin/releases/tag/v1" target="_blank" style="color:#2563eb">mở Release v1</a> để tải <b>Resources.zip (242MB)</b> về máy. 2. Bấm <b>"Chọn file Resources.zip từ máy"</b> chọn file vừa tải. 3. Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release v2 rồi bấm nút GitHub lại.';
-    }, 500);
+    // 2. File ở Release (242MB) - không fetch, mà hiện link tải trực tiếp bằng Safari
+    setResStatus('File Resources.zip ở Release v1 (242MB) - iPhone không tải trực tiếp qua web được (chặn CORS + file quá lớn). Hãy tải về Tệp rồi chọn từ máy.');
+    const el = document.getElementById('resProgress');
+    if(el) el.innerHTML = 'File ở <b>Release v1 (242MB)</b> - iPhone không tải trực tiếp qua web được.<br><br><b>Làm 2 bước này (chắc chắn được):</b><br>1. Bấm <a href="https://github.com/crabking1707/modskin/releases/download/v1/Resources.zip" target="_blank" style="color:#2563eb;font-weight:700">📥 Bấm để tải Resources.zip (242MB) về Tệp</a> - Safari sẽ tải về, đợi tải xong.<br>2. Bấm <b>"Chọn file Resources.zip từ máy"</b> chọn file vừa tải trong Tệp.<br><br>Lưu ý: file ở Release v1 là <b>bản Android 242MB</b>, nếu bạn dùng iOS cần up thêm file <b>iOS 206MB</b> lên Release mới. Lúc game cập nhật bạn chỉ cần up file mới lên Release là link này tự lấy bản mới nhất.';
+    toast('Bấm link tải về Tệp rồi chọn từ máy');
   };
   const btnClear=document.getElementById('btnClearRes');
   if(btnClear) btnClear.onclick=()=>{ RES_FILES=null; RES_PATHS={}; setResStatus('Đã xóa cache Resources - Hãy nạp lại file.'); toast('Đã xóa cache'); };
@@ -579,7 +561,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v6.2: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v6.3: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
