@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.0/dist/fzstd.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Modskin LQ - Make by Hiếu gamer</title>
 <style>
@@ -784,14 +785,23 @@ async function buildModZip(){
     return -1;
   };
   async function tryDecompressPkg(u8){
-    const off = findZstd(u8);
-    if(off===-1) return null;
-    try{
-      const ds = new DecompressionStream('zstd');
-      const dec = await new Response(new Blob([u8.slice(off)]).stream().pipeThrough(ds)).arrayBuffer();
-      return {header: u8.slice(0,off), data: new Uint8Array(dec), off};
-    }catch(e){ return null; }
-  }
+  const off = findZstd(u8);
+  if(off===-1) return null;
+  // Thử DecompressionStream trước (Chrome PC)
+  try{
+    const ds = new DecompressionStream('zstd');
+    const dec = await new Response(new Blob([u8.slice(off)]).stream().pipeThrough(ds)).arrayBuffer();
+    return {header: u8.slice(0,off), data: new Uint8Array(dec), off};
+  }catch(e){}
+  // Fallback cho iPhone Safari: dùng fzstd WASM
+  try{
+    if(window.fzstd && window.fzstd.decompress){
+      const dec = window.fzstd.decompress(u8.slice(off));
+      return {header: u8.slice(0,off), data: dec, off};
+    }
+  }catch(e){}
+  return null;
+}
   async function tryCompressPkg(header, data){
     try{
       const cs = new CompressionStream('zstd');
@@ -1173,7 +1183,7 @@ function handoffZip(blob,name,debugInfo){
   PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.5<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
