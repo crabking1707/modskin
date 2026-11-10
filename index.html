@@ -576,7 +576,7 @@ function zipStore(files){
   return new Blob([...parts,...central,new Uint8Array(e)],{type:'application/zip'});
 }
 
-/* ---------- v7.1: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
+/* ---------- v7.2: FILE GỐC THẬT + SỬA HASH KIỂM TRA (để game không tải lại 2.67MB) ---------- */
 let RES_FILES = null; let RES_PATHS = {};
 let RES_ZIP_BYTES = null; // Lưu nguyên file zip gốc (206MB) để lúc Tạo file nó tự lấy đúng file theo tướng đang chọn, không bị thiếu 3 file riêng của tướng
 let RES_ZIP_NAME = '';
@@ -597,7 +597,7 @@ let RES_STATUS = 'Chưa nạp Resources.zip';
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function baseName(path){ const parts=String(path).split('/'); return parts[parts.length-1]; }
 function resNeededBasenames(heroesMod){
-  const set = new Set(['version','KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
+  const set = new Set(['KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourceverificationinfosetall.assetbundle','AllActorInfos.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
   for(const h of heroesMod){
     const num = heroNum(h.id);
     set.add('Actor_'+num+'_Infos.pkg.bytes');
@@ -823,8 +823,7 @@ async function buildModZip(){
     for(let i=0;i<parts.length-1;i++){ cur += parts[i]+'/'; if(!dirs.has(cur)){dirs.add(cur); files.push({name:cur, dir:true})} }
     files.push({name:path, data});
   };
-  const ver=new Uint8Array(17); ver.set(new TextEncoder().encode('1.64.1'));
-  add(base+'version', ver);
+  // KHÔNG thêm file version vào zip mod - file version gốc không được sửa, thêm vào là game thấy đã đổi và tải lại
   const hashPairs = [];
   let patchedCount=0;
   const actorMapForHeroes = {};
@@ -855,7 +854,7 @@ async function buildModZip(){
         patched = patchSkinIds(data, heroesMod, actorMapForHeroes);
       }
       const newHex = md5Hex(patched);
-      if(origHex!==newHex) hashPairs.push({origHex, newHex, bn:ph.bn});
+      if(origHex!==newHex) hashPairs.push({origHex, newHex, bn:ph.bn, origSize: data.length, newSize: patched.length});
       add(ph.rel, patched);
       patchedCount++;
       await new Promise(r=>setTimeout(r,5));
@@ -899,20 +898,69 @@ async function buildModZip(){
       // File âm thanh mới có tên khác file gốc nên không cần hashPairs cho nó, nhưng cần thêm vào verification? Bỏ qua, vì file mới không có trong verification cũ
     }
   }
-  // SỬA FILE KIỂM TRA HASH - để game không tải lại file đã sửa (Actor_Infos + Actor_Actions)
-  for(const vBn of ['resourcepackerinfosetall.assetbundle','resourceverificationinfosetall.assetbundle']){
+  // SỬA FILE KIỂM TRA HASH - CHỈ sửa resourceverificationinfosetall, KHÔNG sửa resourcepackerinfosetall và KHÔNG thêm version
+  // Lỗi cũ: chỉ sửa dạng HEX chữ (32 ký tự), còn game nó check dạng RAW MD5 16 byte nhị phân + SIZE (4 byte) nên vẫn phát hiện file đã đổi và tải lại đúng 0.46MB (Actor_106_Actions)
+  // Sửa đúng: sửa cả 3 thứ trong verification: 1) HEX (32 ký tự, cả thường + hoa), 2) RAW MD5 (16 byte), 3) SIZE (LE32 + BE32) gần vị trí hash
+  // Đồng thời patch AllActorInfos.assetbundle (file game thật sự đọc để hiện skin, theo cách mod aem9 trên mạng) - patch lẻ Actor_Infos không đủ
+  {
+    // Patch AllActorInfos.assetbundle nếu có trong Resources.zip (iOS: Resources/1.64.1/assetbundle/AllActorInfos.assetbundle)
+    let allInfo = null;
+    for(const [k,v] of RES_FILES.entries()){ if(k.toLowerCase()==='allactorinfos.assetbundle'){ allInfo = v; break; } }
+    if(!allInfo){ const rp = RES_PATHS['AllActorInfos.assetbundle']; if(rp) allInfo = RES_FILES.get(rp); }
+    if(allInfo){
+      const origHexA = md5Hex(allInfo);
+      // AllActorInfos là Unity AssetBundle (LZMA/LZ4), không phải ZSTD pkg - patch trực tiếp cả ASCII + LE32 (không giải nén ZSTD)
+      const patchedA = patchSkinIds(allInfo, heroesMod, actorMapForHeroes);
+      const newHexA = md5Hex(patchedA);
+      if(origHexA!==newHexA){
+        hashPairs.push({origHex: origHexA, newHex: newHexA, bn:'AllActorInfos.assetbundle', origSize: allInfo.length, newSize: patchedA.length});
+        // Tìm đường dẫn gốc của AllActorInfos trong zip (thường là assetbundle/AllActorInfos.assetbundle)
+        let allPath = RES_PATHS['AllActorInfos.assetbundle'] || 'assetbundle/AllActorInfos.assetbundle';
+        if(!allPath.startsWith(base)) allPath = base + (allPath.includes('assetbundle/') ? allPath.slice(allPath.indexOf('assetbundle/')) : 'assetbundle/AllActorInfos.assetbundle');
+        add(allPath, patchedA);
+        patchedCount++;
+      }
+    }
+  }
+  for(const vBn of ['resourceverificationinfosetall.assetbundle']){
     let vData = RES_FILES.get(vBn);
     if(!vData){ const rp = RES_PATHS[vBn]; if(rp) vData = RES_FILES.get(rp); }
     if(!vData) continue;
     let vBytes = vData.slice();
     const enc = new TextEncoder();
+    const hexToBytes = (hex)=>{ const out=new Uint8Array(16); for(let i=0;i<16;i++) out[i]=parseInt(hex.substr(i*2,2),16); return out; };
     for(const hp of hashPairs){
+      // 1) HEX (32 ký tự, thường + hoa)
       for(const origH of [hp.origHex, hp.origHex.toUpperCase()]){
         const fromB = enc.encode(origH);
         const toB = enc.encode(hp.origHex===origH ? hp.newHex : hp.newHex.toUpperCase());
         for(let i=0;i+fromB.length<=vBytes.length;i++){
           let ok=true; for(let k=0;k<fromB.length;k++){ if(vBytes[i+k]!==fromB[k]){ ok=false; break; } }
           if(ok){ vBytes.set(toB, i); i+=fromB.length-1; }
+        }
+      }
+      // 2) RAW MD5 (16 byte nhị phân) - game check dạng này, không check HEX
+      const origRaw = hexToBytes(hp.origHex), newRaw = hexToBytes(hp.newHex);
+      const rawPositions = [];
+      for(let i=0;i+16<=vBytes.length;i++){
+        let ok=true; for(let k=0;k<16;k++){ if(vBytes[i+k]!==origRaw[k]){ ok=false; break; } }
+        if(ok){ vBytes.set(newRaw, i); rawPositions.push(i); i+=15; }
+      }
+      // 3) SIZE: nếu file đã patch đổi kích thước (do nén lại ZSTD khác), phải sửa SIZE trong verification (LE32 + BE32) gần vị trí hash (trong 512 byte quanh hash)
+      if(hp.origSize!==undefined && hp.newSize!==undefined && hp.origSize!==hp.newSize){
+        const viewV = new DataView(vBytes.buffer, vBytes.byteOffset, vBytes.byteLength);
+        const searchCenters = rawPositions.length ? rawPositions : [];
+        // Nếu không tìm thấy RAW, tìm vị trí HEX để làm tâm
+        if(!searchCenters.length){
+          const hexB = enc.encode(hp.origHex);
+          for(let i=0;i+hexB.length<=vBytes.length;i++){ let ok=true; for(let k=0;k<hexB.length;k++){ if(vBytes[i+k]!==hexB[k]){ ok=false; break; } } if(ok){ searchCenters.push(i); break; } }
+        }
+        for(const c of searchCenters){
+          const lo = Math.max(0, c-512), hi = Math.min(vBytes.length-4, c+512);
+          for(let i=lo;i<=hi;i++){
+            if(viewV.getUint32(i, true)===hp.origSize){ viewV.setUint32(i, hp.newSize, true); }
+            if(viewV.getUint32(i, false)===hp.origSize){ viewV.setUint32(i, hp.newSize, false); }
+          }
         }
       }
     }
