@@ -2,7 +2,6 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<script src="https://cdn.jsdelivr.net/npm/fzstd@0.1.0/dist/fzstd.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Modskin LQ - Make by Hiếu gamer</title>
 <style>
@@ -659,45 +658,94 @@ function md5Hex(u8){
   }
   return hex(state);
 }
-async function unzipNeededV2(zipBytes, needBasenames){
+async function extractZipByBasenames(zipBytes, needBasenames) {
+  const need = new Set();
+  for (const raw of needBasenames) {
+    const base = baseName(String(raw)).toLowerCase();
+    if (base) need.add(base);
+  }
+  if (need.size === 0) return new Map();
   const view = new DataView(zipBytes.buffer, zipBytes.byteOffset, zipBytes.byteLength);
-  let eocd=-1;
-  for(let i=zipBytes.length-22;i>=Math.max(0, zipBytes.length-66000);i--){ if(view.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
-  if(eocd===-1) throw new Error('Không đọc được Resources.zip - không phải file zip');
-  const total = view.getUint16(eocd+10,true);
-  let cdOff = view.getUint32(eocd+16,true);
-  const out = new Map(); const dec = new TextDecoder();
-  RES_PATHS = {};
-  for(let n=0;n<total;n++){
-    if(view.getUint32(cdOff,true)!==0x02014b50) break;
-    const method = view.getUint16(cdOff+10,true);
-    const compSize = view.getUint32(cdOff+20,true);
-    const nameLen = view.getUint16(cdOff+28,true);
-    const extraLen = view.getUint16(cdOff+30,true);
-    const commentLen = view.getUint16(cdOff+32,true);
-    const localOff = view.getUint32(cdOff+42,true);
-    const name = dec.decode(zipBytes.subarray(cdOff+46, cdOff+46+nameLen));
-    cdOff += 46+nameLen+extraLen+commentLen;
-    const bn0 = baseName(name);
-const needLower = new Map([...needBasenames].map(x=>[x.toLowerCase(), x]));
-const canonical = needLower.get(bn0.toLowerCase());
-if(!canonical) continue;
-const bn = canonical;
-    // Đọc local header để lấy data
-    const lh = new DataView(zipBytes.buffer, zipBytes.byteOffset+localOff, 30);
-    const lhNameLen = lh.getUint16(26,true);
-    const lhExtraLen = lh.getUint16(28,true);
-    const dataStart = localOff+30+lhNameLen+lhExtraLen;
-    const comp = zipBytes.subarray(dataStart, dataStart+compSize);
-    let data;
-    if(method===0){ data = comp.slice(); }
-    else if(method===8){
-      try{ const ds = new DecompressionStream('deflate-raw'); const blob = new Blob([comp]); const stream = blob.stream().pipeThrough(ds); const buf = await new Response(stream).arrayBuffer(); data = new Uint8Array(buf); }
-      catch(e){ continue; }
-    } else continue;
-    out.set(bn, data);
-    RES_PATHS[bn]=name;
-    if(n%20===0) await new Promise(r=>setTimeout(r,0));
+  const u16 = (o) => view.getUint16(o, true);
+  const u32 = (o) => view.getUint32(o, true);
+  const u64 = (o) => u32(o) + u32(o + 4) * 0x100000000;
+  const eocd = findEocd(zipBytes);
+  let entries = u16(eocd + 10);
+  let cdSize = u32(eocd + 12);
+  let cdOff = u32(eocd + 16);
+  const disk = u16(eocd + 4);
+  const cdDisk = u16(eocd + 6);
+  const zip64Hint = entries === 0xffff || cdSize === 0xffffffff || cdOff === 0xffffffff || disk === 0xffff || cdDisk === 0xffff;
+  if (zip64Hint && eocd >= 20 && u32(eocd - 20) === 0x07064b50) {
+    const z64 = u64(eocd - 12);
+    if (z64 + 56 > zipBytes.length || u32(z64) !== 0x06064b50) throw new Error("ZIP64 EOCD không hợp lệ");
+    entries = u64(z64 + 32); cdSize = u64(z64 + 40); cdOff = u64(z64 + 48);
+  }
+  const utf8 = new TextDecoder("utf-8");
+  const out = new Map();
+  let p = cdOff; const cdEnd = cdOff + cdSize;
+  for (let i = 0; i < entries && p + 46 <= cdEnd; i++) {
+    if (u32(p) !== 0x02014b50) break;
+    const flag = u16(p + 8); const method = u16(p + 10);
+    let compSize = u32(p + 20); let size = u32(p + 24);
+    const nameLen = u16(p + 28); const extraLen = u16(p + 30); const commentLen = u16(p + 32);
+    let localOff = u32(p + 42);
+    const nameAt = p + 46; const extraAt = nameAt + nameLen; const next = extraAt + extraLen + commentLen;
+    const name = utf8.decode(zipBytes.subarray(nameAt, nameAt + nameLen));
+    if (compSize === 0xffffffff || size === 0xffffffff || localOff === 0xffffffff) {
+      const z = readZip64Extra(zipBytes.subarray(extraAt, extraAt + extraLen), size === 0xffffffff, compSize === 0xffffffff, localOff === 0xffffffff);
+      if (size === 0xffffffff) size = z.size; if (compSize === 0xffffffff) compSize = z.comp; if (localOff === 0xffffffff) localOff = z.off;
+    }
+    p = next;
+    if (name.endsWith("/") || name.endsWith("\\")) continue;
+    if (!need.has(baseName(name).toLowerCase())) continue;
+    out.set(name, await readEntry(zipBytes, view, name, method, compSize, size, localOff));
+  }
+  return out;
+  function must(v){ return v; }
+}
+function findEocd(u8) {
+  const min = Math.max(0, u8.length - 22 - 65535);
+  let loose = -1;
+  for (let i = u8.length - 22; i >= min; i--) {
+    if (u8[i] !== 0x50 || u8[i + 1] !== 0x4b || u8[i + 2] !== 0x05 || u8[i + 3] !== 0x06) continue;
+    const commentLen = u8[i + 20] | (u8[i + 21] << 8);
+    if (i + 22 + commentLen === u8.length) return i;
+    if (loose < 0 && i + 22 + commentLen <= u8.length) loose = i;
+  }
+  if (loose >= 0) return loose;
+  throw new Error("Không phải file ZIP");
+}
+function readZip64Extra(extra, wantSize, wantComp, wantOff) {
+  const out = {}; const v = new DataView(extra.buffer, extra.byteOffset, extra.byteLength);
+  let p = 0;
+  while (p + 4 <= extra.length) {
+    const id = v.getUint16(p, true); const sz = v.getUint16(p + 2, true); const start = p + 4;
+    if (start + sz > extra.length) break;
+    if (id === 1) { let q = start; const read = () => { const n = v.getUint32(q, true) + v.getUint32(q + 4, true) * 0x100000000; q += 8; return n; };
+      if (wantSize) out.size = read(); if (wantComp) out.comp = read(); if (wantOff) out.off = read(); return out; }
+    p = start + sz;
+  }
+  return out;
+}
+async function readEntry(zipBytes, view, name, method, compSize, size, localOff) {
+  const nameLen = view.getUint16(localOff + 26, true); const extraLen = view.getUint16(localOff + 28, true);
+  const dataOff = localOff + 30 + nameLen + extraLen;
+  const compressed = zipBytes.subarray(dataOff, dataOff + compSize);
+  let bytes;
+  if (method === 0) bytes = new Uint8Array(compressed);
+  else if (method === 8) bytes = compSize === 0 ? new Uint8Array(0) : new Uint8Array(await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+  else throw new Error("Không hỗ trợ method " + method);
+  return bytes;
+}
+async function unzipNeededV2(zipBytes, needBasenames){
+  const raw = await extractZipByBasenames(zipBytes, needBasenames);
+  const out = new Map(); RES_PATHS = {};
+  const needLower = new Map([...needBasenames].map(x=>[x.toLowerCase(), x]));
+  for(const [fullName, data] of raw){
+    const bn = baseName(fullName);
+    const canonical = needLower.get(bn.toLowerCase()) || bn;
+    out.set(canonical, data); RES_PATHS[canonical] = fullName;
   }
   return out;
 }
@@ -784,25 +832,58 @@ async function buildModZip(){
     for(let i=0;i+4<=u8.length;i++){ if(u8[i]===0x28 && u8[i+1]===0xB5 && u8[i+2]===0x2F && u8[i+3]===0xFD) return i; }
     return -1;
   };
-  async function tryDecompressPkg(u8){
-  const off = findZstd(u8);
-  if(off===-1) return null;
-  // Thử DecompressionStream trước (Chrome PC)
-  try{
-    const ds = new DecompressionStream('zstd');
-    const dec = await new Response(new Blob([u8.slice(off)]).stream().pipeThrough(ds)).arrayBuffer();
-    return {header: u8.slice(0,off), data: new Uint8Array(dec), off};
-  }catch(e){}
-  // Fallback cho iPhone Safari: dùng fzstd WASM
-  try{
-    if(window.fzstd && window.fzstd.decompress){
-      const dec = window.fzstd.decompress(u8.slice(off));
-      return {header: u8.slice(0,off), data: dec, off};
-    }
-  }catch(e){}
-  return null;
+ const FZSTD_URL = "https://cdn.jsdelivr.net/npm/fzstd@0.1.0/umd/index.js";
+function findZstdMagic(u8) {
+  for (let i = 0; i <= u8.length - 4; i++) {
+    if (u8[i] === 0x28 && u8[i + 1] === 0xb5 && u8[i + 2] === 0x2f && u8[i + 3] === 0xfd) return i;
+  }
+  return -1;
 }
-  async function tryCompressPkg(header, data){
+function loadFzstd() {
+  if (globalThis.fzstd?.decompress) return Promise.resolve(globalThis.fzstd);
+  if (loadFzstd._p) return loadFzstd._p;
+  loadFzstd._p = new Promise((resolve, reject) => {
+    const s = document.createElement("script"); s.src = FZSTD_URL; s.async = true;
+    s.onload = () => { if (globalThis.fzstd?.decompress) resolve(globalThis.fzstd); else reject(new Error("fzstd không có decompress")); };
+    s.onerror = () => reject(new Error("Không tải được fzstd"));
+    document.head.appendChild(s);
+  }).catch((err) => { loadFzstd._p = null; throw err; });
+  return loadFzstd._p;
+}
+async function streamZstd(bytes, Stream) {
+  const stream = new Blob([bytes]).stream().pipeThrough(new Stream("zstd"));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+async function tryDecompressPkg(pkgBytes) {
+  if (!(pkgBytes instanceof Uint8Array)) return null;
+  const at = findZstdMagic(pkgBytes);
+  if (at < 0) return null;
+  const header = pkgBytes.slice(0, at);
+  const payload = pkgBytes.subarray(at);
+  try { return { header, data: await streamZstd(payload, DecompressionStream) }; }
+  catch(e) {
+    try { const fzstd = await loadFzstd(); return { header, data: new Uint8Array(fzstd.decompress(payload)) }; }
+    catch(e2){ return null; }
+  }
+}
+async function tryCompressPkg(header, data) {
+  const compressed = await streamZstd(data, CompressionStream);
+  const out = new Uint8Array(header.length + compressed.length);
+  out.set(header, 0); out.set(compressed, header.length);
+  return out;
+}
+function padPkgToSize(packed, targetSize) {
+  if (packed.length === targetSize) return packed;
+  if (packed.length > targetSize) throw new Error("Nén mới lớn hơn gốc");
+  const gap = targetSize - packed.length;
+  if (gap < 8) return packed;
+  const out = new Uint8Array(targetSize);
+  out.set(packed, 0);
+  const view = new DataView(out.buffer);
+  view.setUint32(packed.length, 0x184D2A50, true);
+  view.setUint32(packed.length + 4, gap - 8, true);
+  return out;
+}(header, data){
     try{
       const cs = new CompressionStream('zstd');
       const comp = await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer();
@@ -884,15 +965,7 @@ if(decPkg){
   const patchedDec = patchSkinIds(decPkg.data, heroesMod, actorMapForHeroes);
   const recompressed = await tryCompressPkg(decPkg.header, patchedDec);
   if(recompressed && recompressed.length<=data.length){
-    const padLen = data.length - recompressed.length;
-    if(padLen===0){ patched = recompressed; }
-    else if(padLen>=8){
-      patched = new Uint8Array(data.length);
-      patched.set(recompressed, 0);
-      const dvPad = new DataView(patched.buffer);
-      dvPad.setUint32(recompressed.length, 0x184D2A50, true);
-      dvPad.setUint32(recompressed.length+4, padLen-8, true);
-    } else { patched = recompressed; }
+    patched = padPkgToSize(recompressed, data.length);
   } else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
 } else { patched = patchSkinIds(data, heroesMod, actorMapForHeroes); }
       // Patch thêm dạng code string: "airi_1" (6 ký tự) -> "airi_13" (7 ký tự) - phải giữ nguyên độ dài file bằng cách patch cả vùng padding 0 phía sau
@@ -1183,7 +1256,7 @@ function handoffZip(blob,name,debugInfo){
   PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v9.9<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br><span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
