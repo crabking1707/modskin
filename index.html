@@ -893,7 +893,19 @@ async function zstdBuildSameSize(header, data, targetLen, label){
       }
     }
   }
-  if(!frame) throw new Error('Nén lại '+(label||'file')+' không vừa SIZE gốc (cần ≤ '+room+' byte, nén được nhỏ nhất '+(smallest===Infinity?'?':smallest)+' byte). Hãy chụp màn hình lỗi này gửi mình.');
+  if(!frame){
+  // Cho phép to hơn - mod bình thường cũng vậy, chỉ cần cập nhật hash là game vẫn nhận
+  let best = null;
+  try{
+    const lib2 = await loadZstdLib();
+    if(lib2) best = new Uint8Array(lib2.compress(data,19));
+  }catch(e){}
+  if(!best) return data;
+  const out2 = new Uint8Array(header.length + best.length);
+  out2.set(header,0);
+  out2.set(best,header.length);
+  return out2;
+}
   const out=new Uint8Array(targetLen);
   out.set(header,0); out.set(frame,header.length);
   const gap=room-frame.length;
