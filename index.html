@@ -706,7 +706,7 @@ async function tryDecompressPkg(u8){
   if(off===-1) return null;
   let dec;
   try{ dec = await zstdDecode(off ? u8.subarray(off) : u8); }
-  catch(e){ throw new Error('Không giải nén được file ZSTD: '+(e&&e.message||e)+'.'); }
+  catch(e){ return null; }
   return {header: u8.slice(0,off), data: dec, off};
 }
 
@@ -1167,7 +1167,8 @@ async function buildModZip(){
   };
   // v7.6: patch 1 file (tự nhận ZSTD). File ZSTD: giải nén -> patch -> nén lại -> pad về ĐÚNG size gốc. Không đổi gì thì trả lại nguyên file gốc.
   const patchAnyV2 = async (data, label, strFn)=>{
-    const dz = await tryDecompressPkg(data);                       // null nếu không phải ZSTD, throw nếu ZSTD mà giải nén lỗi
+    let dz = null;
+try{ dz = await tryDecompressPkg(data); }catch(e){ dz = null; }                       // null nếu không phải ZSTD, throw nếu ZSTD mà giải nén lỗi
     if(!dz){ const o = patchSkinIds(data, heroesMod, actorMapForHeroes); strFn(o); return o; }
     const o = patchSkinIds(dz.data, heroesMod, actorMapForHeroes); strFn(o);
     if(sameBytes(o, dz.data)){ ZSTD_LOG.push(label+': không có gì để đổi - giữ nguyên file gốc'); return data; }
