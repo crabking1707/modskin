@@ -491,7 +491,9 @@ function view3(){
 
 /* ---------- ZIP STORE (thuần JS, không CDN — iPhone chặn JSZip) ---------- */
 const GID={"11596":11596,"airi":106,"aleister":105,"alice":118,"allain":550,"amily":159,"annette":528,"aoi":6568,"arduin":7846,"arthur":166,"arum":531,"astrid":169,"ata":537,"aya":5354,"azzenka":127,"baldum":135,"bijan":570,"billow":2194,"biron":2379,"bolt-baron":2359,"bonnie":565,"bright":534,"butterfly":116,"capheny":532,"celica":155,"charlotte":7307,"chaugnar":101,"cresht":3336,"darcy":525,"dextra":4143,"dieu-thuyen":7562,"dirak":6868,"dolia":3478,"dyadia":3117,"elandorr":5154,"elsu":529,"enzo":4093,"erin":3425,"errol":526,"evita":6698,"fennik":5120,"florentino":129,"flowborn":5358,"flowborn-2":4025,"gildur":3238,"goverra":8241,"grakk":104,"hayate":132,"heino":7946,"helen":3341,"iggy":5305,"ignis":7837,"ilumia":8996,"ishar":8944,"jinna":114,"kahlii":6975,"kaine":6189,"keera":8269,"kilgroth":4967,"kriknak":8174,"krixi":7176,"krizzix":5538,"lauriel":6873,"laville":533,"liliana":5837,"lindis":6092,"lorion":8452,"lu-bo":2070,"lumburr":113,"maloch":4261,"marja":8734,"max":3409,"mganga":5782,"mina":120,"ming":6264,"moren":2298,"murad":131,"nakroth":150,"natalya":2259,"ngo-khong":3373,"omega":102,"omen":171,"ormarr":8274,"paine":137,"preyta":7470,"qi":522,"quillen":523,"raz":110,"richter":5074,"rouie":5423,"rourke":4345,"roxie":4652,"ryoma":165,"sephera":7565,"sinestrea":5333,"skud":5738,"slimz":3650,"stuart":8314,"superman":3536,"taara":6500,"tachi":5332,"tamyn":4426,"teemee":4646,"teeri":5588,"telannas":501,"thane":7397,"the-flash":5243,"thorne":6757,"toro":4015,"trieu-van":6948,"tulen":139,"valhein":133,"veera":121,"veres":521,"violet":111,"volkath":6074,"wiro":7230,"wisp":7838,"wonder-woman":5085,"xeniel":2578,"yan":2475,"ybneth":8927,"yena":524,"yorn":112,"yue":6546,"zata":6243,"zephys":107,"zill":504,"zip":520,"zuka":2512};
+const ACTOR_FIX={airi:106,paine:124,florentino:521,flo:521};   // v7.7: ActorID thật (GID web của Paine/Florentino khác ActorID trong game)
 function heroNum(id){
+  if(ACTOR_FIX[id]) return ACTOR_FIX[id];
   if(GID[id]) return GID[id];
   if(/^\d+$/.test(id)) return +id;
   return 0;
@@ -550,11 +552,12 @@ function zipStore(files){
   const push=arr=>{const u=new Uint8Array(arr); parts.push(u); return u.length};
   for(const f of files){
     const name=enc.encode(f.name), data=f.data||new Uint8Array(0), dir=!!f.dir;
+    const gpf = /[^\x00-\x7f]/.test(f.name) ? 0x0800 : 0;   // giống mẫu: flag 0 khi tên toàn ASCII
     const crc=dir?0:crc32(data);
     const local=[];
     const w16=n=>local.push(n&255,(n>>>8)&255);
     const w32=n=>local.push(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255);
-    w32(0x04034b50); w16(20); w16(0x0800); w16(0); w16(0); w16(0);
+    w32(0x04034b50); w16(20); w16(gpf); w16(0); w16(0); w16(0);
     w32(crc); w32(dir?0:data.length); w32(dir?0:data.length); w16(name.length); w16(0);
     const localU=new Uint8Array(local);
     parts.push(localU,name); if(!dir) parts.push(data);
@@ -562,7 +565,7 @@ function zipStore(files){
     const cen=[];
     const c16=n=>cen.push(n&255,(n>>>8)&255);
     const c32=n=>cen.push(n&255,(n>>>8)&255,(n>>>16)&255,(n>>>24)&255);
-    c32(0x02014b50); c16(20); c16(20); c16(0x0800); c16(0); c16(0); c16(0);
+    c32(0x02014b50); c16(0x0314); c16(20); c16(gpf); c16(0); c16(0); c16(0);
     c32(crc); c32(dir?0:data.length); c32(dir?0:data.length); c16(name.length); c16(0); c16(0); c16(0); c16(0);
     c32(ext>>>0); c32(offset>>>0);
     central.push(new Uint8Array(cen), name);
@@ -597,8 +600,33 @@ async function ensureResForHeroes(heroesMod){
 let RES_STATUS = 'Chưa nạp Resources.zip';
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function baseName(path){ const parts=String(path).split('/'); return parts[parts.length-1]; }
+// v7.7: bộ file cần lấy = đúng 22 file chung + 3 file riêng mỗi tướng như file mẫu iOS.zip (KHÔNG còn AllActorInfos / ResGlobalSkinCfg)
+const SAMPLE_COMMON = [
+  ['KernelLua.pkg.bytes','KernelLua.pkg.bytes','gen'],
+  ['StableSystems_3.pkg.bytes','StableSystems_3.pkg.bytes','gen'],
+  ['version.txt','version.txt','raw'],
+  ['HeroSkinShop.bytes','Databin/Client/Shop/HeroSkinShop.bytes','db'],
+  ['ResCharacterComponent.bytes','Databin/Client/Character/ResCharacterComponent.bytes','db'],
+  ['LobbyBank.bytes','Databin/Client/Sound/LobbyBank.bytes','db'],
+  ['ChatSound.bytes','Databin/Client/Sound/ChatSound.bytes','db'],
+  ['HeroSound.bytes','Databin/Client/Sound/HeroSound.bytes','db'],
+  ['BattleBank.bytes','Databin/Client/Sound/BattleBank.bytes','db'],
+  ['LobbySound.bytes','Databin/Client/Sound/LobbySound.bytes','db'],
+  ['CoupleSound.bytes','Databin/Client/Sound/CoupleSound.bytes','db'],
+  ['HeadImage.bytes','Databin/Client/Global/HeadImage.bytes','db'],
+  ['organSkin.bytes','Databin/Client/Actor/organSkin.bytes','db'],
+  ['heroSkin.bytes','Databin/Client/Actor/heroSkin.bytes','db'],
+  ['ResSkinSeniorLabelCfg.bytes','Databin/Client/Actor/ResSkinSeniorLabelCfg.bytes','db'],
+  ['liteBulletCfg.bytes','Databin/Client/Skill/liteBulletCfg.bytes','db'],
+  ['skillmark.bytes','Databin/Client/Skill/skillmark.bytes','db'],
+  ['skillcombine.bytes','Databin/Client/Skill/skillcombine.bytes','db'],
+  ['ResSkinMotionBaseCfg.bytes','Databin/Client/Motion/ResSkinMotionBaseCfg.bytes','db'],
+  ['resourceverificationinfosetall.assetbundle','assetbundle/resourceverificationinfosetall.assetbundle','raw'],
+  ['resourcepackerinfosetall.assetbundle','assetbundle/resourcepackerinfosetall.assetbundle','raw'],
+  ['CommonActions.pkg.bytes','Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes','gen']
+];
 function resNeededBasenames(heroesMod){
-  const set = new Set(['KernelLua.pkg.bytes','StableSystems_3.pkg.bytes','resourceverificationinfosetall.assetbundle','AllActorInfos.assetbundle','CommonActions.pkg.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','skillcombine.bytes','skillmark.bytes','heroSkin.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes']);
+  const set = new Set(SAMPLE_COMMON.map(x=>x[0]));
   for(const h of heroesMod){
     const num = heroNum(h.id);
     set.add('Actor_'+num+'_Infos.pkg.bytes');
@@ -662,26 +690,24 @@ function md5Hex(u8){
   }
   return hex(state);
 }
-/* ============ v7.6: ZSTD - giải nén (DecompressionStream / fzstd) • nén lại (bộ nén tự viết + thư viện dự phòng) • PAD về đúng SIZE gốc ============ */
-// LƯU Ý: trình duyệt KHÔNG có CompressionStream('zstd') / DecompressionStream('zstd') (kể cả Chrome PC), nên 2 hàm đó chỉ là "thử cho có".
-// fzstd chỉ GIẢI NÉN (không nén được) -> phần NÉN LẠI dùng zstdEncodeOwn() bên dưới (chạy thuần JS, không cần mạng, iPhone chạy được).
-let ZSTD_LOG = [];            // ghi lại từng file ZSTD đã xử lý để hiện trong DEBUG
+/* ============ v7.7: ZSTD - chỉ GIẢI NÉN (DecompressionStream / fzstd). Giống file mẫu: lưu file đã giải nén (raw), KHÔNG nén lại ============ */
+let ZSTD_LOG = [];            // ghi lại từng file đã xử lý để hiện trong DEBUG
 let _fzLoading = null;
 function loadFzstd(){
   if(window.fzstd && window.fzstd.decompress) return Promise.resolve(true);
   if(_fzLoading) return _fzLoading;
-  // URL đúng của fzstd: .../umd/index.js (bản cũ dist/fzstd.min.js KHÔNG tồn tại nên không load được)
+  // Thẻ <script> fzstd ở đầu file là bản chính; đây chỉ là dự phòng nếu thẻ đó tải lỗi
   const urls = ['https://cdn.jsdelivr.net/npm/fzstd@0.1.1/umd/index.js','https://unpkg.com/fzstd@0.1.1/umd/index.js'];
   _fzLoading = (async()=>{
     for(const u of urls){
       try{
-        await new Promise((ok,no)=>{ const s=document.createElement('script'); s.src=u; s.onload=ok; s.onerror=()=>no(new Error('load '+u)); setTimeout(()=>no(new Error('timeout '+u)),10000); document.head.appendChild(s); });
+        await new Promise((ok,no)=>{ const sc=document.createElement('script'); sc.src=u; sc.onload=ok; sc.onerror=()=>no(new Error('load '+u)); setTimeout(()=>no(new Error('timeout '+u)),10000); document.head.appendChild(sc); });
         if(window.fzstd && window.fzstd.decompress) return true;
       }catch(e){}
     }
     return false;
   })();
-  _fzLoading.then(ok=>{ if(!ok) _fzLoading=null; });   // lỗi mạng thì lần sau cho thử lại
+  _fzLoading.then(ok=>{ if(!ok) _fzLoading=null; });
   return _fzLoading;
 }
 // Magic ZSTD 28 B5 2F FD - chỉ tìm trong 256 byte đầu (không quét cả file để khỏi nhận nhầm file nhị phân thường)
@@ -690,233 +716,63 @@ function zstdFind(u8){
   for(let i=0;i<=lim;i++){ if(u8[i]===0x28 && u8[i+1]===0xB5 && u8[i+2]===0x2F && u8[i+3]===0xFD) return i; }
   return -1;
 }
+// Cắt skippable frame (magic 0x184D2A5x) / dữ liệu thừa nằm ở CUỐI file - fzstd gặp là báo "invalid zstd data"
+function zstdTrimTail(u8){
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  for(let p=4; p+8<=u8.length; p++){
+    if(u8[p+3]!==0x18 || u8[p+2]!==0x4D || u8[p+1]!==0x2A || (u8[p]&0xF0)!==0x50) continue;
+    let q=p;   // đi qua chuỗi skippable frame liên tiếp, phải chạm đúng cuối file
+    while(q+8<=u8.length && u8[q+3]===0x18 && u8[q+2]===0x4D && u8[q+1]===0x2A && (u8[q]&0xF0)===0x50){ q += 8 + dv.getUint32(q+4,true); }
+    if(q===u8.length) return u8.subarray(0,p);
+  }
+  return null;
+}
+async function zstdDecode(u8){
+  try{ const ds = new DecompressionStream('zstd'); const r = await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer(); return new Uint8Array(r); }catch(e){}
+  if(!(await loadFzstd())) throw new Error('không tải được thư viện fzstd');
+  try{ return window.fzstd.decompress(u8); }
+  catch(e1){
+    const cut = zstdTrimTail(u8);
+    if(cut && cut.length>0 && cut.length<u8.length) return window.fzstd.decompress(cut);
+    throw e1;
+  }
+}
+// Trả về {header, data} nếu file là ZSTD giải nén được. KHÔNG BAO GIỜ throw: không phải ZSTD hoặc giải nén lỗi -> null
+async function tryDecompressPkg(u8){
+  try{
+    const off = zstdFind(u8);
+    if(off===-1) return null;
+    const dec = await zstdDecode(off ? u8.subarray(off) : u8);
+    return {header: u8.slice(0,off), data: dec, off};
+  }catch(e){ return null; }
+}
+// Sửa CRC32 các entry STORE bên trong file .pkg.bytes dạng ZIP (sau khi patch byte, CRC cũ không còn đúng). Trả về số entry đã sửa.
+function fixInnerZipCrc(u8){
+  if(u8.length<22 || u8[0]!==0x50 || u8[1]!==0x4B || u8[2]!==3 || u8[3]!==4) return 0;
+  const dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+  let e=-1; for(let i=u8.length-22;i>=Math.max(0,u8.length-66000);i--){ if(dv.getUint32(i,true)===0x06054b50){ e=i; break; } }
+  if(e<0) return 0;
+  const total = dv.getUint16(e+10,true); let c = dv.getUint32(e+16,true), fixed=0;
+  for(let n=0;n<total && c+46<=u8.length;n++){
+    if(dv.getUint32(c,true)!==0x02014b50) break;
+    const method=dv.getUint16(c+10,true), crc=dv.getUint32(c+16,true), cs=dv.getUint32(c+20,true), us=dv.getUint32(c+24,true);
+    const nl=dv.getUint16(c+28,true), el=dv.getUint16(c+30,true), cl=dv.getUint16(c+32,true), lo=dv.getUint32(c+42,true);
+    if(method===0 && cs===us && lo+30<=u8.length){
+      const ds = lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);
+      if(ds+us<=u8.length){
+        const nc = crc32(u8.subarray(ds,ds+us))>>>0;
+        if(nc!==crc){ dv.setUint32(c+16,nc,true); dv.setUint32(lo+14,nc,true); fixed++; }
+      }
+    }
+    c += 46+nl+el+cl;
+  }
+  return fixed;
+}
 function sameBytes(a,b){
   if(a.length!==b.length) return false;
   for(let i=0;i<a.length;i++){ if(a[i]!==b[i]) return false; }
   return true;
 }
-async function zstdDecode(u8){
-  try{ const ds = new DecompressionStream('zstd'); const r = await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer(); return new Uint8Array(r); }catch(e){}
-  if(await loadFzstd()) return window.fzstd.decompress(u8);
-  throw new Error('không tải được thư viện fzstd (kiểm tra mạng / tắt chặn quảng cáo)');
-}
-// Trả về {header, data, off} nếu file là ZSTD (header = phần byte đứng trước magic), null nếu không phải ZSTD
-async function tryDecompressPkg(u8){
-  const off = zstdFind(u8);
-  if(off===-1) return null;
-  let dec;
-  try{ dec = await zstdDecode(off ? u8.subarray(off) : u8); }
-  catch(e){ return null; }
-  return {header: u8.slice(0,off), data: dec, off};
-}
-
-/* ----- Bộ nén ZSTD tự viết: LZ77 (hash chain + lazy) + literals Raw + sequences FSE "predefined" -> frame hợp lệ, giải nén được bằng libzstd/fzstd ----- */
-const _ZS = (()=>{
-  const LL_BITS=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,4,6,7,8,9,10,11,12,13,14,15,16];
-  const LL_BASE=[0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,18,20,22,24,28,32,40,48,64,128,256,512,1024,2048,4096,8192,16384,32768,65536];
-  const ML_BITS=[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,1,2,2,3,3,4,4,5,7,8,9,10,11,12,13,14,15,16];
-  const ML_BASE=[3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,37,39,41,43,47,51,59,67,83,99,131,259,515,1027,2051,4099,8195,16387,32771,65539];
-  const LL_NORM=[4,3,2,2,2,2,2,2,2,2,2,2,2,1,1,1,2,2,2,2,2,2,2,2,2,3,2,1,1,1,1,1,-1,-1,-1,-1];
-  const ML_NORM=[1,4,3,2,2,2,2,2,2].concat(new Array(37).fill(1), new Array(7).fill(-1));   // đã đối chiếu từng state với libzstd thật
-  const OF_NORM=[1,1,1,1,1,1,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,-1,-1,-1,-1,-1];
-  function mkFse(norm, log){
-    const size=1<<log, sym=new Int16Array(size), nxt=new Int32Array(norm.length);
-    let high=size-1;
-    for(let s=0;s<norm.length;s++){ if(norm[s]===-1){ sym[high--]=s; nxt[s]=1; } else nxt[s]=norm[s]; }
-    const step=(size>>1)+(size>>3)+3, mask=size-1; let p=0;
-    for(let s=0;s<norm.length;s++){ for(let c=0;c<norm[s];c++){ sym[p]=s; do{ p=(p+step)&mask; }while(p>high); } }
-    const nb=new Uint8Array(size), base=new Int32Array(size), lists=norm.map(()=>[]);
-    for(let u=0;u<size;u++){ const s=sym[u], nx=nxt[s]++, b=log-(31-Math.clz32(nx)); nb[u]=b; base[u]=(nx<<b)-size; lists[s].push(u); }
-    return {log, nb, base, lists};
-  }
-  const T_LL=mkFse(LL_NORM,6), T_ML=mkFse(ML_NORM,6), T_OF=mkFse(OF_NORM,5);
-  function findState(t, s, target){
-    const l=t.lists[s];
-    for(let i=0;i<l.length;i++){ const u=l[i]; if(target>=t.base[u] && target<t.base[u]+(1<<t.nb[u])) return u; }
-    throw new Error('FSE: không tìm được state');
-  }
-  function codeOf(baseArr, v){ let c=baseArr.length-1; while(baseArr[c]>v) c--; return c; }
-  // Ghi bit LSB-first, đọc ngược từ cuối (đúng chuẩn ZSTD)
-  function BitW(cap){ this.b=new Uint8Array(cap); this.n=0; this.acc=0; this.cnt=0; }
-  BitW.prototype.put=function(v,nb){
-    while(nb>0){
-      const take=Math.min(nb,8-this.cnt);
-      this.acc |= (v & ((1<<take)-1)) << this.cnt; this.cnt+=take; v>>>=take; nb-=take;
-      if(this.cnt===8){ this.b[this.n++]=this.acc; this.acc=0; this.cnt=0; }
-    }
-  };
-  BitW.prototype.close=function(){ this.put(1,1); if(this.cnt>0){ this.b[this.n++]=this.acc; this.acc=0; this.cnt=0; } return this.b.subarray(0,this.n); };
-  function encodeSeqs(LLs, MLs, OFs){
-    const ns=LLs.length, llc=new Uint8Array(ns), mlc=new Uint8Array(ns), ofc=new Uint8Array(ns);
-    const llx=new Int32Array(ns), mlx=new Int32Array(ns), ofx=new Int32Array(ns);
-    for(let k=0;k<ns;k++){
-      const a=codeOf(LL_BASE,LLs[k]); llc[k]=a; llx[k]=LLs[k]-LL_BASE[a];
-      const b=codeOf(ML_BASE,MLs[k]); mlc[k]=b; mlx[k]=MLs[k]-ML_BASE[b];
-      const ov=OFs[k]+3, oc=31-Math.clz32(ov); ofc[k]=oc; ofx[k]=ov-(1<<oc);
-    }
-    const bw=new BitW(ns*12+64);
-    let k=ns-1;
-    let sLL=T_LL.lists[llc[k]][0], sOF=T_OF.lists[ofc[k]][0], sML=T_ML.lists[mlc[k]][0];
-    bw.put(llx[k],LL_BITS[llc[k]]); bw.put(mlx[k],ML_BITS[mlc[k]]); bw.put(ofx[k],ofc[k]);
-    for(k=ns-2;k>=0;k--){
-      const nLL=findState(T_LL,llc[k],sLL), nOF=findState(T_OF,ofc[k],sOF), nML=findState(T_ML,mlc[k],sML);
-      bw.put(sOF-T_OF.base[nOF], T_OF.nb[nOF]);
-      bw.put(sML-T_ML.base[nML], T_ML.nb[nML]);
-      bw.put(sLL-T_LL.base[nLL], T_LL.nb[nLL]);
-      bw.put(llx[k],LL_BITS[llc[k]]); bw.put(mlx[k],ML_BITS[mlc[k]]); bw.put(ofx[k],ofc[k]);
-      sLL=nLL; sOF=nOF; sML=nML;
-    }
-    bw.put(sML,T_ML.log); bw.put(sOF,T_OF.log); bw.put(sLL,T_LL.log);
-    return bw.close();
-  }
-  function cat(parts){ let n=0; for(const p of parts) n+=p.length; const o=new Uint8Array(n); let i=0; for(const p of parts){ o.set(p,i); i+=p.length; } return o; }
-  function litHeader(nl){
-    if(nl<32) return Uint8Array.of(nl<<3);
-    if(nl<4096) return Uint8Array.of(4|((nl&15)<<4), nl>>4);
-    return Uint8Array.of(12|((nl&15)<<4), (nl>>4)&255, nl>>12);
-  }
-  function seqCount(ns){
-    if(ns<128) return Uint8Array.of(ns);
-    if(ns<0x7F00) return Uint8Array.of((ns>>8)+128, ns&255);
-    const m=ns-0x7F00; return Uint8Array.of(255, m&255, m>>8);
-  }
-  function encode(data, opt){
-    opt=opt||{};
-    const MAXCH=opt.chain||32, MINM=opt.minMatch||4, LAZY=opt.lazy!==false, n=data.length, BS=131072, HB=17, MAXOFF=(1<<20);   // offset tối đa 1MB (bảng FSE offset đã kiểm chứng tới đây)
-    const parts=[];
-    const fh=new Uint8Array(9); fh[0]=0x28; fh[1]=0xB5; fh[2]=0x2F; fh[3]=0xFD; fh[4]=0xA0;   // Single_Segment + FCS 4 byte
-    fh[5]=n&255; fh[6]=(n>>>8)&255; fh[7]=(n>>>16)&255; fh[8]=(n>>>24)&255;
-    parts.push(fh);
-    if(n===0){ parts.push(Uint8Array.of(1,0,0)); return cat(parts); }
-    const head=new Int32Array(1<<HB).fill(-1), prev=new Int32Array(n).fill(-1);
-    const hash=p=>Math.imul((data[p]|(data[p+1]<<8)|(data[p+2]<<16)|(data[p+3]<<24)),2654435761)>>>(32-HB);
-    let ip=0;
-    const insUpTo=q=>{ while(ip<q){ if(ip+4<=n){ const h=hash(ip); prev[ip]=head[h]; head[h]=ip; } ip++; } };
-    let fL=0, fO=0, curEnd=0;
-    const findBest=p=>{
-      fL=0; fO=0; if(p+4>n) return;
-      const maxL=curEnd-p; let bl=0, bo=0, cand=head[hash(p)], d=0;
-      while(cand>=0 && d<MAXCH && bl<maxL){
-        if(p-cand>MAXOFF) break;
-        if(data[cand+bl]===data[p+bl]){
-          let l=0; while(l<maxL && data[cand+l]===data[p+l]) l++;
-          if(l>bl){ bl=l; bo=p-cand; }
-        }
-        cand=prev[cand]; d++;
-      }
-      if(bl>=MINM){ fL=bl; fO=bo; }
-    };
-    for(let bs=0; bs<n; bs+=BS){
-      const be=Math.min(bs+BS,n), last=be>=n, size=be-bs;
-      let blk=null, type=0;
-      // RLE: cả block cùng 1 byte
-      let allSame=true; for(let i=bs+1;i<be;i++){ if(data[i]!==data[bs]){ allSame=false; break; } }
-      if(allSame && size>4){ blk=Uint8Array.of(data[bs]); type=1; }
-      else {
-        curEnd=be;
-        const lits=new Uint8Array(size); let nl=0; const LLs=[], MLs=[], OFs=[];
-        let anchor=bs, i=bs;
-        while(i+MINM<=be && i+4<=n){
-          insUpTo(i); findBest(i); let L=fL, O=fO;
-          if(L>0 && LAZY && L<64 && i+1+MINM<=be){ insUpTo(i+1); findBest(i+1); if(fL>L+1){ i++; L=fL; O=fO; } }
-          if(L>0){
-            for(let k=anchor;k<i;k++) lits[nl++]=data[k];
-            LLs.push(i-anchor); MLs.push(L); OFs.push(O); i+=L; anchor=i;
-          } else i++;
-        }
-        for(let k=anchor;k<be;k++) lits[nl++]=data[k];
-        if(LLs.length>0){
-          const content=cat([litHeader(nl), lits.subarray(0,nl), seqCount(LLs.length), Uint8Array.of(0), encodeSeqs(LLs,MLs,OFs)]);
-          if(content.length<size){ blk=content; type=2; }
-        }
-        if(!blk){ blk=data.subarray(bs,be); type=0; }
-      }
-      const bsz = type===1 ? size : blk.length;
-      const hv=(bsz<<3)|(type<<1)|(last?1:0);
-      parts.push(Uint8Array.of(hv&255,(hv>>>8)&255,(hv>>>16)&255), blk);
-    }
-    return cat(parts);
-  }
-  return {encode};
-})();
-function zstdEncodeOwn(data, opt){ return _ZS.encode(data, opt); }
-
-// Thư viện ZSTD WASM dự phòng (có nén + chọn level) - chỉ dùng khi bộ nén tự viết không nén vừa SIZE gốc. Tải được thì dùng, không thì bỏ qua.
-let _zlibLoading = null;
-function loadZstdLib(){
-  if(_zlibLoading) return _zlibLoading;
-  const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,no)=>setTimeout(()=>no(new Error('timeout')),ms))]);
-  const urls=['https://cdn.jsdelivr.net/npm/@oneidentity/zstd-js@1.0.3/+esm','https://esm.sh/@oneidentity/zstd-js@1.0.3'];
-  _zlibLoading=(async()=>{
-    for(const u of urls){
-      try{
-        const m = await withTimeout(import(u),15000);
-        const init = m.ZstdInit || (m.default && m.default.ZstdInit);
-        if(!init) continue;
-        const z = await withTimeout(init(),15000);
-        if(z && z.ZstdSimple && z.ZstdSimple.compress) return z.ZstdSimple;
-      }catch(e){}
-    }
-    return null;
-  })();
-  return _zlibLoading;
-}
-
-// Nén lại data (đã patch) thành frame ZSTD rồi PAD bằng skippable frame (magic 0x184D2A50 + size LE32) cho bằng ĐÚNG SIZE file gốc.
-// Trả về: header + frame + skippable pad, length === targetLen. Không vừa thì throw (CHƯA trừ điểm).
-async function zstdBuildSameSize(header, data, targetLen, label){
-  const room = targetLen - header.length;                 // chỗ trống cho frame ZSTD
-  const fits = f => f && (f.length===room || f.length<=room-8);  // khe hở phải = 0 hoặc >= 8 byte (skippable frame tối thiểu 8 byte)
-  const verify = async f => { try{ return sameBytes(await zstdDecode(f), data); }catch(e){ return false; } };
-  let frame=null, how='', smallest=Infinity;
-  const tryFrame = async (f, name)=>{
-    if(!f) return false;
-    smallest=Math.min(smallest,f.length);
-    if(!fits(f)) return false;
-    if(!(await verify(f))) return false;       // giải nén lại phải ra y hệt data đã patch
-    frame=f; how=name; return true;
-  };
-  // 1) CompressionStream('zstd') nếu trình duyệt có (hiện hầu như chưa trình duyệt nào có)
-  try{ const cs=new CompressionStream('zstd'); const r=await new Response(new Blob([data]).stream().pipeThrough(cs)).arrayBuffer(); if(await tryFrame(new Uint8Array(r),'native')){} }catch(e){}
-  // 2) Bộ nén tự viết (nhanh, không cần mạng) - thử vài cấu hình tới khi vừa SIZE
-  const variants=[{chain:32,minMatch:4},{chain:128,minMatch:4},{chain:8,minMatch:4,lazy:false},{chain:512,minMatch:4},{chain:32,minMatch:5},{chain:32,minMatch:3},{chain:16,minMatch:6,lazy:false}];
-  for(let vi=0; !frame && vi<variants.length; vi++){
-    await new Promise(r=>setTimeout(r,0));
-    await tryFrame(zstdEncodeOwn(data,variants[vi]),'tự nén #'+(vi+1));
-  }
-  // 3) Dự phòng: thư viện zstd WASM (nén mạnh hơn) nếu tải được
-  if(!frame){
-    const lib = await loadZstdLib();
-    if(lib){
-      for(const lv of [12,19]){
-        try{ if(await tryFrame(new Uint8Array(lib.compress(data,lv)),'zstd-wasm lv'+lv)) break; }catch(e){}
-      }
-    }
-  }
-  if(!frame){
-  // Cho phép to hơn - mod bình thường cũng vậy, chỉ cần cập nhật hash là game vẫn nhận
-  let best = null;
-  try{
-    const lib2 = await loadZstdLib();
-    if(lib2) best = new Uint8Array(lib2.compress(data,19));
-  }catch(e){}
-  if(!best) return data;
-  const out2 = new Uint8Array(header.length + best.length);
-  out2.set(header,0);
-  out2.set(best,header.length);
-  return out2;
-}
-  const out=new Uint8Array(targetLen);
-  out.set(header,0); out.set(frame,header.length);
-  const gap=room-frame.length;
-  if(gap>0){
-    const dv=new DataView(out.buffer), p=header.length+frame.length;
-    dv.setUint32(p,0x184D2A50,true); dv.setUint32(p+4,gap-8,true);    // skippable frame: phần còn lại là 0
-  }
-  ZSTD_LOG.push((label||'file')+': giải nén '+Math.round(data.length/1024)+'KB → nén '+Math.round(frame.length/1024)+'KB ('+how+') + pad '+Math.round(gap/1024)+'KB = đúng '+targetLen+' byte');
-  return out;
-}
-
 let RES_MISSING = []; // v7.6: tên file cần mà không thấy trong zip (hiện ở DEBUG)
 async function unzipNeededV2(zipBytes, needBasenames){
   const view = new DataView(zipBytes.buffer, zipBytes.byteOffset, zipBytes.byteLength);
@@ -1047,7 +903,7 @@ async function buildModZip(){
     // Fallback: GID (cho Airi 106 thì đúng, cho Florentino 129 thì sai nhưng vẫn thử, sẽ báo thiếu file nếu sai)
     return heroNum(heroId);
   };
-  // --- ZSTD: dùng helper cấp trên (tryDecompressPkg / zstdBuildSameSize) ---
+  // --- ZSTD: chỉ giải nén (tryDecompressPkg), lưu raw như file mẫu ---
   // --- Patch skin ID theo video: HeroID*100+Skin (vd 52101 -> 52102, 10601 -> 10613) ---
   // Patch cả dạng ASCII ("52101") và dạng số nguyên 32-bit LE (52101) trong file đã giải nén
   const patchSkinIds = (bytes, heroes, actorMap)=>{
@@ -1177,236 +1033,65 @@ async function buildModZip(){
         }
       }catch(e){}
   };
-  // v7.6: patch 1 file (tự nhận ZSTD). File ZSTD: giải nén -> patch -> nén lại -> pad về ĐÚNG size gốc. Không đổi gì thì trả lại nguyên file gốc.
+  // v7.7: patch 1 file. File ZSTD: giải nén -> patch ID (ASCII + LE32) + chuỗi code -> LƯU RAW (không nén lại, y như file mẫu).
+  // Không giải nén được thì giữ nguyên file gốc (không throw, không dừng).
+  const kb = n=>Math.round(n/1024)+'KB';
   const patchAnyV2 = async (data, label, strFn)=>{
     let dz = null;
-try{ dz = await tryDecompressPkg(data); }catch(e){ dz = null; }                       // null nếu không phải ZSTD, throw nếu ZSTD mà giải nén lỗi
-    if(!dz){ const o = patchSkinIds(data, heroesMod, actorMapForHeroes); strFn(o); return o; }
-    const o = patchSkinIds(dz.data, heroesMod, actorMapForHeroes); strFn(o);
-    if(sameBytes(o, dz.data)){ ZSTD_LOG.push(label+': không có gì để đổi - giữ nguyên file gốc'); return data; }
-    return await zstdBuildSameSize(dz.header, o, data.length, label);
+    try{ dz = await tryDecompressPkg(data); }catch(e){ dz = null; }
+    if(!dz && zstdFind(data)!==-1){ ZSTD_LOG.push(label+': ZSTD nhưng giải nén lỗi -> giữ nguyên file gốc'); return data; }
+    const o = patchSkinIds(dz ? dz.data : data, heroesMod, actorMapForHeroes);
+    strFn(o);
+    const crcFixed = fixInnerZipCrc(o);
+    if(dz) ZSTD_LOG.push(label+': giải nén '+kb(data.length)+' → '+kb(o.length)+' (lưu raw'+(crcFixed?', sửa CRC '+crcFixed+' entry':'')+')');
+    return o;
   };
-  const base='Resources/1.64.1/';
-  const dirs=new Set(); const files=[];
-  const add=(path,data)=>{
-    const parts=path.split('/'); let cur='';
-    for(let i=0;i<parts.length-1;i++){ cur += parts[i]+'/'; if(!dirs.has(cur)){dirs.add(cur); files.push({name:cur, dir:true})} }
-    files.push({name:path, data});
-  };
-  // KHÔNG thêm file version vào zip mod - file version gốc không được sửa, thêm vào là game thấy đã đổi và tải lại
-  const hashPairs = [];
-  let patchedCount=0;
+  // File không patch (version.txt, verification, packerinfo): chỉ giải nén nếu là ZSTD để giống mẫu
+  const rawPass = async (data)=>{ let dz=null; try{ dz = await tryDecompressPkg(data); }catch(e){ dz=null; } return dz ? dz.data : data; };
+  // Thư mục gốc lấy từ chính zip nạp vào (vd Resources/1.64.1/), không có thì dùng 1.64.1
+  let base = 'Resources/1.64.1/';
+  for(const p of Object.values(RES_PATHS||{})){ const m = String(p).match(/^(.*?Resources\/[^\/]+\/)/); if(m){ base = m[1]; break; } }
+  const files = [];                                        // KHÔNG thêm entry thư mục - file mẫu không có
+  const add = (rel, data)=>{ files.push({name: base+rel, data}); };
+  const getRes = (bn)=>{ let d = RES_FILES.get(bn); if(!d && RES_PATHS[bn]) d = RES_FILES.get(RES_PATHS[bn]); return d; };
   const actorMapForHeroes = {};
   for(const h of heroesMod) actorMapForHeroes[h.heroId] = actorIdOf(h.heroId);
-  // 1+2. Ngoại hình + Hiệu ứng: Actor_Infos + Actor_Actions (giải nén ZSTD -> patch -> nén lại)
+  const strFnOf = {gen: patchStrGen, db: patchStrDb, actor: patchStrActor};
+  const yieldUI = ()=>new Promise(r=>setTimeout(r,0));
+  // 1) 22 file chung - ĐÚNG thứ tự + đường dẫn như file mẫu
+  for(const [bn, rel, kind] of SAMPLE_COMMON){
+    const data = getRes(bn);
+    if(!data) continue;                                    // thiếu thì đã ghi ở RES_MISSING (DEBUG), không throw
+    add(rel, kind==='raw' ? await rawPass(data) : await patchAnyV2(data, bn, strFnOf[kind]));
+    await yieldUI();
+  }
+  // 2) 3 file riêng mỗi tướng: Actions -> AssetRef -> Infos (đúng thứ tự + thư mục như file mẫu)
+  const heroMissing = [];
   for(const h of heroesMod){
-    const actorId = actorMapForHeroes[h.heroId];
-    const bundle = bundleOf(h.heroId);
-    const perHero = [
-      {bn:'Actor_'+actorId+'_Infos.pkg.bytes', rel:base+'Ages/Prefab_Characters/Prefab_Hero/Actor_'+actorId+'_Infos.pkg.bytes', label:'Ngoại hình'},
-      {bn:'Actor_'+actorId+'_Actions.pkg.bytes', rel:base+'Ages/Prefab_Characters/Prefab_Hero/Actor_'+actorId+'_Actions.pkg.bytes', label:'Hiệu ứng'},
+    const n = actorMapForHeroes[h.heroId];
+    const trio = [
+      ['Actor_'+n+'_Actions.pkg.bytes','Ages/Prefab_Characters/Prefab_Hero/Actor_'+n+'_Actions.pkg.bytes','actor'],
+      [n+'_AssetRef.bytes','AssetRefs/Hero/'+n+'_AssetRef.bytes','gen'],
+      ['Actor_'+n+'_Infos.pkg.bytes','Prefab_Characters/Actor_'+n+'_Infos.pkg.bytes','actor']
     ];
-    for(const ph of perHero){
-      let data = RES_FILES.get(ph.bn);
-      if(!data){ const rp = RES_PATHS[ph.bn]; if(rp) data = RES_FILES.get(rp); }
-      if(!data) continue;
-      const origHex = md5Hex(data);
-      // v7.6: giải nén ZSTD -> patch ID (ASCII + LE32) + patch chuỗi code -> nén lại -> PAD skippable frame về đúng SIZE gốc
-      const patched = await patchAnyV2(data, ph.bn, patchStrActor);
-      const newHex = md5Hex(patched);
-      if(origHex!==newHex) hashPairs.push({origHex, newHex, bn:ph.bn, origSize: data.length, newSize: patched.length});
-      add(ph.rel, patched);
-      patchedCount++;
-      await new Promise(r=>setTimeout(r,5));
+    let found = 0;
+    for(const [bn, rel, kind] of trio){
+      const data = getRes(bn);
+      if(!data){ heroMissing.push(bn+' (ActorID '+n+' cho '+h.hero+')'); continue; }
+      add(rel, await patchAnyV2(data, bn, strFnOf[kind])); found++;
+      await yieldUI();
     }
-    // 2b. DATABIN - File mod mẫu đổi rất nhiều file Databin (heroSkin, skillcombine, ...), không phải chỉ 2 file Actor.
-    // Databin là file plain binary (không nén ZSTD), patch trực tiếp giữ nguyên SIZE, game đọc Databin để hiện skin ở sảnh + trong trận.
-    // Nếu chỉ patch Actor mà không patch Databin thì sảnh vẫn hiện Ninja rồng.
-    {
-      const databinNames = ['heroSkin.bytes','skillcombine.bytes','skillmark.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes','CommonActions.pkg.bytes'];
-      for(const dbn of databinNames){
-        let dbData = RES_FILES.get(dbn);
-        if(!dbData){ const rp = RES_PATHS[dbn]; if(rp) dbData = RES_FILES.get(rp); }
-        if(!dbData) continue;
-        const oH = md5Hex(dbData);
-        const pDb = await patchAnyV2(dbData, dbn, patchStrDb);
-        const nH = md5Hex(pDb);
-        if(oH!==nH){
-          hashPairs.push({origHex: oH, newHex: nH, bn: dbn, origSize: dbData.length, newSize: pDb.length});
-          // Databin nằm ở Resources/1.64.1/Databin/ (iOS) hoặc Resources/1.64.1/Databin/ (Android) - tìm đường dẫn gốc
-          let dbPath = RES_PATHS[dbn] || ('Databin/'+dbn);
-          if(!dbPath.startsWith(base)){
-            if(dbPath.includes('Databin/')) dbPath = base + dbPath.slice(dbPath.indexOf('Databin/'));
-            else dbPath = base + 'Databin/' + dbn;
-          }
-          // Tránh trùng: nếu đã có file này trong files thì bỏ qua
-          if(!files.some(f=>f.name===dbPath)){
-            add(dbPath, pDb);
-            patchedCount++;
-          }
-        }
-      }
-    }
-    // 3. Âm thanh: tìm file SFX/VO của skin đích trong Resources.zip, copy đổi tên bỏ _Skin_<SkinID>
-    // Video: Hero_Florentino_Skin_52102_SFX.bnk -> Hero_Florentino_SFX.bnk, Hero_Florentino_Skin_52102_VO.bnk -> Hero_Florentino_VO.bnk
-    // Trong zip, file âm thanh ở Extra/2019.V2/Sound_DLC/Android/ và .../Vietnamese/
-    const targetSkinId = actorId*100 + (h.skinIndex+1); // vd 52102
-    const targetSkinIdStr = String(targetSkinId);
-    // Tìm tất cả file âm thanh của hero này trong RES_FILES (tìm theo bundle + SkinID)
-    for(const [bn, sData] of RES_FILES.entries()){
-      // bn dạng: Hero_Florentino_Skin_52102_SFX.bnk, Hero_Florentino_Skin_52102_VO.bnk, Hero_Florentino_Skin_52102_Show.bnk (Show thì bỏ, video nói bỏ)
-      if(!bn.includes('Hero_')) continue;
-      if(!bn.includes(bundle)) continue;
-      if(!bn.includes(targetSkinIdStr)) continue;
-      if(bn.includes('_Show')) continue; // Show thì bỏ, video nói không đụng Show
-      // bn có _SFX hoặc _VO
-      const isSFX = bn.includes('_SFX');
-      const isVO = bn.includes('_VO');
-      if(!isSFX && !isVO) continue;
-      // Tên mới: bỏ _Skin_52102 đi
-      const newBn = bn.replace('_Skin_'+targetSkinIdStr, '').replace('_Skin_'+targetSkinId, '');
-      // Tìm đường dẫn gốc của file này trong zip (RES_PATHS)
-      const origPath = RES_PATHS[bn] || bn;
-      // Đường dẫn đích: giữ nguyên thư mục gốc, chỉ đổi tên file (vd Extra/2019.V2/Sound_DLC/Android/Hero_Florentino_SFX.bnk)
-      // Nếu origPath không có base, thêm base vào
-      let outPath = origPath;
-      if(!outPath.startsWith(base)){
-        // origPath dạng: Extra/2019.V2/Sound_DLC/Android/Hero_...bnk -> thêm base
-        if(outPath.includes('Extra/')) outPath = base + outPath.slice(outPath.indexOf('Extra/'));
-        else outPath = base + 'Extra/2019.V2/Sound_DLC/' + (isSFX?'Android/':'Vietnamese/') + newBn;
-      } else {
-        // Đã có base, chỉ thay tên file
-        outPath = outPath.slice(0, outPath.lastIndexOf('/')+1) + newBn;
-      }
-      // Cần cả 2 file: SFX ở Android, VO ở Vietnamese - video nói SFX ở Android, VO ở Vietnamese
-      // Nếu file gốc ở Android mà là VO, vẫn giữ nguyên thư mục gốc (đừng đổi)
-      add(outPath, sData.slice());
-      patchedCount++;
-      // Ghi hash cho file âm thanh mới (để game không tải lại)
-      // File âm thanh mới có tên khác file gốc nên không cần hashPairs cho nó, nhưng cần thêm vào verification? Bỏ qua, vì file mới không có trong verification cũ
-    }
+    if(found===0) throw new Error('Không thấy file nào của '+h.hero+' (ActorID '+n+') trong Resources.zip - nạp đúng file Resources iOS rồi tạo lại. CHƯA trừ điểm.');
   }
-  // (Đã bỏ block COPY FILE SKIN cũ - skin nằm trong pkg, không phải file riêng, quét tên zip không tìm thấy)
-  // 3c. PATCH TẤT CẢ FILE CÒN LẠI TRONG RES_FILES - File mod mẫu đổi rất nhiều file, không phải chỉ 2 + 11 file.
-  // RES_FILES hiện chỉ có ~20 file do resNeededBasenames giới hạn, nhưng trong 20 file đó có thể còn file khác chứa skin ID (KernelLua, StableSystems, CommonActions, ResCharacterComponent...)
-  // Patch tất cả file còn lại trong RES_FILES mà chưa được thêm vào files, nếu nó chứa skin ID thì thêm vào zip.
-  {
-    const alreadyAdded = new Set(files.map(f=>f.name));
-    for(const [bn, fData] of RES_FILES.entries()){
-      // Bỏ qua file đã xử lý ở trên (Actor, Databin, AllActorInfos, Sound, verification)
-      if(bn.startsWith('Actor_') && (bn.includes('_Infos') || bn.includes('_Actions'))) continue;
-      if(['heroSkin.bytes','skillcombine.bytes','skillmark.bytes','ResSkinMotionBaseCfg.bytes','liteBulletCfg.bytes','ResSkinSeniorLabelCfg.bytes','organSkin.bytes','ResGlobalSkinCfg.bytes','ResCharacterComponent.bytes','HeroSkinShop.bytes','CommonActions.pkg.bytes'].includes(bn)) continue;
-      if(bn.toLowerCase()==='allactorinfos.assetbundle') continue;
-      if(bn.toLowerCase()==='resourceverificationinfosetall.assetbundle') continue;
-      if(bn.includes('_SFX') || bn.includes('_VO')) continue;
-      // Chỉ patch file có khả năng chứa skin ID: .bytes, .pkg.bytes, .assetbundle, .cfg
-      if(!bn.endsWith('.bytes') && !bn.endsWith('.assetbundle') && !bn.endsWith('.cfg')) continue;
-      const oH2 = md5Hex(fData);
-      const p2 = await patchAnyV2(fData, bn, patchStrGen);
-      const nH2 = md5Hex(p2);
-      if(oH2!==nH2){
-        hashPairs.push({origHex: oH2, newHex: nH2, bn: bn, origSize: fData.length, newSize: p2.length});
-        let outP = RES_PATHS[bn] || bn;
-        if(!outP.startsWith(base)){
-          if(outP.includes('Resources/')) outP = outP.slice(outP.indexOf('Resources/'));
-          else outP = base + outP;
-        }
-        if(!alreadyAdded.has(outP)){
-          add(outP, p2);
-          alreadyAdded.add(outP);
-          patchedCount++;
-        }
-      }
-    }
-  }
-  // SỬA FILE KIỂM TRA HASH - CHỈ sửa resourceverificationinfosetall, KHÔNG sửa resourcepackerinfosetall và KHÔNG thêm version
-  // Lỗi cũ: chỉ sửa dạng HEX chữ (32 ký tự), còn game nó check dạng RAW MD5 16 byte nhị phân + SIZE (4 byte) nên vẫn phát hiện file đã đổi và tải lại đúng 0.46MB (Actor_106_Actions)
-  // Sửa đúng: sửa cả 3 thứ trong verification: 1) HEX (32 ký tự, cả thường + hoa), 2) RAW MD5 (16 byte), 3) SIZE (LE32 + BE32) gần vị trí hash
-  // Đồng thời patch AllActorInfos.assetbundle (file game thật sự đọc để hiện skin, theo cách mod aem9 trên mạng) - patch lẻ Actor_Infos không đủ
-  {
-    // Patch AllActorInfos.assetbundle nếu có trong Resources.zip (iOS: Resources/1.64.1/assetbundle/AllActorInfos.assetbundle)
-    let allInfo = null;
-    for(const [k,v] of RES_FILES.entries()){ if(k.toLowerCase()==='allactorinfos.assetbundle'){ allInfo = v; break; } }
-    if(!allInfo){ const rp = RES_PATHS['AllActorInfos.assetbundle']; if(rp) allInfo = RES_FILES.get(rp); }
-    if(allInfo){
-      const origHexA = md5Hex(allInfo);
-      // AllActorInfos là Unity AssetBundle (LZMA/LZ4), không phải ZSTD pkg - patch trực tiếp cả ASCII + LE32 (không giải nén ZSTD)
-      const patchedA = (zstdFind(allInfo)!==-1) ? await patchAnyV2(allInfo, 'AllActorInfos.assetbundle', ()=>{}) : patchSkinIds(allInfo, heroesMod, actorMapForHeroes);
-      const newHexA = md5Hex(patchedA);
-      if(origHexA!==newHexA){
-        hashPairs.push({origHex: origHexA, newHex: newHexA, bn:'AllActorInfos.assetbundle', origSize: allInfo.length, newSize: patchedA.length});
-        // Tìm đường dẫn gốc của AllActorInfos trong zip (thường là assetbundle/AllActorInfos.assetbundle)
-        let allPath = RES_PATHS['AllActorInfos.assetbundle'] || 'assetbundle/AllActorInfos.assetbundle';
-        if(!allPath.startsWith(base)) allPath = base + (allPath.includes('assetbundle/') ? allPath.slice(allPath.indexOf('assetbundle/')) : 'assetbundle/AllActorInfos.assetbundle');
-        add(allPath, patchedA);
-        patchedCount++;
-      }
-    }
-  }
-  for(const vBn of ['resourceverificationinfosetall.assetbundle']){
-    let vData = RES_FILES.get(vBn);
-    if(!vData){ const rp = RES_PATHS[vBn]; if(rp) vData = RES_FILES.get(rp); }
-    if(!vData) continue;
-    let vBytes = vData.slice();
-    const enc = new TextEncoder();
-    const hexToBytes = (hex)=>{ const out=new Uint8Array(16); for(let i=0;i<16;i++) out[i]=parseInt(hex.substr(i*2,2),16); return out; };
-    for(const hp of hashPairs){
-      // 1) HEX (32 ký tự, thường + hoa)
-      for(const origH of [hp.origHex, hp.origHex.toUpperCase()]){
-        const fromB = enc.encode(origH);
-        const toB = enc.encode(hp.origHex===origH ? hp.newHex : hp.newHex.toUpperCase());
-        for(let i=0;i+fromB.length<=vBytes.length;i++){
-          let ok=true; for(let k=0;k<fromB.length;k++){ if(vBytes[i+k]!==fromB[k]){ ok=false; break; } }
-          if(ok){ vBytes.set(toB, i); i+=fromB.length-1; }
-        }
-      }
-      // 2) RAW MD5 (16 byte nhị phân) - game check dạng này, không check HEX
-      const origRaw = hexToBytes(hp.origHex), newRaw = hexToBytes(hp.newHex);
-      const rawPositions = [];
-      for(let i=0;i+16<=vBytes.length;i++){
-        let ok=true; for(let k=0;k<16;k++){ if(vBytes[i+k]!==origRaw[k]){ ok=false; break; } }
-        if(ok){ vBytes.set(newRaw, i); rawPositions.push(i); i+=15; }
-      }
-      // 3) SIZE: nếu file đã patch đổi kích thước (do nén lại ZSTD khác), phải sửa SIZE trong verification (LE32 + BE32) gần vị trí hash (trong 512 byte quanh hash)
-      if(hp.origSize!==undefined && hp.newSize!==undefined && hp.origSize!==hp.newSize){
-        const viewV = new DataView(vBytes.buffer, vBytes.byteOffset, vBytes.byteLength);
-        const searchCenters = rawPositions.length ? rawPositions : [];
-        // Nếu không tìm thấy RAW, tìm vị trí HEX để làm tâm
-        if(!searchCenters.length){
-          const hexB = enc.encode(hp.origHex);
-          for(let i=0;i+hexB.length<=vBytes.length;i++){ let ok=true; for(let k=0;k<hexB.length;k++){ if(vBytes[i+k]!==hexB[k]){ ok=false; break; } } if(ok){ searchCenters.push(i); break; } }
-        }
-        for(const c of searchCenters){
-          const lo = Math.max(0, c-512), hi = Math.min(vBytes.length-4, c+512);
-          for(let i=lo;i<=hi;i++){
-            if(viewV.getUint32(i, true)===hp.origSize){ viewV.setUint32(i, hp.newSize, true); }
-            if(viewV.getUint32(i, false)===hp.origSize){ viewV.setUint32(i, hp.newSize, false); }
-          }
-        }
-      }
-    }
-    add(base+'assetbundle/'+vBn, vBytes);
-  }
-  if(patchedCount===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó.');
-  // Kiểm tra thiếu file: nếu không tìm thấy Actor_Infos/Actions thì báo rõ (do ActorID sai hoặc dùng file Android cho iOS)
-  const missingHeroFiles = [];
-  for(const h of heroesMod){
-    const actorId = actorMapForHeroes[h.heroId];
-    for(const bn of ['Actor_'+actorId+'_Infos.pkg.bytes', 'Actor_'+actorId+'_Actions.pkg.bytes']){
-      let has = RES_FILES.get(bn);
-      if(!has && RES_PATHS[bn]) has = RES_FILES.get(RES_PATHS[bn]);
-      const inFiles = files.some(f=>f.name && f.name.includes(bn));
-      if(!inFiles) missingHeroFiles.push(bn+' (ActorID '+actorId+' cho '+h.hero+')');
-    }
-  }
-  if(missingHeroFiles.length>0){
-    throw new Error('Thiếu '+missingHeroFiles.length+' file riêng của tướng ('+missingHeroFiles.join(', ')+') - Có thể do ActorID sai (Florentino ActorID là 521, không phải 129) hoặc dùng file Android cho iOS. Hãy nạp file iOS 206MB rồi tạo lại. CHƯA trừ điểm.');
-  }
+  if(files.length===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó. CHƯA trừ điểm.');
+  const patchedCount = files.length;
+  const hashPairs = [];   // resourceverificationinfosetall được chép nguyên: hash trong file đó là kiểu 8 byte riêng của game (không phải MD5) nên không sửa được ở đây
   const uniqSkins=[...new Map(heroesMod.map(r=>[r.heroId, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip';
-  // DEBUG: tính tổng size + danh sách file để hiện ở dialog (biết vì sao vẫn 82KB)
-  const fileList = files.filter(f=>!f.dir).map(f=>({name: f.name, size: f.data ? f.data.length : 0}));
+  // DEBUG: tổng size + danh sách file để hiện ở dialog
+  const fileList = files.map(f=>({name: f.name, size: f.data ? f.data.length : 0}));
   const totalSize = fileList.reduce((s,f)=>s+f.size,0);
-  const debugInfo = {resFilesCount: RES_FILES ? RES_FILES.size : 0, outFilesCount: fileList.length, totalSize, fileList, hashPairsCount: hashPairs.length, missing: (RES_MISSING||[]).slice(), zstdLog: ZSTD_LOG.slice()};
+  const miss = (RES_MISSING||[]).concat(heroMissing);
+  const debugInfo = {resFilesCount: RES_FILES ? RES_FILES.size : 0, outFilesCount: fileList.length, totalSize, fileList, hashPairsCount: 0, missing: miss, zstdLog: ZSTD_LOG.slice()};
   return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs, debugInfo};
 }
 let MAKING = false; // Khóa chống bấm liên tục / bấm 2 lần -> trừ 2 điểm
@@ -1417,7 +1102,7 @@ function handoffZip(blob,name,debugInfo){
   PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Hash đã sửa: '+(debugInfo.hashPairsCount||0)+' file<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
