@@ -604,7 +604,6 @@ function baseName(path){ const parts=String(path).split('/'); return parts[parts
 const SAMPLE_COMMON = [
   ['KernelLua.pkg.bytes','KernelLua.pkg.bytes','gen'],
   ['StableSystems_3.pkg.bytes','StableSystems_3.pkg.bytes','gen'],
-  ['version.txt','version.txt','raw'],
   ['HeroSkinShop.bytes','Databin/Client/Shop/HeroSkinShop.bytes','db'],
   ['ResCharacterComponent.bytes','Databin/Client/Character/ResCharacterComponent.bytes','db'],
   ['LobbyBank.bytes','Databin/Client/Sound/LobbyBank.bytes','db'],
@@ -715,15 +714,45 @@ function zstdTrimTail(u8){
   }
   return null;
 }
+// Đọc header frame ZSTD: dictID + FrameContentSize (để chẩn đoán và kiểm tra dữ liệu cứu được)
+function zstdFrameInfo(u8, off){
+  try{
+    const f=u8[off+4], ss=(f>>5)&1, df=f&3, fcf=f>>6; let p=off+5+(ss?0:1);
+    const dl=df===3?4:df; let dict=0; for(let i=0;i<dl;i++) dict += u8[p+i]*Math.pow(256,i); p+=dl;
+    let fcs=null; const fl = fcf===0 ? (ss?1:0) : (fcf===1?2:(fcf===2?4:8));
+    if(fl){ fcs=0; for(let i=0;i<Math.min(fl,6);i++) fcs += u8[p+i]*Math.pow(256,i); if(fcf===1) fcs+=256; }
+    return {dict, fcs, single:!!ss};
+  }catch(e){ return {dict:0,fcs:null,single:false}; }
+}
+let _zErr = '';
 async function zstdDecode(u8){
   try{ const ds = new DecompressionStream('zstd'); const r = await new Response(new Blob([u8]).stream().pipeThrough(ds)).arrayBuffer(); return new Uint8Array(r); }catch(e){}
   if(!(await loadFzstd())) throw new Error('không tải được thư viện fzstd');
   try{ return window.fzstd.decompress(u8); }
   catch(e1){
+    _zErr = String(e1 && e1.message || e1);
+    // (1) cắt skippable frame ở cuối
     const cut = zstdTrimTail(u8);
-    if(cut && cut.length>0 && cut.length<u8.length) return window.fzstd.decompress(cut);
+    if(cut && cut.length>0 && cut.length<u8.length){ try{ return window.fzstd.decompress(cut); }catch(e2){} }
+    // (2) giải nén kiểu dòng chảy: frame hợp lệ + byte rác ở cuối -> lấy phần đã giải xong nếu đúng FrameContentSize
+    try{
+      if(window.fzstd.Decompress){
+        const chunks=[]; let total=0;
+        try{ const d=new window.fzstd.Decompress((c)=>{ chunks.push(c); total+=c.length; }); d.push(u8,true); }catch(e3){}
+        const info=zstdFrameInfo(u8,0);
+        if(total>0 && info.fcs!==null && total===info.fcs){
+          const o=new Uint8Array(total); let q=0; for(const c of chunks){ o.set(c,q); q+=c.length; } return o;
+        }
+      }
+    }catch(e4){}
     throw e1;
   }
+}
+// Mô tả file ZSTD giải nén lỗi (hiện ở DEBUG để biết nguyên nhân): kích thước, 16 byte đầu, dictID, FrameContentSize, lỗi của fzstd
+function zstdDiag(u8){
+  const off=zstdFind(u8); const inf = off>=0 ? zstdFrameInfo(u8,off) : {dict:0,fcs:null};
+  const head=Array.from(u8.subarray(0,16)).map(x=>x.toString(16).padStart(2,'0')).join(' ');
+  return 'size='+u8.length+' magic@'+off+' dictID='+inf.dict+' fcs='+inf.fcs+' lỗi="'+_zErr+'" head='+head;
 }
 // Trả về {header, data} nếu file là ZSTD giải nén được. KHÔNG BAO GIỜ throw: không phải ZSTD hoặc giải nén lỗi -> null
 async function tryDecompressPkg(u8){
@@ -1035,7 +1064,7 @@ async function buildModZip(){
   const patchAnyV2 = async (data, label)=>{
     let dz = null;
     try{ dz = await tryDecompressPkg(data); }catch(e){ dz = null; }
-    if(!dz && zstdFind(data)!==-1){ ZSTD_LOG.push(label+': ZSTD nhưng giải nén lỗi -> giữ nguyên file gốc'); return data; }
+    if(!dz && zstdFind(data)!==-1){ ZSTD_LOG.push(label+': ZSTD giải nén lỗi -> giữ nguyên file gốc | '+zstdDiag(data)); return data; }
     const o = patchSkinIdsFull(dz ? dz.data : data);
     const crcFixed = fixInnerZipCrc(o);
     hashJobs.push({bn: label, orig: data, dec: dz ? dz.data : null, out: o});
