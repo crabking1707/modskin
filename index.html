@@ -600,7 +600,7 @@ async function ensureResForHeroes(heroesMod){
 let RES_STATUS = 'Chưa nạp Resources.zip';
 function setResStatus(s){ RES_STATUS=s; const el=document.getElementById('resProgress'); if(el) el.textContent=s; }
 function baseName(path){ const parts=String(path).split('/'); return parts[parts.length-1]; }
-// v7.7: bộ file cần lấy = đúng 22 file chung + 3 file riêng mỗi tướng như file mẫu iOS.zip (KHÔNG còn AllActorInfos / ResGlobalSkinCfg)
+// v7.8: bộ file cần lấy = 22 file chung của file mẫu iOS.zip + ResGlobalSkinCfg.bytes + 3 file riêng mỗi tướng
 const SAMPLE_COMMON = [
   ['KernelLua.pkg.bytes','KernelLua.pkg.bytes','gen'],
   ['StableSystems_3.pkg.bytes','StableSystems_3.pkg.bytes','gen'],
@@ -621,6 +621,7 @@ const SAMPLE_COMMON = [
   ['skillmark.bytes','Databin/Client/Skill/skillmark.bytes','db'],
   ['skillcombine.bytes','Databin/Client/Skill/skillcombine.bytes','db'],
   ['ResSkinMotionBaseCfg.bytes','Databin/Client/Motion/ResSkinMotionBaseCfg.bytes','db'],
+  ['ResGlobalSkinCfg.bytes','Databin/Client/Global/ResGlobalSkinCfg.bytes','db'],   // v7.8: bắt buộc có (đường dẫn lấy theo zip gốc nếu có)
   ['resourceverificationinfosetall.assetbundle','assetbundle/resourceverificationinfosetall.assetbundle','raw'],
   ['resourcepackerinfosetall.assetbundle','assetbundle/resourcepackerinfosetall.assetbundle','raw'],
   ['CommonActions.pkg.bytes','Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes','gen']
@@ -637,58 +638,45 @@ function resNeededBasenames(heroesMod){
 }
 /* MD5 thuần JS (crypto.subtle không có MD5) - để tính hash file gốc vs file đã patch */
 function md5Hex(u8){
-  function cmn(q,a,b,x,s,t){ a = (a + q + x + t) | 0; return ((a << s) | (a >>> (32 - s))) + b; }
-  function ff(a,b,c,d,x,s,t){ return cmn((b & c) | (~b & d), a, b, x, s, t); }
-  function gg(a,b,c,d,x,s,t){ return cmn((b & d) | (c & ~d), a, b, x, s, t); }
-  function hh(a,b,c,d,x,s,t){ return cmn(b ^ c ^ d, a, b, x, s, t); }
-  function ii(a,b,c,d,x,s,t){ return cmn(c ^ (b | ~d), a, b, x, s, t); }
-  function md5cycle(x,k){
-    let a=x[0], b=x[1], c=x[2], d=x[3];
-    a=ff(a,b,c,d,k[0],7,-680876936); d=ff(d,a,b,c,k[1],12,-389564586); c=ff(c,d,a,b,k[2],17,606105819); b=ff(b,c,d,a,k[3],22,-1044525330);
-    a=ff(a,b,c,d,k[4],7,-176418897); d=ff(d,a,b,c,k[5],12,1200080426); c=ff(c,d,a,b,k[6],17,-1473231341); b=ff(b,c,d,a,k[7],22,-45705983);
-    a=ff(a,b,c,d,k[8],7,1770035416); d=ff(d,a,b,c,k[9],12,-1958414417); c=ff(c,d,a,b,k[10],17,-42063); b=ff(b,c,d,a,k[11],22,-1990404162);
-    a=ff(a,b,c,d,k[12],7,1804603682); d=ff(d,a,b,c,k[13],12,-40341101); c=ff(c,d,a,b,k[14],17,-1502002290); b=ff(b,c,d,a,k[15],22,1236535329);
-    a=gg(a,b,c,d,k[1],5,-165796510); d=gg(d,a,b,c,k[6],9,-1069501632); c=gg(c,d,a,b,k[11],14,643717713); b=gg(b,c,d,a,k[0],20,-373897302);
-    a=gg(a,b,c,d,k[5],5,-701558691); d=gg(d,a,b,c,k[10],9,38016083); c=gg(c,d,a,b,k[15],14,-660478335); b=gg(b,c,d,a,k[4],20,-405537848);
-    a=gg(a,b,c,d,k[9],5,568446438); d=gg(d,a,b,c,k[14],9,-1019803690); c=gg(c,d,a,b,k[3],14,-187363961); b=gg(b,c,d,a,k[8],20,1163531501);
-    a=gg(a,b,c,d,k[13],5,-1444681467); d=gg(d,a,b,c,k[2],9,-51403784); c=gg(c,d,a,b,k[7],14,1735328473); b=gg(b,c,d,a,k[12],20,-1926607734);
-    a=hh(a,b,c,d,k[5],4,-378558); d=hh(d,a,b,c,k[8],11,-2022574463); c=hh(c,d,a,b,k[11],16,1839030562); b=hh(b,c,d,a,k[14],23,-35309556);
-    a=hh(a,b,c,d,k[1],4,-1530992060); d=hh(d,a,b,c,k[4],11,1272893353); c=hh(c,d,a,b,k[7],16,-155497632); b=hh(b,c,d,a,k[10],23,-1094730640);
-    a=hh(a,b,c,d,k[13],4,681279174); d=hh(d,a,b,c,k[0],11,-358537222); c=hh(c,d,a,b,k[3],16,-722521979); b=hh(b,c,d,a,k[6],23,76029189);
-    a=hh(a,b,c,d,k[9],4,-640364487); d=hh(d,a,b,c,k[12],11,-421815835); c=hh(c,d,a,b,k[15],16,530742520); b=hh(b,c,d,a,k[2],23,-995338651);
-    a=ii(a,b,c,d,k[0],6,-198630844); d=ii(d,a,b,c,k[7],10,1126891415); c=ii(c,d,a,b,k[14],15,-1416354905); b=ii(b,c,d,a,k[5],21,-57434055);
-    a=ii(a,b,c,d,k[12],6,1700485571); d=ii(d,a,b,c,k[3],10,-1894986606); c=ii(c,d,a,b,k[10],15,-1051523); b=ii(b,c,d,a,k[1],21,-2054922799);
-    a=ii(a,b,c,d,k[8],6,1873313359); d=ii(d,a,b,c,k[15],10,-30611744); c=ii(c,d,a,b,k[6],15,-1560198380); b=ii(b,c,d,a,k[13],21,1309151649);
-    a=ii(a,b,c,d,k[4],6,-145523070); d=ii(d,a,b,c,k[11],10,-1120210379); c=ii(c,d,a,b,k[2],15,718787259); b=ii(b,c,d,a,k[9],21,-343485551);
-    x[0]=(a+x[0])|0; x[1]=(b+x[1])|0; x[2]=(c+x[2])|0; x[3]=(d+x[3])|0;
-  }
-  function md5blk(s){
-    const md5blks=[];
-    for(let i=0;i<64;i+=4){
-      md5blks[i>>2]=s.charCodeAt(i)+(s.charCodeAt(i+1)<<8)+(s.charCodeAt(i+2)<<16)+(s.charCodeAt(i+3)<<24);
+  // MD5 chuẩn RFC 1321 chạy trực tiếp trên Uint8Array (đã đối chiếu với MD5 chuẩn). Trả về chuỗi hex thường 32 ký tự.
+  const SH=[7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21];
+  const K=new Int32Array(64); for(let i=0;i<64;i++) K[i]=Math.floor(Math.abs(Math.sin(i+1))*4294967296)|0;
+  let a0=0x67452301|0, b0=0xefcdab89|0, c0=0x98badcfe|0, d0=0x10325476|0;
+  const M=new Int32Array(16);
+  const block=(buf,off)=>{
+    for(let i=0;i<16;i++){ const j=off+i*4; M[i]=buf[j]|(buf[j+1]<<8)|(buf[j+2]<<16)|(buf[j+3]<<24); }
+    let A=a0,B=b0,C=c0,D=d0;
+    for(let i=0;i<64;i++){
+      let F,g;
+      if(i<16){ F=(B&C)|(~B&D); g=i; }
+      else if(i<32){ F=(D&B)|(~D&C); g=(5*i+1)&15; }
+      else if(i<48){ F=B^C^D; g=(3*i+5)&15; }
+      else { F=C^(B|~D); g=(7*i)&15; }
+      F=(F+A+K[i]+M[g])|0; A=D; D=C; C=B; const sh=SH[i]; B=(B+((F<<sh)|(F>>>(32-sh))))|0;
     }
-    return md5blks;
+    a0=(a0+A)|0; b0=(b0+B)|0; c0=(c0+C)|0; d0=(d0+D)|0;
+  };
+  const len=u8.length; let off=0;
+  for(; off+64<=len; off+=64) block(u8,off);
+  const rem=len-off, tail=new Uint8Array(rem<56?64:128);
+  for(let i=0;i<rem;i++) tail[i]=u8[off+i];
+  tail[rem]=0x80;
+  const bl=(len*8)>>>0, bh=Math.floor(len/536870912), e=tail.length;
+  for(let i=0;i<4;i++){ tail[e-8+i]=(bl>>>(i*8))&255; tail[e-4+i]=(bh>>>(i*8))&255; }
+  block(tail,0); if(e===128) block(tail,64);
+  let out=''; for(const v of [a0,b0,c0,d0]) for(let j=0;j<4;j++) out+=((v>>>(j*8))&255).toString(16).padStart(2,'0');
+  return out;
+}
+function hexToBytes(h){ const o=new Uint8Array(h.length/2); for(let i=0;i<o.length;i++) o[i]=parseInt(h.substr(i*2,2),16); return o; }
+// Thay mọi chỗ khớp 'from' bằng 'to' (cùng độ dài) trong buf, trả về số chỗ đã thay
+function replaceAllBytes(buf, from, to){
+  let c=0; const f0=from[0], fl=from.length;
+  for(let i=0;i+fl<=buf.length;i++){
+    if(buf[i]!==f0) continue;
+    let ok=true; for(let k=1;k<fl;k++){ if(buf[i+k]!==from[k]){ ok=false; break; } }
+    if(ok){ buf.set(to,i); c++; i+=fl-1; }
   }
-  function rhex(n){ let s='', j; for(j=0;j<4;j++) s+=((n>>(j*8+4))&0x0F).toString(16)+((n>>(j*8))&0x0F).toString(16); return s; }
-  function hex(x){ for(let i=0;i<x.length;i++) x[i]=rhex(x[i]); return x.join(''); }
-  // Chuyển Uint8Array -> string latin1 rồi tính MD5
-  let s=''; for(let i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]);
-  const state=[1732584193,-271733879,-1732584194,271733878];
-  const len=s.length;
-  // Padding
-  let bitLen = len*8;
-  s += String.fromCharCode(0x80);
-  while((s.length%64)!==56) s+=String.fromCharCode(0);
-  // Thêm độ dài 64-bit LE
-  // v7.6: sửa lỗi cũ - dịch bit >=32 trong JS bị quay vòng nên 4 byte cao của độ dài bị sai -> MD5 ra sai với MỌI file (hash trong verification không bao giờ khớp)
-  const bitLenLo = (len*8)>>>0, bitLenHi = Math.floor(len/536870912);
-  for(let i=0;i<4;i++) s+=String.fromCharCode((bitLenLo>>>(i*8))&0xFF);
-  for(let i=0;i<4;i++) s+=String.fromCharCode((bitLenHi>>>(i*8))&0xFF);
-  for(let i=0;i<s.length;i+=64){
-    const blk = md5blk(s.substr(i,64));
-    md5cycle(state, blk);
-  }
-  return hex(state);
+  return c;
 }
 /* ============ v7.7: ZSTD - chỉ GIẢI NÉN (DecompressionStream / fzstd). Giống file mẫu: lưu file đã giải nén (raw), KHÔNG nén lại ============ */
 let ZSTD_LOG = [];            // ghi lại từng file đã xử lý để hiện trong DEBUG
@@ -1036,13 +1024,21 @@ async function buildModZip(){
   // v7.7: patch 1 file. File ZSTD: giải nén -> patch ID (ASCII + LE32) + chuỗi code -> LƯU RAW (không nén lại, y như file mẫu).
   // Không giải nén được thì giữ nguyên file gốc (không throw, không dừng).
   const kb = n=>Math.round(n/1024)+'KB';
-  const patchAnyV2 = async (data, label, strFn)=>{
+  // v7.8: patchSkinIds ĐỔI CẢ 3 DẠNG cho mọi file (Actions, Infos, heroSkin, ResGlobalSkinCfg, ResSkinMotionBaseCfg, ...):
+  //   (1) chuỗi ASCII "10601" -> "10615"   (2) số LE32 10601 -> 10615   (3) code string "airi_1" -> "airi_15" (giữ SIZE)
+  const patchSkinIdsFull = (bytes)=>{
+    const o = patchSkinIds(bytes, heroesMod, actorMapForHeroes);
+    patchStrActor(o);
+    return o;
+  };
+  const hashJobs = [];   // mỗi file đã patch: {bn, orig, dec, out} -> tính MD5 ghi vào verification
+  const patchAnyV2 = async (data, label)=>{
     let dz = null;
     try{ dz = await tryDecompressPkg(data); }catch(e){ dz = null; }
     if(!dz && zstdFind(data)!==-1){ ZSTD_LOG.push(label+': ZSTD nhưng giải nén lỗi -> giữ nguyên file gốc'); return data; }
-    const o = patchSkinIds(dz ? dz.data : data, heroesMod, actorMapForHeroes);
-    strFn(o);
+    const o = patchSkinIdsFull(dz ? dz.data : data);
     const crcFixed = fixInnerZipCrc(o);
+    hashJobs.push({bn: label, orig: data, dec: dz ? dz.data : null, out: o});
     if(dz) ZSTD_LOG.push(label+': giải nén '+kb(data.length)+' → '+kb(o.length)+' (lưu raw'+(crcFixed?', sửa CRC '+crcFixed+' entry':'')+')');
     return o;
   };
@@ -1056,13 +1052,16 @@ async function buildModZip(){
   const getRes = (bn)=>{ let d = RES_FILES.get(bn); if(!d && RES_PATHS[bn]) d = RES_FILES.get(RES_PATHS[bn]); return d; };
   const actorMapForHeroes = {};
   for(const h of heroesMod) actorMapForHeroes[h.heroId] = actorIdOf(h.heroId);
-  const strFnOf = {gen: patchStrGen, db: patchStrDb, actor: patchStrActor};
   const yieldUI = ()=>new Promise(r=>setTimeout(r,0));
+  let verIdx = -1;   // vị trí resourceverificationinfosetall trong zip (sẽ ghi đè hash sau khi patch xong mọi file)
   // 1) 22 file chung - ĐÚNG thứ tự + đường dẫn như file mẫu
   for(const [bn, rel, kind] of SAMPLE_COMMON){
     const data = getRes(bn);
     if(!data) continue;                                    // thiếu thì đã ghi ở RES_MISSING (DEBUG), không throw
-    add(rel, kind==='raw' ? await rawPass(data) : await patchAnyV2(data, bn, strFnOf[kind]));
+    let rel2 = rel;
+    if(bn==='ResGlobalSkinCfg.bytes' && RES_PATHS[bn] && String(RES_PATHS[bn]).startsWith(base)) rel2 = String(RES_PATHS[bn]).slice(base.length);   // theo đúng đường dẫn trong zip gốc
+    add(rel2, kind==='raw' ? await rawPass(data) : await patchAnyV2(data, bn));
+    if(bn==='resourceverificationinfosetall.assetbundle') verIdx = files.length-1;
     await yieldUI();
   }
   // 2) 3 file riêng mỗi tướng: Actions -> AssetRef -> Infos (đúng thứ tự + thư mục như file mẫu)
@@ -1078,20 +1077,38 @@ async function buildModZip(){
     for(const [bn, rel, kind] of trio){
       const data = getRes(bn);
       if(!data){ heroMissing.push(bn+' (ActorID '+n+' cho '+h.hero+')'); continue; }
-      add(rel, await patchAnyV2(data, bn, strFnOf[kind])); found++;
+      add(rel, await patchAnyV2(data, bn)); found++;
       await yieldUI();
     }
     if(found===0) throw new Error('Không thấy file nào của '+h.hero+' (ActorID '+n+') trong Resources.zip - nạp đúng file Resources iOS rồi tạo lại. CHƯA trừ điểm.');
   }
   if(files.length===0) throw new Error('Không tìm thấy file gốc nào trong Resources.zip. Hãy nạp lại file đó. CHƯA trừ điểm.');
   const patchedCount = files.length;
-  const hashPairs = [];   // resourceverificationinfosetall được chép nguyên: hash trong file đó là kiểu 8 byte riêng của game (không phải MD5) nên không sửa được ở đây
+  // v7.8: tính lại MD5 cho từng file đã patch rồi ghi đè hash mới vào resourceverificationinfosetall: dạng hex string (thường + HOA) và dạng raw 16 byte
+  const hashPairs = []; let hashHitsHex = 0, hashHitsRaw = 0;
+  if(verIdx>=0){
+    const ver = files[verIdx].data.slice();
+    const encH = new TextEncoder();
+    for(const job of hashJobs){
+      const newHex = md5Hex(job.out);
+      const olds = new Set([md5Hex(job.orig)]); if(job.dec) olds.add(md5Hex(job.dec));
+      for(const oh of olds){
+        if(oh===newHex) continue;
+        hashPairs.push({origHex: oh, newHex, bn: job.bn, origSize: job.orig.length, newSize: job.out.length});
+        hashHitsHex += replaceAllBytes(ver, encH.encode(oh), encH.encode(newHex));
+        hashHitsHex += replaceAllBytes(ver, encH.encode(oh.toUpperCase()), encH.encode(newHex.toUpperCase()));
+        hashHitsRaw += replaceAllBytes(ver, hexToBytes(oh), hexToBytes(newHex));
+      }
+      await yieldUI();
+    }
+    files[verIdx].data = ver;
+  }
   const uniqSkins=[...new Map(heroesMod.map(r=>[r.heroId, r])).values()]; const name=(uniqSkins.length===1?slugFile(uniqSkins[0].skin):uniqSkins.map(h=>slugFile(h.skin)).join('_'))+'.zip';
   // DEBUG: tổng size + danh sách file để hiện ở dialog
   const fileList = files.map(f=>({name: f.name, size: f.data ? f.data.length : 0}));
   const totalSize = fileList.reduce((s,f)=>s+f.size,0);
   const miss = (RES_MISSING||[]).concat(heroMissing);
-  const debugInfo = {resFilesCount: RES_FILES ? RES_FILES.size : 0, outFilesCount: fileList.length, totalSize, fileList, hashPairsCount: 0, missing: miss, zstdLog: ZSTD_LOG.slice()};
+  const debugInfo = {resFilesCount: RES_FILES ? RES_FILES.size : 0, outFilesCount: fileList.length, totalSize, fileList, hashPairsCount: hashPairs.length, hashHitsHex, hashHitsRaw, missing: miss, zstdLog: ZSTD_LOG.slice()};
   return {blob:zipStore(files), name, rows:heroesMod, patchedCount, hashPairs, debugInfo};
 }
 let MAKING = false; // Khóa chống bấm liên tục / bấm 2 lần -> trừ 2 điểm
@@ -1102,7 +1119,7 @@ function handoffZip(blob,name,debugInfo){
   PENDING_BUILD = {blob, name, debugInfo};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v7.6<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>Hash MD5 mới: '+(debugInfo.hashPairsCount||0)+' file • ghi đè vào verification: '+(debugInfo.hashHitsHex||0)+' chỗ hex, '+(debugInfo.hashHitsRaw||0)+' chỗ raw<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
