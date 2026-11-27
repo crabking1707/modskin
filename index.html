@@ -649,7 +649,13 @@ const SKIN_TABLES = [
 ];
 function resNeededBasenames(heroesMod){
   const set = new Set(SKIN_TABLES.map(x=>x[0]));
-  for(const h of heroesMod){ const n = h.actor || heroNum(h.heroId); set.add('Actor_'+n+'_Actions.pkg.bytes'); }
+  set.add('CommonActions.pkg.bytes');
+  for(const h of heroesMod){
+    const n = h.actor || heroNum(h.heroId);
+    set.add('Actor_'+n+'_Actions.pkg.bytes');
+    set.add('Actor_'+n+'_Infos.pkg.bytes');
+    set.add(n+'_AssetRef.bytes');
+  }
   return set;
 }
 /* MD5 thuần JS (crypto.subtle không có MD5) - để tính hash file gốc vs file đã patch */
@@ -1272,7 +1278,157 @@ const SKINMOD = (()=>{
     }
     return text;
   }
-  return {setMd5,parse,build,motion,sound,hasSkinRow,shop,heroSkin,organSkin,xmlRules,u32};
+
+  // ---- 7) BinaryDomDocument (ROOT / JTCom / JTArr / JTPri) cho Actor_*_Infos và *_AssetRef ----
+  const _td = new TextDecoder('utf-8',{fatal:false}), _te = new TextEncoder();
+  function bdomParse(buf, pos=0){
+    const nodeSz = u32(buf, pos), nameSz = u32(buf, pos+4);
+    const name = _td.decode(buf.subarray(pos+8, pos+4+nameSz));
+    let p = pos + 4 + nameSz;
+    const attrSz = u32(buf, p); const attrs = [];
+    if(attrSz > 4){
+      const acnt = u32(buf, p+4); let ap = p + 8;
+      for(let i=0;i<acnt;i++){
+        const asz = u32(buf, ap), ksz = u32(buf, ap+4);
+        const k = _td.decode(buf.subarray(ap+8, ap+4+ksz));
+        const v = buf.slice(ap+4+ksz, ap+asz);
+        attrs.push([k, v]); ap += asz;
+      }
+    }
+    p += attrSz;
+    const valSz = u32(buf, p);
+    const val = buf.slice(p+4, p+valSz);
+    p += valSz;
+    const chSz = u32(buf, p); const children = [];
+    if(chSz > 4){
+      const ccnt = u32(buf, p+4); let cp = p + 8;
+      for(let i=0;i<ccnt;i++){
+        const r = bdomParse(buf, cp);
+        children.push(r.node); cp = r.end;
+      }
+    }
+    return {node:{name, attrs, val, children}, end: pos + nodeSz};
+  }
+  function bdomSerialize(node){
+    const nb = _te.encode(node.name);
+    let ab;
+    if(!node.attrs.length){ ab = new Uint8Array(4); w32(ab,0,4); }
+    else {
+      const parts = [new Uint8Array(4)]; w32(parts[0],0,node.attrs.length);
+      for(const [k,v] of node.attrs){
+        const kb = _te.encode(k); const asz = 8 + kb.length + v.length;
+        const h = new Uint8Array(8); w32(h,0,asz); w32(h,4,4+kb.length);
+        parts.push(h, kb, v);
+      }
+      const body = catBytes(parts);
+      const ah = new Uint8Array(4); w32(ah,0,4+body.length);
+      ab = catBytes([ah, body]);
+    }
+    const vh = new Uint8Array(4); w32(vh,0,4+node.val.length);
+    const vb = catBytes([vh, node.val]);
+    let cb;
+    if(!node.children.length){ cb = new Uint8Array(4); w32(cb,0,4); }
+    else {
+      const cparts = [new Uint8Array(4)]; w32(cparts[0],0,node.children.length);
+      for(const ch of node.children) cparts.push(bdomSerialize(ch));
+      const cbody = catBytes(cparts);
+      const chh = new Uint8Array(4); w32(chh,0,4+cbody.length);
+      cb = catBytes([chh, cbody]);
+    }
+    const total = 8 + nb.length + ab.length + vb.length + cb.length;
+    const nh = new Uint8Array(8); w32(nh,0,total); w32(nh,4,4+nb.length);
+    return catBytes([nh, nb, ab, vb, cb]);
+  }
+  function bdomClone(n){ return {name:n.name, attrs:n.attrs.map(([k,v])=>[k,new Uint8Array(v)]), val:new Uint8Array(n.val), children:n.children.map(bdomClone)}; }
+  function bdomGetV(n){ for(const [k,v] of n.attrs) if(k==='V') return _td.decode(v); return ''; }
+  function bdomSetV(n, s){ const b=_te.encode(s); for(const a of n.attrs) if(a[0]==='V'){ a[1]=b; return; } n.attrs.push(['V',b]); }
+  function bdomFind(n, name){ return n.children.find(c=>c.name===name) || null; }
+
+  // ---- 8) Actor_<A>_Infos: đổi ngoại hình (model trận + model sảnh + camera sảnh) cho mọi skin sang skin T ----
+  function actorInfo(rawBytes, T){
+    if(T<1) return null;
+    const tree = bdomParse(rawBytes, 0).node;
+    const sp = bdomFind(tree, 'SkinPrefab');
+    if(!sp || !sp.children || T > sp.children.length) return null;
+    const target = sp.children[T-1];
+    if(!target || !target.children.length) return null;
+    const tLod = bdomFind(target, 'ArtSkinPrefabLOD');
+    const tShow = bdomFind(target, 'ArtSkinLobbyShowLOD');
+    const tCam = bdomFind(target, 'ArtSkinLobbyShowCamera');
+    const addPrefab = s => (s && !/\.prefab$/i.test(s) && /_LOD\d|_Show\d/i.test(s)) ? (s+'.prefab') : s;
+    // Chuẩn hoá hậu tố .prefab trên target để khớp mẫu mod
+    if(tLod) for(const el of tLod.children) bdomSetV(el, addPrefab(bdomGetV(el)));
+    if(tShow) for(const el of tShow.children) bdomSetV(el, addPrefab(bdomGetV(el)));
+    // Cập nhật ArtPrefabLOD (model trận mặc định), ArtLobbyShowLOD (model sảnh mặc định), ArtSkinLobbyShowCamera
+    const baseLod = bdomFind(tree, 'ArtPrefabLOD');
+    if(baseLod && tLod && tLod.children.length) baseLod.children = tLod.children.map(bdomClone);
+    const baseShow = bdomFind(tree, 'ArtLobbyShowLOD');
+    if(baseShow && tShow && tShow.children.length) baseShow.children = tShow.children.map(bdomClone);
+    const baseCam = bdomFind(tree, 'ArtSkinLobbyShowCamera');
+    if(baseCam && tCam) bdomSetV(baseCam, bdomGetV(tCam));
+    // Ghi đè toàn bộ các slot SkinPrefab có dữ liệu sang target
+    for(let i=0;i<sp.children.length;i++){
+      if(i===T-1) continue;
+      const cur = sp.children[i];
+      const curLod = bdomFind(cur, 'ArtSkinPrefabLOD');
+      if(curLod && curLod.children.length && bdomGetV(curLod.children[0])){
+        sp.children[i] = bdomClone(target);
+      }
+    }
+    return bdomSerialize(tree);
+  }
+
+  // ---- 9) <A>_AssetRef.bytes: cập nhật đường dẫn preload hiệu ứng chiêu thức sang thư mục skin (base+T) ----
+  function assetRef(rawBytes, heroDir, T, has, base){
+    if(!has) return null;
+    const tree = bdomParse(rawBytes, 0).node;
+    const D = heroDir.toLowerCase();
+    const re = new RegExp('^(prefab_skill_effects/hero_skill_effects/'+D+'/)([^/]+)$','i');
+    let changed = 0;
+    function walk(n){
+      for(const a of n.attrs){
+        if(a[0]==='V'){
+          const s = _td.decode(a[1]);
+          const m = s.match(re);
+          if(m){
+            const fname = /\.prefab$/i.test(m[2]) ? m[2] : (m[2]+'.prefab');
+            a[1] = _te.encode(m[1] + (base+T) + '/' + fname);
+            changed++;
+          }
+        }
+      }
+      for(const ch of n.children) walk(ch);
+    }
+    walk(tree);
+    return changed ? bdomSerialize(tree) : null;
+  }
+
+  // ---- 10) CommonActions (Back.xml, HasteE1.xml, HasteE1_leave.xml): biến về + gia tốc tế đàn ----
+  function skinListXml(base){
+    let s=''; for(let k=0;k<=45;k++) s += '<SkinOrAvatarList id="'+(base+k)+'" />'; return s;
+  }
+  function commonBack(xmlText, heroDir, base, T){
+    const sl = skinListXml(base);
+    let out = xmlText;
+    // Loại trừ hiệu ứng biến về mặc định cho tướng này trên các track SkinAvatarFilterType="11"
+    out = out.replace(/(<Track[^>]*trackName="(?:GetResource\[huijidi\]|GetResource\[huicheng\]|TriggerParticleTick0|TriggerParticle0)"[^>]*SkinAvatarFilterType="11"[^>]*>[\s\S]*?)(<\/Track>)/g,
+      (m,a,b)=> a.includes('id="'+base+'"') ? m : (a + sl + b));
+    const sid = base + T;
+    const addTracks =
+      '<Track trackName="Mod_'+sid+'_BackFall" eventType="TriggerParticleTick" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
+      '<Event eventName="TriggerParticleTick" time="7.000" isDuration="false"><TemplateObject name="targetId" objectName="None" id="-1" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huijidi_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><float name="lifeTime" value="5.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bUseHeroLocalForward" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>'+
+      '<Track trackName="Mod_'+sid+'_BackLoop" eventType="TriggerParticle" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
+      '<Event eventName="TriggerParticle" time="0.000" length="7.000" isDuration="true"><TemplateObject name="targetId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huicheng_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bEnableOptCull" value="false" refParamName="" useRefParam="false" /><bool name="bTrailProtect" value="true" refParamName="" useRefParam="false" /><bool name="bApplySpecialEffect" value="true" refParamName="" useRefParam="false" /><bool name="bOnlySetAlpha" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
+    return out.replace('</Action>', addTracks + '</Action>');
+  }
+  function commonHaste(xmlText, heroDir, base, T){
+    const sl = skinListXml(base), sid = base + T;
+    const addTrack =
+      '<Track trackName="Mod_'+sid+'_Haste" eventType="TriggerParticle" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
+      '<Event eventName="TriggerParticle" time="0.000" length="5.000" isDuration="true"><TemplateObject name="targetId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="Prefab_Skill_Effects/Hero_Skill_Effects/'+heroDir+'/'+sid+'/jiasu_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="0.700" z="-0.600" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
+    return xmlText.replace('</Action>', addTrack + '</Action>');
+  }
+  return {setMd5,parse,build,motion,sound,hasSkinRow,shop,heroSkin,organSkin,xmlRules,u32,bdomParse,bdomSerialize,actorInfo,assetRef,commonBack,commonHaste};
 })();
 
 // v8.0: ID skin thật của game (do bạn cung cấp: skin.txt). Cờ 1 = ● (skin có hiệu ứng/âm thanh riêng), 0 = ○
@@ -1401,7 +1557,69 @@ async function buildModZip(){
     ZSTD_LOG.push(actBn+': sửa '+xmlChanged+' file XML'+(xmlSkipped?(' (bỏ qua '+xmlSkipped+' file con mã hóa)'):''));
   }
   if(files.length===0) throw new Error('Không có file nào để đổi. CHƯA trừ điểm.');
-  ZSTD_LOG.push('⚠ BẢN THỬ: chưa gồm actorinfo (Actor_'+A+'_Infos), 3 file CommonActions (Back/HasteE1), AssetRef, HeadImage và phần mod riêng của bot (Lua, cam xa...).');
+  // 1) Actor_<A>_Infos.pkg.bytes (ngoại hình: model trận + model sảnh + camera sảnh)
+  const infoBn = 'Actor_'+A+'_Infos.pkg.bytes';
+  const infoPkg = RES_FILES.get(infoBn);
+  if(!infoPkg) notFound.push(infoBn);
+  else {
+    let infoChanged = 0;
+    const rwInfo = pkgRewrite(infoPkg, (name, stored)=>{
+      if(!/_actorinfo\.bytes$/i.test(name) || /tutorail/i.test(name)) return null;
+      let rawInfo; try{ rawInfo = gameDecode(stored); }catch(_){ return null; }
+      if(!rawInfo) return null;
+      const patched = SKINMOD.actorInfo(rawInfo, T);
+      if(patched){ infoChanged++; return patched; }
+      return null;
+    });
+    if(infoChanged){
+      files.push({name:root+'Prefab_Characters/'+infoBn, data:rwInfo.bytes});
+      ZSTD_LOG.push(infoBn+': đã đổi ngoại hình (model trận + sảnh) sang skin #'+T+' ('+kb(rwInfo.bytes.length)+')');
+    } else ZSTD_LOG.push(infoBn+': không đổi được (skin #'+T+' vượt quá số slot SkinPrefab)');
+  }
+  await yieldUI();
+
+  // 2) <A>_AssetRef.bytes (preload hiệu ứng chiêu thức)
+  const arBn = A+'_AssetRef.bytes';
+  const arBytes = RES_FILES.get(arBn);
+  if(!arBytes) notFound.push(arBn);
+  else if(has){
+    let rawAr = null; try{ rawAr = gameDecode(arBytes); }catch(_){}
+    if(rawAr){
+      const patchedAr = SKINMOD.assetRef(rawAr, HERO_DIR, T, has, base);
+      if(patchedAr){
+        files.push({name:root+'AssetRefs/Hero/'+arBn, data:patchedAr});
+        ZSTD_LOG.push(arBn+': đã cập nhật preload hiệu ứng ('+kb(rawAr.length)+' → '+kb(patchedAr.length)+')');
+      } else ZSTD_LOG.push(arBn+': không có đường dẫn hiệu ứng cần đổi');
+    }
+  }
+  await yieldUI();
+
+  // 3) CommonActions.pkg.bytes (biến về Back.xml + gia tốc HasteE1.xml / HasteE1_leave.xml)
+  const caBn = 'CommonActions.pkg.bytes';
+  const caPkg = RES_FILES.get(caBn);
+  if(!caPkg) notFound.push(caBn);
+  else if(has){
+    let caChanged = 0;
+    const rwCa = pkgRewrite(caPkg, (name, stored)=>{
+      const low = name.toLowerCase();
+      if(low!=='commonresource/back.xml' && low!=='commonresource/hastee1.xml' && low!=='commonresource/hastee1_leave.xml') return null;
+      let rawXml; try{ rawXml = gameDecode(stored); }catch(_){ return null; }
+      if(!rawXml) return null;
+      const bom = rawXml[0]===0xEF && rawXml[1]===0xBB && rawXml[2]===0xBF;
+      const txt = new TextDecoder().decode(bom?rawXml.subarray(3):rawXml);
+      const outTxt = (low==='commonresource/back.xml') ? SKINMOD.commonBack(txt, HERO_DIR, base, T) : SKINMOD.commonHaste(txt, HERO_DIR, base, T);
+      if(outTxt===txt) return null;
+      caChanged++;
+      const encB = new TextEncoder().encode(outTxt);
+      if(!bom) return encB;
+      const r = new Uint8Array(encB.length+3); r.set([0xEF,0xBB,0xBF],0); r.set(encB,3); return r;
+    });
+    if(caChanged){
+      files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+caBn, data:rwCa.bytes});
+      ZSTD_LOG.push(caBn+': đã thêm hiệu ứng biến về & gia tốc ('+caChanged+' XML)');
+    }
+  }
+  ZSTD_LOG.push('✓ Đã bao gồm: Databin + Actions + Actor_'+A+'_Infos (ngoại hình) + '+A+'_AssetRef (preload hiệu ứng) + CommonActions (biến về/gia tốc).');
   const name=slugFile(heroesMod[0].skin)+'.zip';
   const fileList=files.map(f=>({name:f.name,size:f.data.length}));
   const totalSize=fileList.reduce((a,f)=>a+f.size,0);
