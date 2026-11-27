@@ -419,12 +419,14 @@ function view2(){
   $('#q').oninput=e=>{st.q=e.target.value;list()};
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{st.role=st.role===b.dataset.r?'':b.dataset.r;view2()});
   $('#hg').onclick=e=>{const c=e.target.closest('[data-h]');if(!c)return;const id=c.dataset.h,i=st.picked.indexOf(id);
-    if(i>=0){st.picked.splice(i,1);delete st.skin[id]}else st.picked.push(id);c.classList.toggle('on');foot()};
+    if(i>=0){st.picked.splice(i,1);delete st.skin[id]}
+    else{if(st.picked.length>=60)return toast('Chỉ chọn tối đa 60 tướng cùng lúc!');st.picked.push(id)}
+    c.classList.toggle('on');foot()};
   function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/['’\s-]/g,'')}
   function list(){const q=norm(st.q);const L=H.filter(h=>(!st.role||h.role===st.role)&&(!q||norm(h.name).includes(q)));
     $('#cnt').textContent=L.length+' tướng';
     $('#hg').innerHTML=L.map(h=>`<button class="hero ${st.picked.includes(h.id)?'on':''}" data-h="${h.id}"><img loading="lazy" src="${heroImg(h.id)}" alt=""><b>${esc(h.name)}</b><small style="color:${ROLES[h.role]}">● ${h.role}</small></button>`).join('')}
-  function foot(){const n=st.picked.length;bar(`<div class="row"><div class="logo" style="background:#0b1220;border:1px solid #334155">${n}</div><div class="s"><b>Đã chọn ${n} tướng</b><span>${n?st.picked.map(i=>byId[i].name).join(', '):'Chưa chọn tướng nào'}</span></div><button class="go" id="n2" ${n?'':'disabled'}>Xác nhận (${n}) →</button></div>`);
+  function foot(){const n=st.picked.length;bar(`<div class="row"><div class="logo" style="background:#0b1220;border:1px solid #334155">${n}</div><div class="s"><b>Đã chọn ${n}/60 tướng</b><span>${n?st.picked.map(i=>byId[i].name).join(', '):'Chưa chọn tướng nào (tối đa 60)'}</span></div><button class="go" id="n2" ${n?'':'disabled'}>Xác nhận (${n}) →</button></div>`);
     $('#n2').onclick=()=>go(3)}
   list();foot();
 }
@@ -621,7 +623,7 @@ let RES_ZIP_NAME = '';
 async function ensureResForHeroes(heroesMod){
   // Nếu đã nạp zip mà thiếu file của tướng đang chọn (VD nạp trước khi chọn tướng -> chỉ có 17 file chung), thì giải nén lại từ zip gốc
   if(!RES_ZIP_BYTES) return;
-  const need = resNeededBasenames(heroesMod.map(h=>({id:h.heroId})));
+  const need = resNeededBasenames(heroesMod);
   let missing = false;
   for(const bn of need){ if(!RES_FILES || !RES_FILES.get(bn)) { missing = true; break; } }
   if(!missing) return;
@@ -1519,54 +1521,84 @@ async function buildModZip(){
   ZSTD_LOG = [];
   const sel=st.picked.filter(i=>st.skin[i]!=null);
   const heroesMod = sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
-  if(heroesMod.length!==1) throw new Error('Phiên bản này làm từng tướng một (chọn 1 tướng). CHƯA trừ điểm.');
-  const sk = findSkin(heroesMod[0].hero, heroesMod[0].skin);
-  if(!sk) throw new Error('Chưa có ID skin thật cho "'+heroesMod[0].hero+' - '+heroesMod[0].skin+'" trong danh sách. CHƯA trừ điểm.');
-  const A = Math.floor(sk.id/100), base = A*100, T = sk.id-base, has = !!sk.flag;
-  heroesMod[0].actor = A;
+  if(heroesMod.length<1) throw new Error('Bạn chưa chọn tướng/skin nào. CHƯA trừ điểm.');
+  if(heroesMod.length>60) throw new Error('Chỉ hỗ trợ tối đa 60 tướng mỗi lần tạo file (đang chọn '+heroesMod.length+' tướng). CHƯA trừ điểm.');
+
+  const seenActors = new Set();
+  for(const item of heroesMod){
+    const sk = findSkin(item.hero, item.skin);
+    if(!sk) throw new Error('Chưa có ID skin thật cho "'+item.hero+' - '+item.skin+'" trong danh sách. CHƯA trừ điểm.');
+    const A = Math.floor(sk.id/100);
+    if(seenActors.has(A)) throw new Error('Trùng ActorID '+A+' ('+item.hero+'). Mỗi tướng chỉ chọn 1 skin. CHƯA trừ điểm.');
+    seenActors.add(A);
+    item.sk = sk;
+    item.actor = A;
+    item.base = A*100;
+    item.T = sk.id - item.base;
+    item.has = !!sk.flag;
+  }
+
   await ensureResForHeroes(heroesMod);
   if(!RES_FILES || RES_FILES.size===0) throw new Error('Ban chua nap file goc!');
-  const actBn0='Actor_'+A+'_Actions.pkg.bytes'; const act0=RES_FILES.get(actBn0);
-  let HERO_DIR=(act0 && pkgHeroDir(act0,A)) || null;
-  if(!HERO_DIR) throw new Error('Không thấy file '+actBn0+' hoặc không đọc được thư mục tướng trong đó (ActorID '+A+'). CHƯA trừ điểm.');
-  const COUPLE_PREFIX='Play_'+HERO_DIR.replace(/^\d+_/,'')+'_';
-  HERO_DIR = HERO_DIR.toLowerCase();
+
   SKINMOD.setMd5(md5Hex);
   let root='Resources/1.64.1/';
   for(const p of Object.values(RES_PATHS||{})){ const m=String(p).match(/^(.*?Resources\/[^\/]+\/)/); if(m){ root=m[1]; break; } }
   const files=[]; const yieldUI=()=>new Promise(r=>setTimeout(r,0)); const kb=n=>Math.round(n/1024)+'KB';
-  const raw={}; const notFound=[];
+  const raw={}; const origLen={}; const notFound=[];
   for(const [bn,rel] of SKIN_TABLES){
     const d=RES_FILES.get(bn); if(!d){ notFound.push(bn); continue; }
     let r=null; try{ r=gameDecode(d); }catch(e){ throw new Error('Không giải nén được '+bn+': '+(e&&e.message||e)+'. CHƯA trừ điểm.'); }
     if(!r){ notFound.push(bn+' (mã hóa)'); continue; }
-    raw[bn]=r; await yieldUI();
+    raw[bn]=r; origLen[bn]=r.length; await yieldUI();
   }
-  ZSTD_LOG.push(heroesMod[0].hero+' • skin ID '+sk.id+' (ActorID '+A+') • '+(has?'● có hiệu ứng/âm thanh riêng':'○ không có hiệu ứng riêng')+(A===130?'':' • THỬ NGHIỆM: quy tắc mới kiểm chứng trên Airi'));
-  const put=(bn,out)=>{ const rel=SKIN_TABLES.find(x=>x[0]===bn)[1]; if(out){ files.push({name:root+rel,data:out}); ZSTD_LOG.push(bn+': đã sửa ('+kb(raw[bn].length)+' → '+kb(out.length)+')'); } else ZSTD_LOG.push(bn+': không có gì để đổi (giữ nguyên, không đưa vào zip)'); };
-  const tryRule=(bn,fn)=>{ if(!raw[bn]) return; put(bn,fn(raw[bn])); };
-  tryRule('ResSkinMotionBaseCfg.bytes',d=>SKINMOD.motion(d,base,T));
-  tryRule('LobbyBank.bytes',d=>SKINMOD.sound(d,base,T,null,4));
-  tryRule('ChatSound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
-  tryRule('HeroSound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
-  tryRule('BattleBank.bytes',d=>SKINMOD.sound(d,base,T,null,4));
-  tryRule('LobbySound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
-  tryRule('CoupleSound.bytes',d=>SKINMOD.sound(d,base,T,COUPLE_PREFIX,16));
-  tryRule('HeroSkinShop.bytes',d=>SKINMOD.shop(d,base,T));
-  tryRule('heroSkin.bytes',d=>SKINMOD.heroSkin(d,base,T,A));
-  tryRule('organSkin.bytes',d=>SKINMOD.organSkin(d,base,T));
-  await yieldUI();
-  // File Actions của tướng: sửa các XML (đường dẫn hiệu ứng, tên sự kiện âm thanh, điều kiện skin), các file con còn lại chép nguyên bản nén
-  const actBn=actBn0; const act=act0; let xmlChanged=0, xmlSkipped=0;
-  if(!act) notFound.push(actBn);
-  else {
+
+  const dirtyTables = new Set();
+  const tableCounts = {};
+  const caTargets = [];
+  let actionsCount = 0, infosCount = 0, assetRefCount = 0;
+
+  for(let hi=0; hi<heroesMod.length; hi++){
+    const item = heroesMod[hi];
+    const {hero, sk, actor:A, base, T, has} = item;
+    const actBn = 'Actor_'+A+'_Actions.pkg.bytes';
+    const act = RES_FILES.get(actBn);
+    let HERO_DIR = (act && pkgHeroDir(act, A)) || null;
+    if(!HERO_DIR) throw new Error('Không thấy file '+actBn+' hoặc không đọc được thư mục tướng trong đó ('+hero+' - ActorID '+A+'). CHƯA trừ điểm.');
+    const COUPLE_PREFIX = 'Play_'+HERO_DIR.replace(/^\d+_/,'')+'_';
+    HERO_DIR = HERO_DIR.toLowerCase();
+
+    ZSTD_LOG.push('['+(hi+1)+'/'+heroesMod.length+'] '+hero+' • skin ID '+sk.id+' (ActorID '+A+') • '+(has?'● có hiệu ứng/âm thanh riêng':'○ không có hiệu ứng riêng'));
+
+    const applyTable=(bn,fn)=>{
+      if(!raw[bn]) return;
+      const out = fn(raw[bn]);
+      if(out){
+        raw[bn] = out;
+        dirtyTables.add(bn);
+        tableCounts[bn] = (tableCounts[bn]||0) + 1;
+      }
+    };
+    applyTable('ResSkinMotionBaseCfg.bytes',d=>SKINMOD.motion(d,base,T));
+    applyTable('LobbyBank.bytes',d=>SKINMOD.sound(d,base,T,null,4));
+    applyTable('ChatSound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
+    applyTable('HeroSound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
+    applyTable('BattleBank.bytes',d=>SKINMOD.sound(d,base,T,null,4));
+    applyTable('LobbySound.bytes',d=>SKINMOD.sound(d,base,T,null,16));
+    applyTable('CoupleSound.bytes',d=>SKINMOD.sound(d,base,T,COUPLE_PREFIX,16));
+    applyTable('HeroSkinShop.bytes',d=>SKINMOD.shop(d,base,T));
+    applyTable('heroSkin.bytes',d=>SKINMOD.heroSkin(d,base,T,A));
+    applyTable('organSkin.bytes',d=>SKINMOD.organSkin(d,base,T));
+
+    // 1) Actor_<A>_Actions.pkg.bytes
+    let xmlChanged=0, xmlSkipped=0;
     const rw=pkgRewrite(act,(name,stored)=>{
       if(!/\.xml$/i.test(name)) return null;
       let data; try{ data=gameDecode(stored); }catch(e){ xmlSkipped++; return null; }
       if(!data){ xmlSkipped++; return null; }
       const bom = data[0]===0xEF && data[1]===0xBB && data[2]===0xBF;
       const text=new TextDecoder().decode(bom?data.subarray(3):data);
-      const keepFn = (A===130) ? (resName)=>{   // ngoại lệ đã thấy trong mod mẫu của Airi: 3 tài nguyên được giữ nguyên đường dẫn
+      const keepFn = (A===130) ? (resName)=>{
         if(/(^|\/)U1\.xml$/i.test(name) && resName==='gongbenwuzang_attack03_spell01') return true;
         if(/(^|\/)U1E5(1)?\.xml$/i.test(name) && resName==='gongbenwuzang_loop_spell01') return true;
         return false; } : null;
@@ -1577,51 +1609,67 @@ async function buildModZip(){
     });
     xmlChanged=rw.changed;
     files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+actBn, data:rw.bytes});
-    ZSTD_LOG.push(actBn+': sửa '+xmlChanged+' file XML'+(xmlSkipped?(' (bỏ qua '+xmlSkipped+' file con mã hóa)'):''));
-  }
-  if(files.length===0) throw new Error('Không có file nào để đổi. CHƯA trừ điểm.');
-  // 1) Actor_<A>_Infos.pkg.bytes (ngoại hình: model trận + model sảnh + camera sảnh)
-  const infoBn = 'Actor_'+A+'_Infos.pkg.bytes';
-  const infoPkg = RES_FILES.get(infoBn);
-  if(!infoPkg) notFound.push(infoBn);
-  else {
-    let infoChanged = 0;
-    const rwInfo = pkgRewrite(infoPkg, (name, stored)=>{
-      if(!/_actorinfo\.bytes$/i.test(name) || /tutorail/i.test(name)) return null;
-      let rawInfo; try{ rawInfo = gameDecode(stored); }catch(_){ return null; }
-      if(!rawInfo) return null;
-      const patched = SKINMOD.actorInfo(rawInfo, T);
-      if(patched){ infoChanged++; return patched; }
-      return null;
-    });
-    if(infoChanged){
-      files.push({name:root+'Prefab_Characters/'+infoBn, data:rwInfo.bytes});
-      ZSTD_LOG.push(infoBn+': đã đổi ngoại hình (model trận + sảnh) sang skin #'+T+' ('+kb(rwInfo.bytes.length)+')');
-    } else ZSTD_LOG.push(infoBn+': không đổi được (skin #'+T+' vượt quá số slot SkinPrefab)');
-  }
-  await yieldUI();
+    actionsCount++;
+    ZSTD_LOG.push('  ↳ '+actBn+': sửa '+xmlChanged+' XML'+(xmlSkipped?(' (bỏ qua '+xmlSkipped+' mã hóa)'):''));
 
-  // 2) <A>_AssetRef.bytes (preload hiệu ứng chiêu thức)
-  const arBn = A+'_AssetRef.bytes';
-  const arBytes = RES_FILES.get(arBn);
-  if(!arBytes) notFound.push(arBn);
-  else if(has){
-    let rawAr = null; try{ rawAr = gameDecode(arBytes); }catch(_){}
-    if(rawAr){
-      const patchedAr = SKINMOD.assetRef(rawAr, HERO_DIR, T, has, base);
-      if(patchedAr){
-        files.push({name:root+'AssetRefs/Hero/'+arBn, data:patchedAr});
-        ZSTD_LOG.push(arBn+': đã cập nhật preload hiệu ứng ('+kb(rawAr.length)+' → '+kb(patchedAr.length)+')');
-      } else ZSTD_LOG.push(arBn+': không có đường dẫn hiệu ứng cần đổi');
+    // 2) Actor_<A>_Infos.pkg.bytes
+    const infoBn = 'Actor_'+A+'_Infos.pkg.bytes';
+    const infoPkg = RES_FILES.get(infoBn);
+    if(!infoPkg) notFound.push(infoBn);
+    else {
+      let infoChanged = 0;
+      const rwInfo = pkgRewrite(infoPkg, (name, stored)=>{
+        if(!/_actorinfo\.bytes$/i.test(name) || /tutorail/i.test(name)) return null;
+        let rawInfo; try{ rawInfo = gameDecode(stored); }catch(_){ return null; }
+        if(!rawInfo) return null;
+        const patched = SKINMOD.actorInfo(rawInfo, T);
+        if(patched){ infoChanged++; return patched; }
+        return null;
+      });
+      if(infoChanged){
+        files.push({name:root+'Prefab_Characters/'+infoBn, data:rwInfo.bytes});
+        infosCount++;
+        ZSTD_LOG.push('  ↳ '+infoBn+': đổi ngoại hình sang skin #'+T+' ('+kb(rwInfo.bytes.length)+')');
+      } else ZSTD_LOG.push('  ↳ '+infoBn+': giữ nguyên (skin #'+T+' vượt số slot)');
+    }
+
+    // 3) <A>_AssetRef.bytes
+    const arBn = A+'_AssetRef.bytes';
+    const arBytes = RES_FILES.get(arBn);
+    if(!arBytes) notFound.push(arBn);
+    else if(has){
+      let rawAr = null; try{ rawAr = gameDecode(arBytes); }catch(_){}
+      if(rawAr){
+        const patchedAr = SKINMOD.assetRef(rawAr, HERO_DIR, T, has, base);
+        if(patchedAr){
+          files.push({name:root+'AssetRefs/Hero/'+arBn, data:patchedAr});
+          assetRefCount++;
+          ZSTD_LOG.push('  ↳ '+arBn+': cập nhật preload hiệu ứng ('+kb(patchedAr.length)+')');
+        }
+      }
+    }
+
+    if(has) caTargets.push({HERO_DIR, base, T, hero});
+    await yieldUI();
+  }
+
+  // Ghi các bảng Databin chung (mỗi bảng chỉ xuất 1 lần sau khi gộp tất cả tướng)
+  for(const [bn, rel] of SKIN_TABLES){
+    if(dirtyTables.has(bn)){
+      files.push({name:root+rel, data:raw[bn]});
+      ZSTD_LOG.push(bn+': đã sửa cho '+(tableCounts[bn]||1)+' tướng ('+kb(origLen[bn])+' → '+kb(raw[bn].length)+')');
+    } else if(raw[bn]){
+      ZSTD_LOG.push(bn+': không có gì để đổi (giữ nguyên)');
     }
   }
-  await yieldUI();
 
-  // 3) CommonActions.pkg.bytes (biến về Back.xml + gia tốc HasteE1.xml / HasteE1_leave.xml)
+  if(files.length===0) throw new Error('Không có file nào để đổi. CHƯA trừ điểm.');
+
+  // 4) CommonActions.pkg.bytes (gộp biến về & gia tốc cho toàn bộ tướng có hiệu ứng riêng)
   const caBn = 'CommonActions.pkg.bytes';
   const caPkg = RES_FILES.get(caBn);
   if(!caPkg) notFound.push(caBn);
-  else if(has){
+  else if(caTargets.length>0){
     let caChanged = 0;
     const rwCa = pkgRewrite(caPkg, (name, stored)=>{
       const low = name.toLowerCase();
@@ -1629,21 +1677,27 @@ async function buildModZip(){
       let rawXml; try{ rawXml = gameDecode(stored); }catch(_){ return null; }
       if(!rawXml) return null;
       const bom = rawXml[0]===0xEF && rawXml[1]===0xBB && rawXml[2]===0xBF;
-      const txt = new TextDecoder().decode(bom?rawXml.subarray(3):rawXml);
-      const outTxt = (low==='commonresource/back.xml') ? SKINMOD.commonBack(txt, HERO_DIR, base, T) : SKINMOD.commonHaste(txt, HERO_DIR, base, T);
-      if(outTxt===txt) return null;
+      let txt = new TextDecoder().decode(bom?rawXml.subarray(3):rawXml);
+      const origTxt = txt;
+      for(const ct of caTargets){
+        txt = (low==='commonresource/back.xml') ? SKINMOD.commonBack(txt, ct.HERO_DIR, ct.base, ct.T) : SKINMOD.commonHaste(txt, ct.HERO_DIR, ct.base, ct.T);
+      }
+      if(txt===origTxt) return null;
       caChanged++;
-      const encB = new TextEncoder().encode(outTxt);
+      const encB = new TextEncoder().encode(txt);
       if(!bom) return encB;
       const r = new Uint8Array(encB.length+3); r.set([0xEF,0xBB,0xBF],0); r.set(encB,3); return r;
     });
     if(caChanged){
       files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+caBn, data:rwCa.bytes});
-      ZSTD_LOG.push(caBn+': đã thêm hiệu ứng biến về & gia tốc ('+caChanged+' XML)');
+      ZSTD_LOG.push(caBn+': đã thêm biến về & gia tốc cho '+caTargets.length+' tướng ('+caChanged+' XML)');
     }
   }
-  ZSTD_LOG.push('✓ Đã bao gồm: Databin + Actions + Actor_'+A+'_Infos (ngoại hình) + '+A+'_AssetRef (preload hiệu ứng) + CommonActions (biến về/gia tốc).');
-  const name=slugFile(heroesMod[0].skin)+'.zip';
+
+  ZSTD_LOG.push('✓ Hoàn tất '+heroesMod.length+' tướng: '+dirtyTables.size+' Databin + '+actionsCount+' Actions + '+infosCount+' Infos + '+assetRefCount+' AssetRef'+(caTargets.length?' + CommonActions':'')+'.');
+  const name = heroesMod.length===1
+    ? (slugFile(heroesMod[0].skin)+'.zip')
+    : (slugFile('Mod_'+heroesMod.length+'_Tuong_'+heroesMod.slice(0,3).map(h=>h.hero).join('_'))+'.zip');
   const fileList=files.map(f=>({name:f.name,size:f.data.length}));
   const totalSize=fileList.reduce((a,f)=>a+f.size,0);
   const debugInfo={resFilesCount:RES_FILES.size, outFilesCount:fileList.length, totalSize, fileList, hashPairsCount:0, hashHitsHex:0, hashHitsRaw:0, missing:(RES_MISSING||[]).concat(notFound), zstdLog:ZSTD_LOG.slice()};
