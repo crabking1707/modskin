@@ -1272,6 +1272,9 @@ const SKINMOD = (()=>{
         return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
       });
     if(holiMap.size){
+      const K = holiMap.size;
+      // Dịch chuyển toàn bộ chỉ số Track trong <Condition id="N"> và <TrackObject ... id="N"> (N >= 0) thêm +K để không lệch điều kiện
+      text = text.replace(/(<(?:Condition|TrackObject)\b[^>]*\bid=")(\d+)(")/g, (m, a, id, c) => a + (+id + K) + c);
       let inject = '';
       for(const [pName, pVal] of holiMap){
         inject += '<Track trackName="ModSkin_'+pName+'" eventType="GetHolidayResourcePathTick" guid="MOD-SKIN-'+pName+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true"><Event eventName="GetHolidayResourcePathTick" time="0.000" isDuration="false" guid="MOD-EV-'+pName+'"><String name="holidayResourcePathPrefix" value="'+pVal+'" refParamName="" useRefParam="false"/><String name="outPathParamName" value="'+pName+'" refParamName="" useRefParam="false"/></Event></Track>';
