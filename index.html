@@ -1260,9 +1260,24 @@ const SKINMOD = (()=>{
   function xmlRules(text, heroDir, T, has, base, keep){
     base = base||13000;
     const D=heroDir.toLowerCase();
-    // Khớp không phân biệt hoa/thường cho đường dẫn hiệu ứng và tránh nối trùng .prefab
-    text=text.replace(new RegExp('(<String name="resourceName" value=")prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]*)"','gi'),
-      (m,a,name)=> (keep && keep(name)) ? m : a+'prefab_skill_effects/hero_skill_effects/'+D+'/'+(has? (base+T)+'/':'')+(/\.prefab$/i.test(name)?name:name+'.prefab')+'"');
+    // Cơ chế chuẩn (GetHolidayResourcePathTick + useRefParam="true") để game không tự nạp đè hiệu ứng skin mặc định/skin khác
+    const holiMap = new Map();
+    text=text.replace(new RegExp('<String name="resourceName" value="(prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]*))" refParamName="" useRefParam="false"(\\s*\\/>)','gi'),
+      (m,full,name,end)=>{
+        if(keep && keep(name)) return m;
+        if(!has) return '<String name="resourceName" value="'+full+'" refParamName="" useRefParam="false"'+end;
+        const cleanName = name.replace(/\.prefab$/i,'');
+        const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+(base+T)+'/'+cleanName;
+        if(!holiMap.has(cleanName)) holiMap.set(cleanName, targetPath);
+        return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
+      });
+    if(holiMap.size){
+      let inject = '';
+      for(const [pName, pVal] of holiMap){
+        inject += '<Track trackName="ModSkin_'+pName+'" eventType="GetHolidayResourcePathTick" guid="MOD-SKIN-'+pName+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true"><Event eventName="GetHolidayResourcePathTick" time="0.000" isDuration="false" guid="MOD-EV-'+pName+'"><String name="holidayResourcePathPrefix" value="'+pVal+'" refParamName="" useRefParam="false"/><String name="outPathParamName" value="'+pName+'" refParamName="" useRefParam="false"/></Event></Track>';
+      }
+      text = text.replace(/(<Action[^>]*>)/, '$1' + inject);
+    }
     if(has){
       text=text.replace(/(<String name="eventName" value="Play_[^"]*)("[^>]*\/>)\s*<Array name="extraSkinId"[^>]*>[\s\S]*?<\/Array>/g,(m,a,b)=>a+'_Skin'+T+b);
       { const act=heroDir.split('_')[0]; text=text.replace(new RegExp('(<String name="eventName" value=")(Play_'+act+'_[^"]*)"','g'),(m,a,v)=> /_Skin\d+$/.test(v)? m : a+v+'_Skin'+T+'"'); }
@@ -1363,10 +1378,7 @@ const SKINMOD = (()=>{
     const tLod = bdomFind(target, 'ArtSkinPrefabLOD');
     const tShow = bdomFind(target, 'ArtSkinLobbyShowLOD');
     const tCam = bdomFind(target, 'ArtSkinLobbyShowCamera');
-    const addPrefab = s => (s && !/\.prefab$/i.test(s) && /_LOD\d|_Show\d/i.test(s)) ? (s+'.prefab') : s;
-    // Chuẩn hoá hậu tố .prefab trên target để khớp mẫu mod
-    if(tLod) for(const el of tLod.children) bdomSetV(el, addPrefab(bdomGetV(el)));
-    if(tShow) for(const el of tShow.children) bdomSetV(el, addPrefab(bdomGetV(el)));
+    // Giữ nguyên đường dẫn LOD/Show gốc của target (không nối thêm .prefab)
     // Cập nhật ArtPrefabLOD (model trận mặc định), ArtLobbyShowLOD (model sảnh mặc định), ArtSkinLobbyShowCamera
     const baseLod = bdomFind(tree, 'ArtPrefabLOD');
     if(baseLod && tLod && tLod.children.length) baseLod.children = tLod.children.map(bdomClone);
