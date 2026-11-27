@@ -1208,7 +1208,7 @@ const SKINMOD = (()=>{
     const out=rows.map(r=>{
       if(pb){ for(let i=0;i<pb.length;i++) if(r[12+i]!==pb[i]) return r; }
       let o=-1; for(let i=minpos;i+4<=r.length;i++){ if(inRange(u32(r,i),base,100)){ o=i; break; } }
-      if(o<0) return r; const key=u32(r,o); if(!inRange(key,base,20)) return r;
+      if(o<0) return r; const key=u32(r,o); if(!inRange(key,base,45)) return r;
       const n=copyRow(r); w32(n,o, key===base+T? base : key+10500); any=true; return n;
     });
     return any? build(d,out): null;
@@ -1222,13 +1222,13 @@ const SKINMOD = (()=>{
     const rows=parse(d); let tmpl=null;
     for(const r of rows) if(u32(r,4)===base+T) tmpl=r;
     if(!tmpl) return null;
-    const out=rows.map(r=>{ const k=u32(r,4); if(inRange(k,base,20) && k!==base+T){ const n=copyRow(tmpl); n.set(r.subarray(4,8),4); n.set(r.subarray(36,40),36); return n; } return r; });
+    const out=rows.map(r=>{ const k=u32(r,4); if(inRange(k,base,45) && k!==base+T){ const n=copyRow(tmpl); n.set(r.subarray(4,8),4); n.set(r.subarray(36,40),36); return n; } return r; });
     return build(d,out);
   }
   // ---- 4) heroSkin ----
   function heroSkin(d, base, T, actor){
     const rows=parse(d); const idx={};
-    for(let i=0;i<rows.length;i++){ const k=u32(rows[i],4); if(inRange(k,base,24) && u32(rows[i],8)===actor) idx[k]=i; }
+    for(let i=0;i<rows.length;i++){ const k=u32(rows[i],4); if(inRange(k,base,45) && u32(rows[i],8)===actor) idx[k]=i; }
     const ti=idx[base+T]; if(ti===undefined) return null;
     const tmpl=rows[ti]; const Tn=u32(tmpl,36);
     const span=r=>{ const n=u32(r,64); return [64,68+n]; };
@@ -1252,7 +1252,7 @@ const SKINMOD = (()=>{
     if(!trows.length) return null;
     let maxId=0; for(const r of rows) maxId=Math.max(maxId,u32(r,4));
     const out=rows.slice(); let id=maxId;
-    for(let K=base;K<=base+20;K++){ if(K===base+T) continue;
+    for(let K=base;K<=base+45;K++){ if(K===base+T) continue;
       for(const t of trows){ const n=copyRow(t); id++; w32(n,4,id); w32(n,24,K); out.push(n); } }
     return build(d,out,id);
   }
@@ -1262,17 +1262,39 @@ const SKINMOD = (()=>{
     const D=heroDir.toLowerCase();
     // Cơ chế chuẩn (GetHolidayResourcePathTick + useRefParam="true") để game không tự nạp đè hiệu ứng skin mặc định/skin khác
     const holiMap = new Map();
-    text=text.replace(new RegExp('<String name="resourceName" value="(prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]*))" refParamName="" useRefParam="false"(\\s*\\/>)','gi'),
-      (m,full,name,end)=>{
-        if(keep && keep(name)) return m;
-        if(!has) return '<String name="resourceName" value="'+full+'" refParamName="" useRefParam="false"'+end;
-        const cleanName = name.replace(/\.prefab$/i,'');
-        const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+(base+T)+'/'+cleanName;
-        if(!holiMap.has(cleanName)) holiMap.set(cleanName, targetPath);
-        return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
-      });
+    const resTagRe = new RegExp('<String\\b([^>]*\\bname="resourceName"[^>]*)>', 'gi');
+    const valRe = new RegExp('^prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]+)$', 'i');
+    text = text.replace(resTagRe, (m, attrs)=>{
+      if(/\buseRefParam="true"/i.test(attrs)) return m;
+      const vm = attrs.match(/\bvalue="([^"]*)"/i);
+      if(!vm) return m;
+      const full = vm[1];
+      const pm = full.match(valRe);
+      if(!pm) return m;
+      const name = pm[1];
+      if(keep && keep(name)) return m;
+      const selfClose = /\/\s*$/.test(attrs);
+      const end = selfClose ? ' />' : '>';
+      if(!has) return '<String name="resourceName" value="'+full+'" refParamName="" useRefParam="false"'+end;
+      const cleanName = name.replace(/\.prefab$/i,'');
+      const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+(base+T)+'/'+cleanName;
+      if(!holiMap.has(cleanName)) holiMap.set(cleanName, targetPath);
+      return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
+    });
     if(holiMap.size){
       const K = holiMap.size;
+      // Khai báo đầy đủ tham số trong <RefParamList> để mọi XML (như khiên S3E4 của Butterfly) nạp đúng đường dẫn động
+      let refAdd = '';
+      for(const [pName] of holiMap){
+        if(!new RegExp('<String\\b[^>]*\\bname="'+pName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'"').test(text)){
+          refAdd += '<String name="'+pName+'" value="" refParamName="" useRefParam="false" />';
+        }
+      }
+      if(refAdd){
+        if(/<\/RefParamList>/.test(text)) text = text.replace('</RefParamList>', refAdd + '</RefParamList>');
+        else if(/<RefParamList\s*\/>/.test(text)) text = text.replace(/<RefParamList\s*\/>/, '<RefParamList>' + refAdd + '</RefParamList>');
+        else text = text.replace(/(<Action\b)/, '<RefParamList>' + refAdd + '</RefParamList>$1');
+      }
       // Dịch chuyển toàn bộ chỉ số Track trong <Condition id="N"> và <TrackObject ... id="N"> (N >= 0) thêm +K để không lệch điều kiện
       text = text.replace(/(<(?:Condition|TrackObject)\b[^>]*\bid=")(\d+)(")/g, (m, a, id, c) => a + (+id + K) + c);
       let inject = '';
@@ -1373,31 +1395,82 @@ const SKINMOD = (()=>{
   function bdomFind(n, name){ return n.children.find(c=>c.name===name) || null; }
 
   // ---- 8) Actor_<A>_Infos: đổi ngoại hình (model trận + model sảnh + camera sảnh) cho mọi skin sang skin T ----
-  function actorInfo(rawBytes, T){
+  function bdomHasNonEmptyChild(node){
+    return !!(node && node.children && node.children.some(c => bdomGetV(c)));
+  }
+  function findSkinPrefabSlot(spChildren, T, base){
+    const sid = base ? (base + T) : 0;
+    // 1) Ưu tiên slot khai báo tường minh SavedSkinId === T hoặc === base+T (VD: Roxie 51406, Butterfly/Nakroth thức tỉnh 33..38, Elsu trap)
+    for(let i=0;i<spChildren.length;i++){
+      const sv = bdomFind(spChildren[i], 'SavedSkinId');
+      if(sv){
+        const v = +bdomGetV(sv);
+        if((v === T || (sid && v === sid)) && bdomHasNonEmptyChild(bdomFind(spChildren[i], 'ArtSkinPrefabLOD'))){
+          return i;
+        }
+      }
+    }
+    // 2) Đếm tuần tự các slot KHÔNG có SavedSkinId (bỏ qua các slot SavedSkinId=33..38, 98, 99 bị chèn giữa như Butterfly, Nakroth, Krixi, Valhein, Natalya, Tel'Annas, Arthur)
+    let seq = 0;
+    for(let i=0;i<spChildren.length;i++){
+      if(bdomFind(spChildren[i], 'SavedSkinId')) continue;
+      seq++;
+      if(seq === T) return i;
+    }
+    return -1;
+  }
+  function actorInfo(rawBytes, T, base){
     if(T<1) return null;
     const tree = bdomParse(rawBytes, 0).node;
     const sp = bdomFind(tree, 'SkinPrefab');
-    if(!sp || !sp.children || T > sp.children.length) return null;
-    const target = sp.children[T-1];
+    if(!sp || !sp.children || !sp.children.length) return null;
+    const targetIdx = findSkinPrefabSlot(sp.children, T, base);
+    if(targetIdx < 0) return null;
+    const target = sp.children[targetIdx];
     if(!target || !target.children.length) return null;
     const tLod = bdomFind(target, 'ArtSkinPrefabLOD');
+    if(!bdomHasNonEmptyChild(tLod)) return null; // Tránh ghi đè bằng slot rỗng
+    const tLodEx = bdomFind(target, 'ArtSkinPrefabLODEx');
     const tShow = bdomFind(target, 'ArtSkinLobbyShowLOD');
+    const tIdleShow = bdomFind(target, 'ArtSkinLobbyIdleShowLOD');
+    const tEnemy = bdomFind(target, 'ArtEnemySkinPrefabLOD');
+    const tEnemyEx = bdomFind(target, 'ArtEnemySkinPrefabLODEx');
     const tCam = bdomFind(target, 'ArtSkinLobbyShowCamera');
-    // Giữ nguyên đường dẫn LOD/Show gốc của target (không nối thêm .prefab)
-    // Cập nhật ArtPrefabLOD (model trận mặc định), ArtLobbyShowLOD (model sảnh mặc định), ArtSkinLobbyShowCamera
+    // Cập nhật cấu hình skin mặc định ở gốc tree sang skin đích
     const baseLod = bdomFind(tree, 'ArtPrefabLOD');
-    if(baseLod && tLod && tLod.children.length) baseLod.children = tLod.children.map(bdomClone);
+    if(baseLod) baseLod.children = tLod.children.map(bdomClone);
+    const baseLodEx = bdomFind(tree, 'ArtPrefabLODEx');
+    if(baseLodEx && bdomHasNonEmptyChild(tLodEx)) baseLodEx.children = tLodEx.children.map(bdomClone);
     const baseShow = bdomFind(tree, 'ArtLobbyShowLOD');
-    if(baseShow && tShow && tShow.children.length) baseShow.children = tShow.children.map(bdomClone);
+    if(baseShow && bdomHasNonEmptyChild(tShow)) baseShow.children = tShow.children.map(bdomClone);
+    const baseIdleShow = bdomFind(tree, 'ArtLobbyIdleShowLOD');
+    if(baseIdleShow && bdomHasNonEmptyChild(tIdleShow)) baseIdleShow.children = tIdleShow.children.map(bdomClone);
+    const baseEnemy = bdomFind(tree, 'ArtEnemyPrefabLOD');
+    if(baseEnemy && bdomHasNonEmptyChild(tEnemy)) baseEnemy.children = tEnemy.children.map(bdomClone);
+    const baseEnemyEx = bdomFind(tree, 'ArtEnemyPrefabLODEx');
+    if(baseEnemyEx && bdomHasNonEmptyChild(tEnemyEx)) baseEnemyEx.children = tEnemyEx.children.map(bdomClone);
+    // Chỉ ghi đè Camera sảnh khi skin đích có đường dẫn camera khác rỗng (tránh màn hình chọn skin bị đen)
     const baseCam = bdomFind(tree, 'ArtSkinLobbyShowCamera');
-    if(baseCam && tCam) bdomSetV(baseCam, bdomGetV(tCam));
-    // Ghi đè toàn bộ các slot SkinPrefab có dữ liệu sang target
+    const tCamVal = tCam ? bdomGetV(tCam) : '';
+    if(baseCam && tCamVal) bdomSetV(baseCam, tCamVal);
+    // Đồng bộ các thuộc tính hiển thị/ánh sáng/sảnh nếu tồn tại trên cả tree và target
+    for(const k of ['bUnityLight','bDisableDirLight','LobbyScale','Cam02InterpolateDuration']){
+      const bn = bdomFind(tree, k), tn = bdomFind(target, k);
+      if(bn && tn && bdomGetV(tn)) bdomSetV(bn, bdomGetV(tn));
+    }
+    const baseIdleCfg = bdomFind(tree, 'IdleShowConfigs'), tIdleCfg = bdomFind(target, 'IdleShowConfigs');
+    if(baseIdleCfg && tIdleCfg && tIdleCfg.children.length) baseIdleCfg.children = tIdleCfg.children.map(bdomClone);
+    // Ghi đè toàn bộ các slot SkinPrefab có dữ liệu sang target, BẢO TOÀN thẻ SavedSkinId gốc của từng slot
+    const cleanTarget = bdomClone(target);
+    cleanTarget.children = cleanTarget.children.filter(c => c.name !== 'SavedSkinId');
     for(let i=0;i<sp.children.length;i++){
-      if(i===T-1) continue;
+      if(i===targetIdx) continue;
       const cur = sp.children[i];
-      const curLod = bdomFind(cur, 'ArtSkinPrefabLOD');
-      if(curLod && curLod.children.length && bdomGetV(curLod.children[0])){
-        sp.children[i] = bdomClone(target);
+      if(bdomHasNonEmptyChild(bdomFind(cur, 'ArtSkinPrefabLOD'))){
+        const curSaved = bdomFind(cur, 'SavedSkinId');
+        const rep = bdomClone(cleanTarget);
+        if(curSaved) rep.children.push(bdomClone(curSaved));
+        sp.children[i] = rep;
       }
     }
     return bdomSerialize(tree);
@@ -1740,10 +1813,10 @@ async function buildModZip(){
     else {
       let infoChanged = 0;
       const rwInfo = pkgRewrite(infoPkg, (name, stored)=>{
-        if(!/_actorinfo\.bytes$/i.test(name) || /tutorail/i.test(name)) return null;
+        if(!/_actorinfo\.bytes$/i.test(name) || /tutorail|xinshou/i.test(name)) return null;
         let rawInfo; try{ rawInfo = gameDecode(stored); }catch(_){ return null; }
         if(!rawInfo) return null;
-        const patched = SKINMOD.actorInfo(rawInfo, T);
+        const patched = SKINMOD.actorInfo(rawInfo, T, base);
         if(patched){ infoChanged++; return patched; }
         return null;
       });
