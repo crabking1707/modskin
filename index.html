@@ -1260,15 +1260,23 @@ const SKINMOD = (()=>{
   function xmlRules(text, heroDir, T, has, base, keep){
     base = base||13000;
     const D=heroDir.toLowerCase();
-    text=text.replace(new RegExp('(<String name="resourceName" value=")prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]*)"','g'),
-      (m,a,name)=> (keep && keep(name)) ? m : a+'prefab_skill_effects/hero_skill_effects/'+D+'/'+(has? (base+T)+'/':'')+name+'.prefab"');
+    // Khớp không phân biệt hoa/thường cho đường dẫn hiệu ứng và tránh nối trùng .prefab
+    text=text.replace(new RegExp('(<String name="resourceName" value=")prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]*)"','gi'),
+      (m,a,name)=> (keep && keep(name)) ? m : a+'prefab_skill_effects/hero_skill_effects/'+D+'/'+(has? (base+T)+'/':'')+(/\.prefab$/i.test(name)?name:name+'.prefab')+'"');
     if(has){
       text=text.replace(/(<String name="eventName" value="Play_[^"]*)("[^>]*\/>)\s*<Array name="extraSkinId"[^>]*>[\s\S]*?<\/Array>/g,(m,a,b)=>a+'_Skin'+T+b);
       { const act=heroDir.split('_')[0]; text=text.replace(new RegExp('(<String name="eventName" value=")(Play_'+act+'_[^"]*)"','g'),(m,a,v)=> /_Skin\d+$/.test(v)? m : a+v+'_Skin'+T+'"'); }
       text=text.split('<bool name="bAllowEmptyEffect" value="true"').join('<bool name="bAllowEmptyEffect" value="false"');
-      // điều kiện skinId của chính skin đích -> +10500 và đảo điều kiện (giữ đúng thụt lề của dòng skinId)
-      text=text.replace(/(<Event eventName="CheckSkinIdTick"(?:(?!<\/Event>)[\s\S])*?)([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)([ \t]*)(?!<bool name="(?:useNegateValue|bEqual)")/g,
-        (m,pre,ind,a,v,c,eol,ind2)=> (+v===base+T)? pre+ind+a+(+v+10500)+c+eol+ind+'<bool name="bEqual" value="false" refParamName="" useRefParam="false" />'+eol+ind2 : m);
+      // CheckSkinIdTick: chỉ đổi skinId đích -> +10500; chỉ thêm bEqual="false" khi Event chưa có bEqual/useNegateValue/bSkipLogicCheck
+      text=text.replace(/<Event eventName="CheckSkinIdTick"[\s\S]*?<\/Event>/g, (ev)=>{
+        const m = ev.match(/([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)?/);
+        if(!m || +m[3] !== base+T) return ev;
+        const hasNeg = /<bool name="(?:useNegateValue|bEqual)"/.test(ev);
+        const hasSkip = /<bool name="bSkipLogicCheck" value="true"/.test(ev);
+        if(hasNeg) return ev; // giữ nguyên nhánh phủ định (NOT skin đích) để không chạy chồng hiệu ứng mặc định
+        const rep = m[1]+m[2]+(+m[3]+10500)+m[4]+(m[5]||'\n')+(hasSkip ? '' : m[1]+'<bool name="bEqual" value="false" refParamName="" useRefParam="false" />'+(m[5]||'\n'));
+        return ev.replace(m[0], rep);
+      });
       text=text.replace(/(<Event eventName="CheckSkinIdVirtualTick"(?:(?!<\/Event>)[\s\S])*?)([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)([ \t]*)(<bool name="useNegateValue" value="true"[^>]*\/>(\r?\n)([ \t]*))?/g,
         (m,pre,ind,a,v,c,eol,ind2,neg,eol2,ind3)=>{
           const val=+v;
