@@ -92,6 +92,22 @@ a.lnk{display:block;text-align:center;background:var(--ink);color:#fff;text-deco
 .big{font-size:44px;letter-spacing:10px;font-weight:900;text-align:center;background:linear-gradient(135deg,#22d3ee,#7c3aed);-webkit-background-clip:text;background-clip:text;color:transparent;margin:10px 0}
 .foot{text-align:center;color:var(--mut);font-size:12px;margin-top:20px}
 .hide{display:none!important}
+.rm-tabs{display:flex;gap:8px;margin-bottom:14px}
+.rm-tab{flex:1;padding:12px 10px;border-radius:16px;background:#fff;border:2px solid #e2e8f0;font-weight:800;font-size:13px;text-align:center}
+.rm-tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rm-tbl-wrap{overflow-x:auto;margin-top:10px;border:1px solid #e2e8f0;border-radius:14px}
+.rm-tbl{width:100%;border-collapse:collapse;font-size:11px;text-align:left}
+.rm-tbl th,.rm-tbl td{padding:7px 8px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+.rm-tbl th{background:#f8fafc;font-weight:800;white-space:nowrap}
+.rm-b{display:inline-block;padding:2px 7px;border-radius:99px;font-weight:800;font-size:10px;white-space:nowrap}
+.rm-b.ok{background:#dcfce7;color:#166534}.rm-b.warn{background:#fef3c7;color:#92400e}
+.rm-b.err{background:#fee2e2;color:#991b1b}.rm-b.mut{background:#f1f5f9;color:#475569}
+.rm-b.sh{background:#ede9fe;color:#5b21b6}
+.rm-ta{width:100%;min-height:74px;padding:10px 12px;border-radius:14px;border:1.5px solid #e2e8f0;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}
+.rm-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.rm-pre{background:#0f172a;color:#e2e8f0;padding:10px 12px;border-radius:14px;font:11px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;max-height:220px;overflow:auto;white-space:pre-wrap;word-break:break-all;margin:8px 0 0}
+.rm-chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0;cursor:pointer}
+.rm-chk input{width:17px;height:17px;margin:0;accent-color:#0f172a}
 </style>
 </head>
 <body>
@@ -194,7 +210,7 @@ if (hasFB) {
 }
 
 /* ---------- State ---------- */
-const st={landing:false,topup:false,user:null,step:1,device:'ios',role:'',q:'',picked:[],skin:{},cam:5};
+const st={landing:false,topup:false,user:null,step:1,device:'ios',role:'',q:'',picked:[],skin:{},cam:5,tab:'skin'};
 const byId=Object.fromEntries(H.map(h=>[h.id,h]));
 
 /* ---------- Auth UI ---------- */
@@ -417,10 +433,21 @@ function view3(){
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
   const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
     <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
+  const isResTab = st.tab==='res';
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
+  <div class="rm-tabs" style="margin-top:12px">
+    <button class="rm-tab ${!isResTab?'on':''}" id="tabSkin">✨ Mod Skin (Databin + Actions)</button>
+    <button class="rm-tab ${isResTab?'on':''}" id="tabRes">🧩 Mod File Tài Nguyên (README)</button>
+  </div>
+  <div id="paneSkin" class="${isResTab?'hide':''}">
   <h1>Chọn skin</h1>${secs}
+  </div>
+  <div id="paneRes" class="${isResTab?'':'hide'}"></div>
   <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc ${resFileForDevice().name} (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">Bạn đang chọn <b>${st.device==='ios'?'iOS':'Android'}</b> - phải nạp đúng file <b>${resFileForDevice().name} (${resFileForDevice().size})</b> cho thiết bị đó, nạp sai file (iOS lấy file Android hoặc ngược lại) thì mod sẽ không đổi được model. File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại.</p><label class="pill" style="cursor:pointer">📂 Chọn file ${resFileForDevice().name} từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy ${resFileForDevice().name} từ GitHub (bản mới nhất)</button><a class="pill" href="${resFileForDevice().url}" target="_blank" style="text-decoration:none">📥 Tải ${resFileForDevice().name} (${resFileForDevice().size}) về Tệp</a><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>${resFileForDevice().name}</b> ở <b>Release v1</b> (${resFileForDevice().size}) - lúc game cập nhật bạn chỉ cần up file mới lên Release là link tải tự lấy bản mới. <b>Cách dùng đúng:</b> Bấm <b>"📥 Tải ${resFileForDevice().name} về Tệp"</b> để Safari tải về, rồi bấm <b>"Chọn file từ máy"</b> chọn file đó. Chú ý: file Android bạn đặt tên là <b>Resources_adroi.zip</b> (không phải android), phải đúng tên này mới tải được.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
   $('#b3').onclick=()=>go(2);
+  $('#tabSkin').onclick=()=>{ st.tab='skin'; view3(); };
+  $('#tabRes').onclick=()=>{ st.tab='res'; view3(); };
+  if(st.tab==='res' && typeof renderResModPane==='function') renderResModPane();
     const fileRes=document.getElementById('fileResZip');
   if(fileRes) fileRes.onchange=async (e)=>{
     const f=e.target.files[0]; if(!f) return;
@@ -434,7 +461,7 @@ function view3(){
     try{
       const buf = await f.arrayBuffer();
       RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = f.name;
-      const need = resNeededBasenames(st.picked.map(id=>({id})));
+      const need = resNeededBasenames(st.picked.map(id=>({heroId:id})));
       RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
       setResStatus('Đã nạp '+f.name+': '+RES_FILES.size+' file - Sẵn sàng mod! Nếu bạn đổi tướng, không cần nạp lại, lúc Tạo file nó tự lấy thêm file của tướng.');
       toast('Đã nạp '+f.name+' xong');
@@ -464,7 +491,7 @@ function view3(){
           const buf = await r2.arrayBuffer();
           if(buf.byteLength < 1000000) continue;
           RES_ZIP_BYTES = new Uint8Array(buf); RES_ZIP_NAME = wantGit.name + ' (GitHub repo)';
-          const need = resNeededBasenames(st.picked.map(id=>({id})));
+          const need = resNeededBasenames(st.picked.map(id=>({heroId:id})));
           RES_FILES = await unzipNeededV2(RES_ZIP_BYTES, need);
           setResStatus('Đã lấy từ GitHub repo: '+wantGit.name+' - '+RES_FILES.size+' file - Sẵn sàng mod!');
           toast('Đã lấy Resources từ GitHub xong');
@@ -482,7 +509,7 @@ function view3(){
   if(btnClear) btnClear.onclick=()=>{ RES_FILES=null; RES_PATHS={}; setResStatus('Đã xóa cache Resources - Hãy nạp lại file.'); toast('Đã xóa cache'); };
   document.querySelectorAll('.skins').forEach(g=>g.onclick=e=>{const b=e.target.closest('.sk');if(!b)return;st.skin[g.dataset.hero]=+b.dataset.i;
     g.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',x===b));foot()});
-  function foot(){const d=st.picked.filter(i=>st.skin[i]!=null),u=st.user;
+  function foot(){if(st.tab==='res'){bar('');return;}const d=st.picked.filter(i=>st.skin[i]!=null),u=st.user;
     bar(`<div class="row"><div class="logo" style="background:#fff;color:#0f172a">✨</div><div class="s"><b>${st.device==='ios'?'iOS':'Android'} • ${all} tướng • ${d.length} skin đã chọn</b><span>${d.length?d.map(i=>byId[i].name+': '+byId[i].skins[st.skin[i]][0]).join(' | '):'Chọn skin cho từng tướng để tạo file'}</span></div></div>
     <button class="go full" id="mk" ${d.length?'':'disabled'}>Tạo file ZIP ✨ ${u.credits<1?'(cần ≥ 1 điểm)':'(−1 điểm)'}</button>`);
     $('#mk').onclick=make}
@@ -494,6 +521,13 @@ const GID={"11596":11596,"airi":106,"aleister":105,"alice":118,"allain":550,"ami
 const ACTOR_FIX={airi:130,paine:124,florentino:521,flo:521};   // v7.7: ActorID thật (GID web của Paine/Florentino khác ActorID trong game)
 function heroNum(id){
   if(ACTOR_FIX[id]) return ACTOR_FIX[id];
+  try{
+    const h = byId && byId[id];
+    if(h && typeof SKIN_DB!=='undefined' && typeof _normName==='function'){
+      const e = SKIN_DB[_normName(h.name)];
+      if(e && e.s && e.s.length) return Math.floor(e.s[0][0]/100);
+    }
+  }catch(_){}
   if(GID[id]) return GID[id];
   if(/^\d+$/.test(id)) return +id;
   return 0;
@@ -1456,6 +1490,674 @@ async function make(){
   toast('Đã tạo '+built.name+' • Đã trừ 1 điểm (điểm sẽ cập nhật sau 1-2s) • Bấm "⬇️ Bấm để Tải file về" để tải');
   // KHÔNG gọi view3() ngay ở đây - view3() sẽ re-render nút và làm mất MAKING lock + PENDING_BUILD
   // Điểm sẽ tự cập nhật khi Firebase onSnapshot về (B.onUser -> renderHeader)
+}
+
+
+
+/* ============ v9.0: TỰ ĐỘNG HOÁ QUY TRÌNH MOD FILE TÀI NGUYÊN (README.md + inventory.json) ============ */
+const RESMOD_REF = {"reference":"Yan – Khí Linh Long Li Kiếm","analysis":"file inventory, headers and selected readable action strings; not a clean/mod semantic diff","device_verified":false,"files":[{"path":"Documents/Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/Actor_544_Actions.pkg.bytes","bytes":3585552,"sha256":"f75a9e87059e12318450302fa4a4523339aab0a6ec0355d98215c84f29e4f451","zip_entries":95,"zip_crc_ok":true},{"path":"Documents/Resources/1.64.1/Ages/Prefab_Characters/Prefab_Hero/CommonActions.pkg.bytes","bytes":576836,"sha256":"b834e1598a57ea095a494ab0f96f6a341bfade448005870cf64430bc3ea30edd","zip_entries":785,"zip_crc_ok":true},{"path":"Documents/Resources/1.64.1/AssetRefs/Hero/544_AssetRef.bytes","bytes":70786,"sha256":"d3e3aad6330e28066f79f6126c53f5cdaa93b66ae1533ad37416e5a9e3f3e002"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/BattleBank.bytes","bytes":134442,"sha256":"312630269ee6f65c41f7580a3f6319e6e9e0f8db0d2527863afce593922e8229"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/ChatSound.bytes","bytes":91739,"sha256":"758c9d357a0ccf598e48a7b57936ded5d02b5efe3fe37bf214bd99d3fd565de9"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/CoupleSound.bytes","bytes":43551,"sha256":"441c3ec61f3687f085759bdc268c8801fa28a80ef1ac2494c137e856dd13d6de"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/HeroSound.bytes","bytes":146550,"sha256":"3b2f86476e97f098049cd3d332c894eb37c75f3a63cffa431d06388ac1cf1254"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/LobbyBank.bytes","bytes":63814,"sha256":"9076497ae36c216ca0b78caf61b4ef7cfded1bb51c489c758226c40c0d343563"},{"path":"Documents/Resources/1.64.1/Databin/Client/Sound/LobbySound.bytes","bytes":73038,"sha256":"0d58275fa29af2be4010cef7e98aca4c51c4f117d125d62063ca86d7083cd5a0"},{"path":"Documents/Resources/1.64.1/KernelLua.pkg.bytes","bytes":153564,"sha256":"9313df621fea7dad1e8f53d66d10edf80c16aaa8c7a94e81815cd018d89d1dda","zip_entries":26,"zip_crc_ok":true},{"path":"Documents/Resources/1.64.1/Prefab_Characters/Actor_544_Infos.pkg.bytes","bytes":1416,"sha256":"0c50ff09bb9249e2f27eb0bced737aa7234bf9fa2a951bf00a54c988429a766c","zip_entries":1,"zip_crc_ok":true},{"path":"Documents/Resources/1.64.1/Sound/iOS/English(US)/Hero_DongFangYao52205_Yan54400_Show.bnk","bytes":1622250,"sha256":"9a58ef18e778068e8dad4d932b535d1278de8c90a82ecb3bc3521b05e59462ad"},{"path":"Documents/Resources/1.64.1/Sound/iOS/English(US)/Hero_DongFangYao52205_Yan54400_VO.bnk","bytes":1379609,"sha256":"69933b6d3dcd2a799879d47050a2139de7b8cfd9f9575ec12a2d87dab149173f"},{"path":"Documents/Resources/1.64.1/Sound/iOS/Hero_DongFangYao52205_Yan54400_SFX.bnk","bytes":1248575,"sha256":"f843a0da48fe4402d2981c3c89ec6b007b7a45b60141f4b126b242682365af14"},{"path":"Documents/Resources/1.64.1/Sound/iOS/Vietnamese/Hero_DongFangYao52205_Yan54400_Show.bnk","bytes":1622250,"sha256":"32387cece9e8a8b18b25b19342898a2e01b75ae2888311e5a782cd207e26c3e7"},{"path":"Documents/Resources/1.64.1/Sound/iOS/Vietnamese/Hero_DongFangYao52205_Yan54400_VO.bnk","bytes":1379616,"sha256":"560b4a9c604754d8d55e8b05858822677d8bc6ff6335b4afe239715818879879"},{"path":"Documents/Resources/1.64.1/StableSystems_3.pkg.bytes","bytes":413210,"sha256":"821f3d1bb094b362fbae34af95a850c7d8960cda3e2c5559914ffa4309b943e0","zip_entries":96,"zip_crc_ok":true},{"path":"Documents/Resources/1.64.1/assetbundle/battle/hero/544_painter_battle_base.assetbundle","bytes":14889506,"sha256":"35fc85a7c6180ab33d9e8cf0426050bb82df8e9553baaae87d05bcdadf4d3ccb"},{"path":"Documents/Resources/1.64.1/assetbundle/battle/hero/544_painter_battle_base_low.assetbundle","bytes":9938945,"sha256":"a11a1cada33bf9964de82d3fe6c323d9eb49ec301a0cc92eb6589a65ddda5d60"},{"path":"Documents/Resources/1.64.1/assetbundle/hero/544_painter_show_base.assetbundle","bytes":50178005,"sha256":"cedd415f90069eb0be6e3d60c41280d6bb070e653169bb0c973d56476d4b91cf"},{"path":"Documents/Resources/1.64.1/assetbundle/hero/544_painter_show_base_low.assetbundle","bytes":41753888,"sha256":"c3cf5de051e3abc50ff8eb8ced48bcf8d6482aa973347b29bd71b0b721ac50aa"},{"path":"Documents/Resources/1.64.1/assetbundle/show/hero/544_painter_show_base.assetbundle","bytes":44393820,"sha256":"45e2093e559628ccc1e63941d6b5c05f6e9d84e2d06ed9dcace0c27a4af40c33"},{"path":"Documents/Resources/1.64.1/assetbundle/show/hero/544_painter_show_base_low.assetbundle","bytes":41753888,"sha256":"c3cf5de051e3abc50ff8eb8ced48bcf8d6482aa973347b29bd71b0b721ac50aa"},{"path":"Documents/Resources/1.64.1/assetbundle/uisystem/atlas/primary/allshared.assetbundle","bytes":1503179,"sha256":"dac1e877ac8574ef01e70aaaecb0e4dfe8274b9c946643db11db22a3009ffeea"},{"path":"Documents/Resources/1.64.1/assetbundle/uisystem/battle/battleotherui.assetbundle","bytes":1552428,"sha256":"c44ef6ed525ae04b97dfb6d7518c638bf933dd4f790eaba0632de72245cba11b"},{"path":"Documents/Resources/1.64.1/assetbundle/uisystem/battle/battleotherui_raw.assetbundle","bytes":250056,"sha256":"59ebe5e412c104abdd186e8d3816be93d60a0d1305a95b08a38953af064fa2ea"},{"path":"Documents/Resources/1.64.1/version.txt","bytes":17,"sha256":"c97bc797bad11156a22442252874c8e24a55ec5db0d01c9d683100814b2b04e4"}]};
+
+// Pure-JS SHA-256 fallback (dùng khi mở file:// không có crypto.subtle)
+function sha256Sync(u8){
+  const K=new Uint32Array([
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ]);
+  const rrot=(x,n)=>(x>>>n)|(x<<(32-n));
+  const len=u8.length, bitLenHi=Math.floor(len/536870912), bitLenLo=(len*8)>>>0;
+  const padLen=((len+9+63)&~63);
+  const buf=new Uint8Array(padLen); buf.set(u8,0); buf[len]=0x80;
+  const dv=new DataView(buf.buffer);
+  dv.setUint32(padLen-8,bitLenHi,false); dv.setUint32(padLen-4,bitLenLo,false);
+  let h0=0x6a09e667,h1=0xbb67ae85,h2=0x3c6ef372,h3=0xa54ff53a,h4=0x510e527f,h5=0x9b05688c,h6=0x1f83d9ab,h7=0x5be0cd19;
+  const W=new Uint32Array(64);
+  for(let off=0;off<padLen;off+=64){
+    for(let i=0;i<16;i++) W[i]=dv.getUint32(off+i*4,false);
+    for(let i=16;i<64;i++){
+      const s0=rrot(W[i-15],7)^rrot(W[i-15],18)^(W[i-15]>>>3);
+      const s1=rrot(W[i-2],17)^rrot(W[i-2],19)^(W[i-2]>>>10);
+      W[i]=(W[i-16]+s0+W[i-7]+s1)>>>0;
+    }
+    let a=h0,b=h1,c=h2,d=h3,e=h4,f=h5,g=h6,h=h7;
+    for(let i=0;i<64;i++){
+      const S1=rrot(e,6)^rrot(e,11)^rrot(e,25);
+      const ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[i]+W[i])>>>0;
+      const S0=rrot(a,2)^rrot(a,13)^rrot(a,22);
+      const maj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+maj)>>>0;
+      h=g; g=f; f=e; e=(d+t1)>>>0; d=c; c=b; b=a; a=(t1+t2)>>>0;
+    }
+    h0=(h0+a)>>>0; h1=(h1+b)>>>0; h2=(h2+c)>>>0; h3=(h3+d)>>>0;
+    h4=(h4+e)>>>0; h5=(h5+f)>>>0; h6=(h6+g)>>>0; h7=(h7+h)>>>0;
+  }
+  return [h0,h1,h2,h3,h4,h5,h6,h7].map(x=>x.toString(16).padStart(8,'0')).join('');
+}
+async function sha256Hex(u8){
+  try{
+    if(crypto && crypto.subtle){
+      const d=await crypto.subtle.digest('SHA-256',u8);
+      return Array.from(new Uint8Array(d)).map(x=>x.toString(16).padStart(2,'0')).join('');
+    }
+  }catch(_){}
+  return sha256Sync(u8);
+}
+
+const RESMOD = (()=>{
+  const dec = new TextDecoder('utf-8',{fatal:false});
+  const enc = new TextEncoder();
+
+  // Kiểm tra ZSTD dictionary nhúng sẵn (ID 0x0B4355E7, khớp 112640 byte đầu của dict_chunk_2235548.bin)
+  function verifyDict(){
+    try{
+      const d=getZDict();
+      const parsed=ZD.parseDict(d);
+      return {ok: parsed.id===0x0B4355E7 && d.length===112640, id:parsed.id, bytes:d.length};
+    }catch(e){ return {ok:false, error:String(e&&e.message||e)}; }
+  }
+
+  // Đọc danh sách entry ZIP + kiểm tra CRC32 toàn bộ entry STORE (tương đương check.testzip() is None)
+  function verifyZipIntegrity(u8){
+    if(!u8 || u8.length<22 || u8[0]!==0x50 || u8[1]!==0x4B || u8[2]!==3 || u8[3]!==4) return {isZip:false, ok:false, entries:0, bad:[]};
+    const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+    let eocd=-1;
+    for(let i=u8.length-22;i>=Math.max(0,u8.length-66000);i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+    if(eocd<0) return {isZip:true, ok:false, entries:0, bad:['Thiếu EOCD']};
+    const total=dv.getUint16(eocd+10,true);
+    let c=dv.getUint32(eocd+16,true);
+    const bad=[]; const list=[];
+    for(let i=0;i<total;i++){
+      if(c+46>u8.length || dv.getUint32(c,true)!==0x02014b50){ bad.push('CentralDir lỗi @'+i); break; }
+      const method=dv.getUint16(c+10,true), crc=dv.getUint32(c+16,true), cs=dv.getUint32(c+20,true), us=dv.getUint32(c+24,true);
+      const nl=dv.getUint16(c+28,true), el=dv.getUint16(c+30,true), cl=dv.getUint16(c+32,true), lo=dv.getUint32(c+42,true);
+      const name=dec.decode(u8.subarray(c+46,c+46+nl));
+      c += 46+nl+el+cl;
+      if(lo+30>u8.length || dv.getUint32(lo,true)!==0x04034b50){ bad.push(name+' (LocalHdr lỗi)'); continue; }
+      const ds=lo+30+dv.getUint16(lo+26,true)+dv.getUint16(lo+28,true);
+      if(ds+cs>u8.length){ bad.push(name+' (cắt cụt)'); continue; }
+      const payload=u8.subarray(ds,ds+cs);
+      let crcOk=true;
+      if(!name.endsWith('/') && method===0){
+        const calc=crc32(payload)>>>0;
+        if(calc!==crc || cs!==us){ crcOk=false; bad.push(name+' (CRC sai)'); }
+      }
+      list.push({name, method, crc, cs, us, data:payload, isDir:name.endsWith('/'), crcOk});
+    }
+    return {isZip:true, ok:bad.length===0 && list.length===total, entries:list.length, bad, list};
+  }
+
+  // Giải nén toàn bộ entry của 1 file ZIP (hỗ trợ STORE + Deflate + ZSTD)
+  async function extractAllZip(zipBytes){
+    const info=verifyZipIntegrity(zipBytes);
+    if(!info.isZip) throw new Error('File không phải định dạng ZIP (thiếu header PK)');
+    const out=new Map();
+    for(const en of info.list){
+      if(en.isDir) continue;
+      let data=null;
+      if(en.method===0) data=en.data.slice();
+      else if(en.method===8){
+        const ds=new DecompressionStream('deflate-raw');
+        const buf=await new Response(new Blob([en.data]).stream().pipeThrough(ds)).arrayBuffer();
+        data=new Uint8Array(buf);
+      } else if(en.method===93){
+        data=await zstdDecode(en.data.slice());
+      } else continue;
+      out.set(en.name, data);
+    }
+    return out;
+  }
+
+  // Mục 4 README: nhận diện loại dữ liệu theo header thực tế, không dựa đuôi .bytes
+  function inspectHeader(u8, path){
+    if(!u8 || !u8.length) return {type:'EMPTY', note:'File rỗng', writable:false};
+    // 1) ZIP container (PK)
+    if(u8.length>=4 && u8[0]===0x50 && u8[1]===0x4B && u8[2]===3 && u8[3]===4){
+      const z=verifyZipIntegrity(u8);
+      const firstFile=z.list.find(x=>!x.isDir);
+      let innerType='none';
+      if(firstFile && firstFile.method===0 && firstFile.data.length>=4){
+        const d=firstFile.data;
+        if(d[0]===0x22 && d[1]===0x4A && d[2]===0x00 && d[3]===0xEF) innerType='22 4A 00 EF (ZSTD dict)';
+        else if(d[0]===0x22 && d[1]===0x4A && d[2]===0x67 && d[3]===0x00) innerType='22 4A 67 00 (Mã hoá)';
+        else if((d[0]===0xEF&&d[1]===0xBB&&d[2]===0xBF&&d[3]===0x3C) || d[0]===0x3C) innerType='XML rõ';
+        else innerType='Binary/Khác';
+      }
+      return {type:'PK_ZIP', entries:z.entries, crcOk:z.ok, innerType, writable:true,
+        note:'ZIP ('+z.entries+' mục, CRC '+(z.ok?'OK':'LỖI')+', mẫu bên trong: '+innerType+')'};
+    }
+    // 2) ZSTD dictionary wrapper 22 4A 00 EF
+    if(u8.length>=12 && u8[0]===0x22 && u8[1]===0x4A && u8[2]===0x00 && u8[3]===0xEF){
+      const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+      const usize=dv.getUint32(4,true);
+      const inf=zstdFrameInfo(u8,8);
+      let decOk=false, inner='?';
+      try{
+        const raw=gameDecode(u8);
+        if(raw && raw.length){
+          decOk=true;
+          if(raw[0]===0x4D&&raw[1]===0x53&&raw[2]===0x45&&raw[3]===0x53) inner='MSES';
+          else if(raw.length>12 && dec.decode(raw.subarray(4,16)).includes('ROOT')) inner='ROOT/AssetRef';
+          else if(raw[0]===0x3C || (raw[0]===0xEF&&raw[1]===0xBB&&raw[2]===0xBF&&raw[3]===0x3C)) inner='XML';
+          else inner='Binary('+raw.length+'B)';
+        }
+      }catch(_){}
+      return {type:'ZSTD_DICT', dictId:inf.dict, usize, decOk, inner, writable:inner==='MSES'||inner==='XML',
+        note:'22 4A 00 EF (dict 0x'+inf.dict.toString(16).toUpperCase()+', giải nén '+(decOk?'OK → '+inner:'LỖI')+')'};
+    }
+    // 3) Encrypted wrapper 22 4A 67 00
+    if(u8.length>=4 && u8[0]===0x22 && u8[1]===0x4A && u8[2]===0x67 && u8[3]===0x00){
+      return {type:'ENCRYPTED', locked:true, writable:false,
+        note:'22 4A 67 00 (Wrapper mã hoá — không tự giả định key/IV, giữ nguyên bản)'};
+    }
+    // 4) UnityFS AssetBundle
+    if(u8.length>=8 && dec.decode(u8.subarray(0,7))==='UnityFS'){
+      const headStr=dec.decode(u8.subarray(0,Math.min(u8.length,96)));
+      const vm=headStr.match(/\d{4}\.\d+\.\d+[a-z]\d+/);
+      return {type:'UNITYFS', unityVer:vm?vm[0]:'unknown', binaryPassthrough:true, writable:false,
+        note:'UnityFS (Unity '+(vm?vm[0]:'?')+' — đóng gói nguyên bản, không tự sửa trong trình duyệt)'};
+    }
+    // 5) Wwise SoundBank (BKHD)
+    if(u8.length>=16 && dec.decode(u8.subarray(0,4))==='BKHD'){
+      const dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength);
+      const ver=dv.getUint32(8,true), bankId=dv.getUint32(12,true);
+      return {type:'WWISE_BNK', version:ver, bankId, binaryPassthrough:true, writable:false,
+        note:'Wwise BNK (v'+ver+', BankID '+bankId+' — đổi tên file không đổi EventID bên trong)'};
+    }
+    // 6) MSES Databin raw
+    if(u8.length>=140 && u8[0]===0x4D && u8[1]===0x53 && u8[2]===0x45 && u8[3]===0x53){
+      const rows=SKINMOD.parse(u8).length;
+      const storedMd5=dec.decode(u8.subarray(96,128));
+      const calcMd5=md5Hex(u8.subarray(140));
+      return {type:'MSES_RAW', rows, md5Ok:storedMd5===calcMd5, writable:true,
+        note:'MSES ('+rows+' hàng, MD5 '+(storedMd5===calcMd5?'OK':'KHÁC')+')'};
+    }
+    // 7) Plain XML
+    const bom=(u8.length>=3&&u8[0]===0xEF&&u8[1]===0xBB&&u8[2]===0xBF);
+    const s0=dec.decode(u8.subarray(bom?3:0, Math.min(u8.length,64))).trimStart();
+    if(s0.startsWith('<?xml') || s0.startsWith('<Project')){
+      const hasPI=/<\?(?!xml\b)/.test(dec.decode(u8.subarray(0,Math.min(u8.length,4096))));
+      return {type:'PLAIN_XML', bom, hasPI, writable:true,
+        note:'XML rõ'+(bom?' (UTF-8 BOM)':'')+(hasPI?' • có processing instruction':'')};
+    }
+    // 8) Binary AssetRef (ROOT / TypeAssetRefAnalyser)
+    const head256=dec.decode(u8.subarray(0,Math.min(u8.length,256)));
+    if(head256.includes('TypeAssetRefAnalyser') || head256.includes('ROOT')){
+      return {type:'BINARY_ASSETREF', binaryPassthrough:true, writable:false,
+        note:'AssetRef nhị phân (không thay chuỗi khác độ dài trực tiếp trên bytes)'};
+    }
+    // 9) Text (version.txt...)
+    if(/\.txt$/i.test(path||'')){
+      return {type:'TEXT', text:dec.decode(u8).trim(), writable:true, note:'Văn bản: '+dec.decode(u8).trim().slice(0,48)};
+    }
+    return {type:'BINARY', binaryPassthrough:true, writable:false, note:'Nhị phân ('+u8.length+' byte)'};
+  }
+
+  // Mục 10 & 11 README: nhận diện file dùng chung cần kiểm tra diff trước khi đưa vào release
+  function isSharedFile(relPath){
+    const p=String(relPath||'').toLowerCase();
+    return /(commonactions\.pkg\.bytes|kernellua\.pkg\.bytes|stablesystems_3\.pkg\.bytes|allshared\.assetbundle|battleotherui|databin\/client\/sound\/)/.test(p);
+  }
+
+  // Mục 12 README: chuẩn hoá đường dẫn release, không tự nhân đôi Documents/
+  function stripToSubpath(rawPath){
+    let p=String(rawPath||'').replace(/\\/g,'/').replace(/^\/+/,'');
+    p=p.replace(/^Application\/com\.garena\.game\.kgvn\//i,'');
+    p=p.replace(/^Documents\//i,'');
+    const m=p.match(/^Resources\/[^\/]+\/(.+)$/i);
+    if(m) return m[1];
+    return p;
+  }
+  function normalizeRelPath(subpath, version, addAppPrefix){
+    const cleanSub=stripToSubpath(subpath);
+    const ver=(version||'1.64.1').trim().replace(/^\/+|\/+$/g,'');
+    const base='Documents/Resources/'+ver+'/'+cleanSub;
+    return addAppPrefix ? ('Application/com.garena.game.kgvn/'+base) : base;
+  }
+
+  // Mục 11 README: so sánh 3 mức (1: SHA256 file, 2: entry container, 3: nội dung đã decode)
+  async function diff3Levels(cleanBytes, donorBytes, relPath){
+    const donorSha=await sha256Hex(donorBytes);
+    if(!cleanBytes){
+      return {status:'DONOR_ONLY', label:'Chỉ có ở Donor', level:1, cleanSha:null, donorSha, detail:'Không có file tương ứng trong bản sạch'};
+    }
+    const cleanSha=await sha256Hex(cleanBytes);
+    if(cleanSha===donorSha){
+      return {status:'IDENTICAL', label:'Giống bản sạch', level:1, cleanSha, donorSha, detail:'SHA256 trùng khớp 100% — nên loại khỏi release'};
+    }
+    // Mức 2: nếu cả 2 là ZIP container
+    const cz=verifyZipIntegrity(cleanBytes), dz=verifyZipIntegrity(donorBytes);
+    if(cz.isZip && dz.isZip){
+      const cm=new Map(cz.list.filter(x=>!x.isDir).map(x=>[x.name,x]));
+      const dm=new Map(dz.list.filter(x=>!x.isDir).map(x=>[x.name,x]));
+      let added=0, removed=0, crcDiff=0, semanticDiff=0;
+      for(const [k,dv] of dm){
+        const cv=cm.get(k);
+        if(!cv){ added++; semanticDiff++; continue; }
+        if(cv.crc!==dv.crc || cv.us!==dv.us){
+          crcDiff++;
+          // Mức 3: thử decode 22 4A 00 EF để phân biệt đổi nén/timestamp với đổi nội dung
+          try{
+            const cd=cv.method===0 ? gameDecode(cv.data) : null;
+            const dd=dv.method===0 ? gameDecode(dv.data) : null;
+            if(cd && dd){
+              if(!sameBytes(cd,dd)) semanticDiff++;
+            } else semanticDiff++;
+          }catch(_){ semanticDiff++; }
+        }
+      }
+      for(const k of cm.keys()){ if(!dm.has(k)) removed++; }
+      const onlyComp=(added===0 && removed===0 && crcDiff>0 && semanticDiff===0);
+      return {
+        status: onlyComp ? 'COMPRESSION_ONLY' : 'MODIFIED',
+        label: onlyComp ? 'Chỉ khác nén/wrapper' : 'Đã sửa nội dung',
+        level:3, cleanSha, donorSha,
+        detail:`Entry: +${added} / -${removed} / đổi CRC ${crcDiff} (khác nội dung decode: ${semanticDiff})`
+      };
+    }
+    // Mức 3 cho file đơn có wrapper 22 4A 00 EF
+    try{
+      const cd=gameDecode(cleanBytes), dd=gameDecode(donorBytes);
+      if(cd && dd && sameBytes(cd,dd)){
+        return {status:'COMPRESSION_ONLY', label:'Chỉ khác nén/wrapper', level:3, cleanSha, donorSha, detail:'Bytes ngoài khác nhưng nội dung sau khi giải nén ZSTD giống hệt bản sạch'};
+      }
+    }catch(_){}
+    return {status:'MODIFIED', label:'Đã sửa', level:3, cleanSha, donorSha, detail:`Kích thước: ${cleanBytes.length} → ${donorBytes.length} byte`};
+  }
+
+  // Mục 8 README: soi Actor_<id>_Infos.pkg.bytes bằng ZSTD dict 0x0B4355E7 (chỉ đọc, không tự sửa nhị phân chưa có schema)
+  function inspectActorInfo(pkgBytes){
+    const z=verifyZipIntegrity(pkgBytes);
+    if(!z.isZip) return {ok:false, error:'Không phải file ZIP'};
+    const fileEntry=z.list.find(x=>!x.isDir);
+    if(!fileEntry) return {ok:false, error:'ZIP không có file bên trong'};
+    if(fileEntry.method!==0) return {ok:false, error:'Entry bên trong không phải STORE (method '+fileEntry.method+')'};
+    let raw=null;
+    try{ raw=gameDecode(fileEntry.data); }catch(e){ return {ok:false, error:'Giải nén ZSTD lỗi: '+e.message}; }
+    if(!raw) return {ok:false, error:'Entry bị mã hoá (22 4A 67 00) hoặc không giải được'};
+    const text=dec.decode(raw);
+    const paths=[...new Set((text.match(/Prefab_Characters\/[A-Za-z0-9_\/\.-]+/g)||[]).concat(text.match(/Characters\/[A-Za-z0-9_\/\.-]+/g)||[]))];
+    return {ok:true, entryName:fileEntry.name, compressedSize:fileEntry.data.length, decodedSize:raw.length, paths:paths.slice(0,80), totalPaths:paths.length};
+  }
+
+  // Mục 5 & 7 README: sửa tường minh resourceName / eventName trong XML của Actions.pkg.bytes (KHÔNG replace-all ID, giữ nguyên BOM & processing instruction)
+  function parseMappingLines(txt){
+    const out=[];
+    for(const line of String(txt||'').split(/\r?\n/)){
+      const s=line.trim(); if(!s || s.startsWith('#')) continue;
+      const parts=s.split(/\s*(?:=>|->)\s*/);
+      if(parts.length===2 && parts[0] && parts[1]) out.push([parts[0].trim(), parts[1].trim()]);
+    }
+    return out;
+  }
+  function applyExplicitXmlMapping(pkgBytes, particleMap, soundMap){
+    let filesChanged=0, hits=0, skipped=0;
+    const rw=pkgRewrite(pkgBytes,(name,stored)=>{
+      if(!/\.xml$/i.test(name)) return null;
+      let data; try{ data=gameDecode(stored); }catch(_){ skipped++; return null; }
+      if(!data){ skipped++; return null; }
+      const bom=(data.length>=3&&data[0]===0xEF&&data[1]===0xBB&&data[2]===0xBF);
+      const orig=dec.decode(bom?data.subarray(3):data);
+      let text=orig;
+      if(particleMap.length){
+        text=text.replace(/(<String\s+name="resourceName"\s+value=")([^"]*)(")/g,(m,a,val,c)=>{
+          for(const [src,dst] of particleMap){
+            if(val.toLowerCase()===src.toLowerCase()){ hits++; return a+dst+c; }
+          }
+          return m;
+        });
+      }
+      if(soundMap.length){
+        text=text.replace(/(<String\s+name="eventName"\s+value=")([^"]*)(")/g,(m,a,val,c)=>{
+          for(const [src,dst] of soundMap){
+            if(val===src){ hits++; return a+dst+c; }
+          }
+          return m;
+        });
+      }
+      if(text===orig) return null;
+      filesChanged++;
+      const eb=enc.encode(text);
+      if(!bom) return eb;
+      const out=new Uint8Array(eb.length+3); out.set([0xEF,0xBB,0xBF],0); out.set(eb,3); return out;
+    });
+    const check=verifyZipIntegrity(rw.bytes);
+    if(!check.ok) throw new Error('Kiểm tra CRC sau repack Actions thất bại: '+check.bad.join(', '));
+    return {bytes:rw.bytes, filesChanged, hits, skipped, zipEntries:check.entries, zipCrcOk:check.ok};
+  }
+
+  return {verifyDict, verifyZipIntegrity, extractAllZip, inspectHeader, isSharedFile, stripToSubpath, normalizeRelPath, diff3Levels, inspectActorInfo, parseMappingLines, applyExplicitXmlMapping};
+})();
+
+/* ---------- State & UI cho Tab 2: Mod File Tài Nguyên (README + inventory.json) ---------- */
+const rmSt = {
+  version: '1.64.1',
+  addAppPrefix: false,
+  includeManifest: true,
+  donorName: '',
+  items: [],          // {subpath, bytes, hdr, diff, shared, include, refMatch}
+  particleMapText: '',
+  soundMapText: '',
+  actorInfoReport: '',
+  lastManifest: null,
+  status: 'Chưa nạp file donor/mod. Bạn có thể nạp ZIP mod/donor, file rời, hoặc bấm "Test Repack sạch" từ Resources đã nạp.'
+};
+
+// Lấy map file từ Clean Resources ZIP (RES_ZIP_BYTES) theo subpath (chỉ giải nén đúng các file cần đối chiếu)
+async function getCleanSubpathMap(targetSubpaths){
+  const map=new Map();
+  if(!RES_ZIP_BYTES || !targetSubpaths.length) return map;
+  const wantLow=new Map(targetSubpaths.map(s=>[s.toLowerCase(), s]));
+  const dv=new DataView(RES_ZIP_BYTES.buffer,RES_ZIP_BYTES.byteOffset,RES_ZIP_BYTES.byteLength);
+  let eocd=-1;
+  for(let i=RES_ZIP_BYTES.length-22;i>=Math.max(0,RES_ZIP_BYTES.length-66000);i--){ if(dv.getUint32(i,true)===0x06054b50){ eocd=i; break; } }
+  if(eocd<0) return map;
+  const total=dv.getUint16(eocd+10,true); let c=dv.getUint32(eocd+16,true);
+  const td=new TextDecoder();
+  for(let n=0;n<total;n++){
+    if(dv.getUint32(c,true)!==0x02014b50) break;
+    const method=dv.getUint16(c+10,true), cs=dv.getUint32(c+20,true), nl=dv.getUint16(c+28,true), el=dv.getUint16(c+30,true), cl=dv.getUint16(c+32,true), lo=dv.getUint32(c+42,true);
+    const name=td.decode(RES_ZIP_BYTES.subarray(c+46,c+46+nl));
+    c += 46+nl+el+cl;
+    if(name.endsWith('/')) continue;
+    const sub=RESMOD.stripToSubpath(name);
+    const matchKey=wantLow.get(sub.toLowerCase());
+    if(!matchKey) continue;
+    const lh=new DataView(RES_ZIP_BYTES.buffer,RES_ZIP_BYTES.byteOffset+lo,30);
+    const ds=lo+30+lh.getUint16(26,true)+lh.getUint16(28,true);
+    const comp=RES_ZIP_BYTES.subarray(ds,ds+cs);
+    try{
+      let data=null;
+      if(method===0) data=comp.slice();
+      else if(method===8){
+        const ds2=new DecompressionStream('deflate-raw');
+        data=new Uint8Array(await new Response(new Blob([comp]).stream().pipeThrough(ds2)).arrayBuffer());
+      } else if(method===93) data=await zstdDecode(comp.slice());
+      if(data) map.set(matchKey.toLowerCase(), data);
+    }catch(_){}
+  }
+  return map;
+}
+
+async function analyzeDonorFiles(fileMap, sourceLabel){
+  rmSt.status='Đang kiểm kê header & so sánh 3 mức...';
+  renderResModPane();
+  const subpaths=[...fileMap.keys()].map(k=>RESMOD.stripToSubpath(k));
+  const cleanMap=await getCleanSubpathMap(subpaths);
+  const refBySub=new Map(RESMOD_REF.files.map(f=>[RESMOD.stripToSubpath(f.path).toLowerCase(), f]));
+  const items=[];
+  for(const [rawPath, bytes] of fileMap.entries()){
+    const subpath=RESMOD.stripToSubpath(rawPath);
+    if(/version\.txt$/i.test(subpath)){
+      const vt=new TextDecoder().decode(bytes).trim();
+      const vm=vt.match(/^(\d+\.\d+\.\d+)/);
+      if(vm) rmSt.version=vm[1];
+    }
+    const hdr=RESMOD.inspectHeader(bytes, subpath);
+    const cleanBytes=cleanMap.get(subpath.toLowerCase()) || null;
+    const diff=await RESMOD.diff3Levels(cleanBytes, bytes, subpath);
+    const shared=RESMOD.isSharedFile(subpath);
+    const ref=refBySub.get(subpath.toLowerCase()) || null;
+    // Tự động loại file giống hệt bản sạch hoặc chỉ khác nén; file dùng chung cũng tắt mặc định nếu chưa xác nhận khác nội dung
+    const autoInclude = (diff.status!=='IDENTICAL' && diff.status!=='COMPRESSION_ONLY') && (!shared || diff.status==='MODIFIED');
+    items.push({subpath, bytes, hdr, diff, shared, include:autoInclude, refShaOk: ref ? (diff.donorSha===ref.sha256) : null});
+  }
+  rmSt.donorName=sourceLabel;
+  rmSt.items=items;
+  const inc=items.filter(x=>x.include).length;
+  rmSt.status=`Đã kiểm kê ${items.length} file từ "${sourceLabel}" (${inc} file được chọn vào release, ${items.filter(x=>x.shared).length} file dùng chung).`;
+  renderResModPane();
+}
+
+async function buildSmokeTestZip(){
+  if(!RES_ZIP_BYTES) throw new Error('Hãy nạp file gốc Resources_ios.zip / Resources_adroi.zip trước khi chạy Test Repack sạch.');
+  const heroId=st.picked[0];
+  if(!heroId) throw new Error('Chưa chọn tướng ở Bước 2.');
+  const A=heroNum(heroId);
+  const actSub='Ages/Prefab_Characters/Prefab_Hero/Actor_'+A+'_Actions.pkg.bytes';
+  const cleanMap=await getCleanSubpathMap([actSub]);
+  const actBytes=cleanMap.get(actSub.toLowerCase());
+  if(!actBytes) throw new Error('Không tìm thấy '+actSub+' trong file Resources gốc.');
+  const cleanSha=await sha256Hex(actBytes);
+  // Đọc rồi ghi lại nguyên vẹn (chưa sửa nội dung) theo Mục 4 & 13 README
+  const rw=pkgRewrite(actBytes, ()=>null);
+  const chk=RESMOD.verifyZipIntegrity(rw.bytes);
+  if(!chk.ok) throw new Error('Repack sạch thất bại kiểm tra CRC: '+chk.bad.join(', '));
+  const repackedSha=await sha256Hex(rw.bytes);
+  const outPath=RESMOD.normalizeRelPath(actSub, rmSt.version, rmSt.addAppPrefix);
+  const manifest={
+    mode:'roundtrip_smoke_test',
+    generatedAt:new Date().toISOString(),
+    gameVersion:rmSt.version,
+    platform:st.device==='ios'?'iOS':'Android',
+    hero:{id:heroId, name:byId[heroId]?.name||heroId, actorId:A},
+    note:'Bài kiểm tra đầu tiên (README Mục 4 & 13): đọc file sạch rồi ghi lại chưa sửa nội dung để kiểm tra tương thích reader/writer.',
+    containerWarning:'Định dạng xuất là .zip. Đổi đuôi .zip thành .3105 KHÔNG tạo đúng định dạng .3105.',
+    files:[{path:outPath, bytes:rw.bytes.length, clean_sha256:cleanSha, release_sha256:repackedSha, zip_entries:chk.entries, zip_crc_ok:chk.ok}],
+    rollback:'Khôi phục bằng file sạch '+actSub+' (SHA256: '+cleanSha+')'
+  };
+  const outFiles=[{name:outPath, data:rw.bytes}];
+  if(rmSt.includeManifest) outFiles.push({name:'manifest.json', data:new TextEncoder().encode(JSON.stringify(manifest,null,2))});
+  rmSt.lastManifest=manifest;
+  return {blob:zipStore(outFiles), name:`SmokeTest_Repack_${slugFile(byId[heroId]?.name||A)}_${rmSt.version}.zip`, manifest};
+}
+
+async function buildResourceModRelease(){
+  const chosen=rmSt.items.filter(x=>x.include);
+  if(!chosen.length) throw new Error('Chưa có file nào được chọn vào release. Hãy nạp file donor/mod và tick các file cần xuất.');
+  const pMap=RESMOD.parseMappingLines(rmSt.particleMapText);
+  const sMap=RESMOD.parseMappingLines(rmSt.soundMapText);
+  const heroId=st.picked[0]||null;
+  const heroName=heroId?(byId[heroId]?.name||heroId):'Custom';
+  const actorId=heroId?heroNum(heroId):0;
+  const outFiles=[];
+  const manifestFiles=[];
+  let xmlEditsTotal=0;
+  for(const it of chosen){
+    let data=it.bytes;
+    let xmlNote=null;
+    if((pMap.length || sMap.length) && /Actor_\d+_Actions\.pkg\.bytes$/i.test(it.subpath)){
+      const res=RESMOD.applyExplicitXmlMapping(data, pMap, sMap);
+      data=res.bytes;
+      xmlEditsTotal += res.hits;
+      xmlNote=`Sửa ${res.filesChanged} XML (${res.hits} khớp mapping, bỏ qua ${res.skipped} mã hoá, CRC ${res.zipCrcOk?'OK':'LỖI'})`;
+    }
+    const relOut=RESMOD.normalizeRelPath(it.subpath, rmSt.version, rmSt.addAppPrefix);
+    const outSha=await sha256Hex(data);
+    const zChk=(it.hdr.type==='PK_ZIP') ? RESMOD.verifyZipIntegrity(data) : null;
+    outFiles.push({name:relOut, data});
+    manifestFiles.push({
+      path:relOut,
+      bytes:data.length,
+      header_type:it.hdr.type,
+      shared_file:it.shared,
+      diff_status:it.diff.status,
+      clean_sha256:it.diff.cleanSha,
+      release_sha256:outSha,
+      ...(zChk ? {zip_entries:zChk.entries, zip_crc_ok:zChk.ok} : {}),
+      ...(xmlNote ? {xml_mapping:xmlNote} : {})
+    });
+  }
+  const manifest={
+    mode:'resource_mod_release',
+    generatedAt:new Date().toISOString(),
+    gameVersion:rmSt.version,
+    platform:st.device==='ios'?'iOS':'Android',
+    targetHero:{id:heroId, name:heroName, actorId},
+    donorSource:rmSt.donorName,
+    device_verified:false,
+    containerWarning:'Định dạng xuất là .zip. Đổi đuôi .zip thành .3105 KHÔNG tạo đúng định dạng .3105.',
+    mappingsApplied:{particleResourceName:pMap, soundEventName:sMap, totalXmlReplacements:xmlEditsTotal},
+    excludedFiles:rmSt.items.filter(x=>!x.include).map(x=>({subpath:x.subpath, reason:x.diff.status, shared:x.shared})),
+    files:manifestFiles,
+    testChecklist:[
+      '1. Repack chưa chỉnh (Smoke Test): mở game và tải tướng',
+      '2. Model: kiểm tra sảnh/trận, gần/xa, chất lượng thấp/cao',
+      '3. Animation: chạy, dừng, đánh, dùng chiêu, chết/hồi sinh',
+      '4. Particle: từng chiêu, trúng mục tiêu, hủy chiêu (so sánh vừa vào Thử tướng vs chọn lại skin)',
+      '5. Âm thanh: SFX/VO/sảnh, lặp và dừng, đúng ngôn ngữ',
+      '6. UI: nút bấm, thông báo hạ qua nhiều lần hạ (nếu có file UI)',
+      '7. Phiên dài: chơi nhiều phút, tải lại trận, kiểm tra log Jetsam/crash'
+    ],
+    rollback:'Gỡ toàn bộ file trong danh sách và khôi phục lại các file sạch tương ứng theo clean_sha256.'
+  };
+  if(rmSt.includeManifest){
+    outFiles.push({name:'manifest.json', data:new TextEncoder().encode(JSON.stringify(manifest,null,2))});
+  }
+  rmSt.lastManifest=manifest;
+  return {blob:zipStore(outFiles), name:`Release_${slugFile(heroName)}_${rmSt.version}_${st.device}.zip`, manifest};
+}
+
+function downloadBlobDirect(blob, filename){
+  const a=document.createElement('a'), url=URL.createObjectURL(blob);
+  a.href=url; a.download=filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 20000);
+}
+
+function renderResModPane(){
+  const el=document.getElementById('paneRes');
+  if(!el) return;
+  const dictInfo=RESMOD.verifyDict();
+  const heroId=st.picked[0];
+  const heroLabel=heroId ? `${byId[heroId].name} (ActorID ${heroNum(heroId)})` : 'Chưa chọn tướng';
+  const rowsHtml=rmSt.items.map((it,idx)=>{
+    const dc=it.diff.status==='IDENTICAL'?'mut':(it.diff.status==='COMPRESSION_ONLY'?'warn':(it.diff.status==='MODIFIED'?'ok':'warn'));
+    return `<tr>
+      <td><input type="checkbox" class="rm-inc" data-i="${idx}" ${it.include?'checked':''}></td>
+      <td style="word-break:break-all"><b>${esc(it.subpath)}</b><br><span style="color:#64748b">${esc(it.hdr.note)}</span></td>
+      <td><span class="rm-b ${dc}">${esc(it.diff.label)}</span>${it.shared?' <span class="rm-b sh">Dùng chung</span>':''}${it.hdr.locked?' <span class="rm-b err">Mã hoá</span>':''}${it.refShaOk===true?' <span class="rm-b ok">Khớp Yan ref</span>':''}<br><span style="color:#64748b">${esc(it.diff.detail)}</span></td>
+      <td style="white-space:nowrap">${Math.round(it.bytes.length/1024)} KB</td>
+    </tr>`;
+  }).join('');
+
+  el.innerHTML=`
+  <h1>Mod File Tài Nguyên</h1>
+  <p class="sub">Tự động kiểm kê theo header thực tế, so sánh 3 mức với bản sạch, sửa mapping XML có kiểm soát, kiểm tra CRC32 sau repack và xuất gói <code>release/</code> + <code>manifest.json</code> (theo README &amp; inventory.json).</p>
+
+  <div class="card">
+    <h3 style="margin:0 0 6px">1. Kiểm tra công cụ &amp; Nạp Donor / Mod</h3>
+    <p style="font-size:12px;color:#475569;margin:0 0 10px">
+      Tướng đích: <b>${esc(heroLabel)}</b> • ZSTD Dict nhúng sẵn: ${dictInfo.ok?`<span class="rm-b ok">OK (0x${dictInfo.id.toString(16).toUpperCase()} • ${dictInfo.bytes}B)</span>`:`<span class="rm-b err">LỖI</span>`} • Bản sạch: ${RES_ZIP_BYTES?`<span class="rm-b ok">Đã nạp (${esc(RES_ZIP_NAME)})</span>`:`<span class="rm-b warn">Chưa nạp (nạp ở khung bên dưới)</span>`}
+    </p>
+    <div class="rm-row">
+      <label class="pill" style="cursor:pointer">📂 Nạp ZIP Donor / Mod<input type="file" id="rmDonorZip" accept=".zip" style="display:none"></label>
+      <label class="pill" style="cursor:pointer">📄 Nạp nhiều file rời (.bytes/.assetbundle/.bnk)<input type="file" id="rmDonorMulti" multiple style="display:none"></label>
+      <button class="pill" id="rmLoadRef">📋 Xem mẫu kiểm kê Yan (27 file)</button>
+      <button class="pill" id="rmInspectInfo">🔎 Soi Actor_${heroId?heroNum(heroId):'544'}_Infos</button>
+    </div>
+    <p style="font-size:12px;color:#0369a1;margin:8px 0 0">${esc(rmSt.status)}</p>
+    ${rmSt.actorInfoReport?`<pre class="rm-pre">${esc(rmSt.actorInfoReport)}</pre>`:''}
+    ${rmSt.items.length?`<div class="rm-tbl-wrap"><table class="rm-tbl"><thead><tr><th>✓</th><th>Đường dẫn &amp; Header thực tế</th><th>So sánh 3 mức (Clean vs Donor)</th><th>Cỡ</th></tr></thead><tbody>${rowsHtml}</tbody></table></div>`:''}
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 6px">2. Mapping Action XML có kiểm soát (không replace-all ID)</h3>
+    <p style="font-size:12px;color:#64748b;margin:0 0 8px">Chỉ thay đúng giá trị bên trong thẻ <code>resourceName</code> / <code>eventName</code> của các XML đọc được trong <code>Actor_*_Actions.pkg.bytes</code>, giữ nguyên UTF-8 BOM, processing instruction và các track gameplay. Mỗi dòng dạng <code>nguon => dich</code>:</p>
+    <label style="font-size:12px;font-weight:700;display:block;margin-bottom:4px">Particle <code>resourceName</code> (nguồn =&gt; đích):</label>
+    <textarea class="rm-ta" id="rmPMap" placeholder="prefab_skill_effects/hero_skill_effects/544_painter/a1 => prefab_skill_effects/hero_skill_effects/548_SunCe/54804/Sunce_attack_01">${esc(rmSt.particleMapText)}</textarea>
+    <label style="font-size:12px;font-weight:700;display:block;margin:8px 0 4px">Sound <code>eventName</code> (nguồn =&gt; đích):</label>
+    <textarea class="rm-ta" id="rmSMap" placeholder="Play_544_Painter_SkillA => Play_544_Painter_SkillA_Skin1">${esc(rmSt.soundMapText)}</textarea>
+  </div>
+
+  <div class="card">
+    <h3 style="margin:0 0 6px">3. Đóng gói <code>release/</code> &amp; <code>manifest.json</code></h3>
+    <div class="rm-row">
+      <label style="font-size:12px;font-weight:700">Phiên bản Resources:</label>
+      <input id="rmVer" value="${esc(rmSt.version)}" style="width:110px;padding:7px 10px;border-radius:10px;border:1.5px solid #e2e8f0">
+    </div>
+    <label class="rm-chk"><input type="checkbox" id="rmAppPref" ${rmSt.addAppPrefix?'checked':''}> Thêm tiền tố <code>Application/com.garena.game.kgvn/</code> (tự chống lặp <code>Documents/</code>)</label>
+    <label class="rm-chk"><input type="checkbox" id="rmIncMan" ${rmSt.includeManifest?'checked':''}> Kèm file <code>manifest.json</code> (SHA256 sạch/sửa, header, CRC, checklist 7 lớp, hướng dẫn khôi phục)</label>
+    <p style="font-size:11px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:8px 10px;margin:8px 0">
+      ⚠️ <b>Lưu ý kỹ thuật (README Mục 4 &amp; 12):</b> Bundle <code>UnityFS</code>, <code>.bnk</code> và <code>AssetRef</code> nhị phân được kiểm kê và đóng gói nguyên bản (không tự chuyển rig/shader hay sửa chuỗi khác độ dài). File xuất là <code>.zip</code> — <b>đổi đuôi .zip thành .3105 không tạo đúng định dạng .3105</b>.
+    </p>
+    <div class="rm-row">
+      <button class="pill" id="rmBtnSmoke" style="background:#0f172a;color:#fff">🧪 Xuất Test Repack sạch</button>
+      <button class="pill" id="rmBtnBuild" style="background:linear-gradient(135deg,#22d3ee,#7c3aed);color:#fff;border:0">📦 Đóng gói Release (.zip)</button>
+      ${rmSt.lastManifest?'<button class="pill" id="rmBtnMan">📄 Tải manifest.json</button>':''}
+    </div>
+  </div>`;
+
+  // Event bindings
+  const dz=document.getElementById('rmDonorZip');
+  if(dz) dz.onchange=async(e)=>{
+    const f=e.target.files[0]; if(!f) return;
+    try{
+      const buf=new Uint8Array(await f.arrayBuffer());
+      const map=await RESMOD.extractAllZip(buf);
+      await analyzeDonorFiles(map, f.name);
+      toast('Đã kiểm kê '+map.size+' file từ '+f.name);
+    }catch(err){ rmSt.status='Lỗi đọc ZIP donor: '+err.message; renderResModPane(); toast(err.message); }
+  };
+  const dm=document.getElementById('rmDonorMulti');
+  if(dm) dm.onchange=async(e)=>{
+    const fl=[...(e.target.files||[])]; if(!fl.length) return;
+    const map=new Map();
+    for(const f of fl){
+      const rel=f.webkitRelativePath||f.name;
+      map.set(rel, new Uint8Array(await f.arrayBuffer()));
+    }
+    await analyzeDonorFiles(map, fl.length+' file rời');
+    toast('Đã kiểm kê '+fl.length+' file');
+  };
+  const refBtn=document.getElementById('rmLoadRef');
+  if(refBtn) refBtn.onclick=()=>{
+    const totalB=RESMOD_REF.files.reduce((a,x)=>a+x.bytes,0);
+    rmSt.actorInfoReport = `Mẫu tham chiếu: ${RESMOD_REF.reference} (${RESMOD_REF.files.length} file, ${totalB.toLocaleString()} byte, device_verified=${RESMOD_REF.device_verified})\n` +
+      RESMOD_REF.files.map((f,i)=>`${String(i+1).padStart(2,'0')}. ${f.path} (${Math.round(f.bytes/1024)}KB${f.zip_entries?`, ${f.zip_entries} entries, CRC=${f.zip_crc_ok}`:''}) [${f.sha256.slice(0,12)}...]`).join('\n');
+    renderResModPane();
+  };
+  const infoBtn=document.getElementById('rmInspectInfo');
+  if(infoBtn) infoBtn.onclick=async()=>{
+    const A=heroId?heroNum(heroId):544;
+    const sub='Prefab_Characters/Actor_'+A+'_Infos.pkg.bytes';
+    let bytes=null, src='Donor';
+    const fromDonor=rmSt.items.find(x=>x.subpath.toLowerCase()===sub.toLowerCase());
+    if(fromDonor) bytes=fromDonor.bytes;
+    else if(RES_ZIP_BYTES){
+      const cm=await getCleanSubpathMap([sub]);
+      bytes=cm.get(sub.toLowerCase()); src='Bản sạch Resources';
+    }
+    if(!bytes){ rmSt.actorInfoReport='Không tìm thấy '+sub+' trong Donor hay Resources sạch.'; return renderResModPane(); }
+    const res=RESMOD.inspectActorInfo(bytes);
+    if(!res.ok) rmSt.actorInfoReport=`[${src}] ${sub}: ${res.error}`;
+    else rmSt.actorInfoReport=`[${src}] ${sub} → ${res.entryName} (${res.compressedSize}B → giải nén ${res.decodedSize}B bằng ZSTD dict 0x0B4355E7)\nTìm thấy ${res.totalPaths} đường dẫn prefab (chỉ đọc — chưa tự ghi đè nhị phân):\n`+res.paths.join('\n');
+    renderResModPane();
+  };
+  el.querySelectorAll('.rm-inc').forEach(cb=>cb.onchange=()=>{ rmSt.items[+cb.dataset.i].include=cb.checked; });
+  const pm=document.getElementById('rmPMap'); if(pm) pm.oninput=()=>{ rmSt.particleMapText=pm.value; };
+  const sm=document.getElementById('rmSMap'); if(sm) sm.oninput=()=>{ rmSt.soundMapText=sm.value; };
+  const rv=document.getElementById('rmVer'); if(rv) rv.oninput=()=>{ rmSt.version=rv.value.trim()||'1.64.1'; };
+  const ap=document.getElementById('rmAppPref'); if(ap) ap.onchange=()=>{ rmSt.addAppPrefix=ap.checked; };
+  const im=document.getElementById('rmIncMan'); if(im) im.onchange=()=>{ rmSt.includeManifest=im.checked; };
+
+  const btnSmoke=document.getElementById('rmBtnSmoke');
+  if(btnSmoke) btnSmoke.onclick=async()=>{
+    try{
+      const r=await buildSmokeTestZip();
+      downloadBlobDirect(r.blob, r.name);
+      rmSt.status=`✅ Đã xuất Test Repack sạch: ${r.name} (CRC OK). Hãy test riêng file này trong game trước khi sửa skin.`;
+      renderResModPane(); toast('Đã tải '+r.name);
+    }catch(e){ rmSt.status='Lỗi Smoke Test: '+e.message; renderResModPane(); toast(e.message); }
+  };
+  const btnBuild=document.getElementById('rmBtnBuild');
+  if(btnBuild) btnBuild.onclick=async()=>{
+    try{
+      const r=await buildResourceModRelease();
+      downloadBlobDirect(r.blob, r.name);
+      rmSt.status=`✅ Đã đóng gói Release: ${r.name} (${r.manifest.files.length} file + ${rmSt.includeManifest?'manifest.json':'không manifest'}).`;
+      renderResModPane(); toast('Đã tải '+r.name);
+    }catch(e){ rmSt.status='Lỗi đóng gói: '+e.message; renderResModPane(); toast(e.message); }
+  };
+  const btnMan=document.getElementById('rmBtnMan');
+  if(btnMan) btnMan.onclick=()=>{
+    if(!rmSt.lastManifest) return;
+    downloadBlobDirect(new Blob([JSON.stringify(rmSt.lastManifest,null,2)],{type:'application/json'}), 'manifest.json');
+  };
 }
 
 
