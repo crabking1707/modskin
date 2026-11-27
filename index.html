@@ -412,21 +412,19 @@ function view1(){
 function view2(){
   const roleChips=Object.keys(ROLES).map(r=>`<button class="chip ${st.role===r?'on':''}" data-r="${r}"><span class="dot" style="background:${ROLES[r]}"></span>${r}</button>`).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="pill" id="b2">← Quay lại</button><span class="pill"><span class="dot" style="background:#10b981"></span>${st.device==='ios'?'iOS':'Android'} đã chọn</span></div>
-  <h1>Chọn tướng yêu thích</h1><p class="sub">Ấn vào icon để chọn nhiều tướng. Viền sáng cyan = đã chọn.</p>
+  <h1>Chọn tướng yêu thích</h1><p class="sub">Ấn vào icon để chọn nhiều tướng (tối đa 60 tướng). Viền sáng cyan = đã chọn.</p>
   <input class="search" id="q" placeholder="Tìm tên tướng... (VD: Nakroth, Violet, Tel'Annas)" value="${esc(st.q)}">
   <div class="chips">${roleChips}<span class="chip" id="cnt"></span></div><div class="grid" id="hg"></div>`;
   $('#b2').onclick=()=>go(1);
   $('#q').oninput=e=>{st.q=e.target.value;list()};
   document.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{st.role=st.role===b.dataset.r?'':b.dataset.r;view2()});
   $('#hg').onclick=e=>{const c=e.target.closest('[data-h]');if(!c)return;const id=c.dataset.h,i=st.picked.indexOf(id);
-    if(i>=0){st.picked.splice(i,1);delete st.skin[id]}
-    else{if(st.picked.length>=60)return toast('Chỉ chọn tối đa 60 tướng cùng lúc!');st.picked.push(id)}
-    c.classList.toggle('on');foot()};
+    if(i>=0){st.picked.splice(i,1);delete st.skin[id];c.classList.remove('on');}else{if(st.picked.length>=60){toast('Tối đa 60 tướng mỗi lần tạo file!');return;}st.picked.push(id);c.classList.add('on');}foot()};
   function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/['’\s-]/g,'')}
   function list(){const q=norm(st.q);const L=H.filter(h=>(!st.role||h.role===st.role)&&(!q||norm(h.name).includes(q)));
     $('#cnt').textContent=L.length+' tướng';
     $('#hg').innerHTML=L.map(h=>`<button class="hero ${st.picked.includes(h.id)?'on':''}" data-h="${h.id}"><img loading="lazy" src="${heroImg(h.id)}" alt=""><b>${esc(h.name)}</b><small style="color:${ROLES[h.role]}">● ${h.role}</small></button>`).join('')}
-  function foot(){const n=st.picked.length;bar(`<div class="row"><div class="logo" style="background:#0b1220;border:1px solid #334155">${n}</div><div class="s"><b>Đã chọn ${n}/60 tướng</b><span>${n?st.picked.map(i=>byId[i].name).join(', '):'Chưa chọn tướng nào (tối đa 60)'}</span></div><button class="go" id="n2" ${n?'':'disabled'}>Xác nhận (${n}) →</button></div>`);
+  function foot(){const n=st.picked.length;bar(`<div class="row"><div class="logo" style="background:#0b1220;border:1px solid #334155">${n}</div><div class="s"><b>Đã chọn ${n}/60 tướng</b><span>${n?st.picked.map(i=>byId[i].name).join(', '):'Chưa chọn tướng nào'}</span></div><button class="go" id="n2" ${n?'':'disabled'}>Xác nhận (${n}) →</button></div>`);
     $('#n2').onclick=()=>go(3)}
   list();foot();
 }
@@ -1303,6 +1301,8 @@ const SKINMOD = (()=>{
           if(val===base+T) return pre+ind+a+(val+10500)+c+eol+(neg? ind3 : ind+'<bool name="useNegateValue" value="true" refParamName="" useRefParam="false" />'+eol+ind2);
           if(val===base+T-1 && neg) return pre+ind+a+(val+10500)+c+eol+ind3;   // skin liền trước skin đích, điều kiện phủ định
           return m; });
+      // Đồng bộ SkinOrAvatarList cho các tướng đời mới (Billow 59901, Bolt Baron, Biron, Dolia...)
+      text = syncSkinFilterList(text, base, base + T, false);
     }
     return text;
   }
@@ -1432,26 +1432,136 @@ const SKINMOD = (()=>{
   function skinListXml(base){
     let s=''; for(let k=0;k<=45;k++) s += '<SkinOrAvatarList id="'+(base+k)+'" />'; return s;
   }
-  function commonBack(xmlText, heroDir, base, T){
-    const sl = skinListXml(base);
+  function appendMissingSkinIds(trk, base){
+    let extra = '';
+    for(let k=0;k<=45;k++){
+      const id = base + k;
+      if(!new RegExp('<SkinOrAvatarList\\s+id="' + id + '"\\s*\\/?>').test(trk)){
+        extra += '<SkinOrAvatarList id="' + id + '" />';
+      }
+    }
+    return extra ? trk.replace('</Track>', extra + '</Track>') : trk;
+  }
+  // Đồng bộ SkinOrAvatarList cho mọi Track chứa skin đích (sid):
+  // - Trong file chiêu thức (skipParticle=false): mở rộng cả flt=9 và flt=11, đồng thời loại trừ skin đích khỏi flt=9 của skin KHÁC cùng tướng nếu người chơi đang mặc skin khác
+  // - Trong CommonActions/Back.xml (skipParticle=true): chỉ mở rộng hoạt ảnh/âm thanh/trạng thái (bỏ qua TriggerParticle mặc định để không bị chồng hiệu ứng)
+  function syncSkinFilterList(xmlText, base, sid, skipParticle){
+    const sidRe = new RegExp('<SkinOrAvatarList\\s+id="' + sid + '"\\s*\\/?>');
+    const baseRe = new RegExp('<SkinOrAvatarList\\s+id="' + base + '"\\s*\\/?>');
+    return xmlText.replace(/<Track\b(?:[^>"']|"[^"]*"|'[^']*')*(?:\/>|>[\s\S]*?<\/Track>)/g, (trk)=>{
+      if(/\/>$/.test(trk) || !sidRe.test(trk) || baseRe.test(trk)) return trk;
+      if(skipParticle && /eventType="TriggerParticle(?:Tick)?"/.test(trk)) return trk;
+      return appendMissingSkinIds(trk, base);
+    });
+  }
+  // Trích xuất và chuẩn hóa các track riêng từ <sid>_Back.xml hoặc track SkinAvatarFilterType="9" của sid trong <hero>/skill/Back.xml
+  function extractSkinBackTracks(skinBackXml, heroDir, base, sid, baseTrackCount, onlySidFilter){
+    if(!skinBackXml) return {xml:'', hasLoop:false, hasFall:false};
+    // Khớp chuẩn cả thẻ tự đóng <Track ... /> lẫn thẻ đầy đủ <Track ...>...</Track>
+    const rawTracks = skinBackXml.match(/<Track\b(?:[^>"']|"[^"]*"|'[^']*')*(?:\/>|>[\s\S]*?<\/Track>)/g) || [];
+    const sidRe = new RegExp('<SkinOrAvatarList\\s+id="' + sid + '"\\s*\\/?>');
+    const selected = [];
+    const indexMap = new Map();
+    const guidMap = new Map();
+    for(let i=0;i<rawTracks.length;i++){
+      const t = rawTracks[i];
+      if(/enabled="false"/.test(t) || /\/>$/.test(t)) continue;
+      if(onlySidFilter && !(/SkinAvatarFilterType="9"/.test(t) && sidRe.test(t))) continue;
+      const newIdx = baseTrackCount + selected.length;
+      indexMap.set(i, newIdx);
+      const gm = t.match(/<Track\b[^>]*\bguid="([^"]+)"/);
+      if(gm) guidMap.set(gm[1], newIdx);
+      selected.push(t);
+    }
+    if(!selected.length) return {xml:'', hasLoop:false, hasFall:false};
+    const D = heroDir.toLowerCase();
+    const resRe = new RegExp('(<String\\s+name="resourceName"\\s+value=")(prefab_skill_effects/hero_skill_effects/' + D + '/)([^"/]+)(")', 'gi');
+    let outXml = '', hasLoop = false, hasFall = false;
+    for(let t of selected){
+      // Dịch chuyển Condition / TrackObject chính xác theo guid (ưu tiên) hoặc chỉ số gốc
+      t = t.replace(/<(?:Condition|TrackObject)\b[^>]*>/g, (tag)=>{
+        const idm = tag.match(/\bid="(\d+)"/);
+        if(!idm) return tag;
+        const gm = tag.match(/\bguid="([^"]+)"/);
+        let mapped = (gm && guidMap.has(gm[1])) ? guidMap.get(gm[1]) : indexMap.get(+idm[1]);
+        return mapped !== undefined ? tag.replace(/\bid="\d+"/, 'id="'+mapped+'"') : tag;
+      });
+      // Chuẩn hóa đường dẫn hiệu ứng trong <sid>_Back.xml về đúng thư mục skin sid (nếu chưa có /sid/)
+      t = t.replace(resRe, (m, a, p, name, c)=> a + p + sid + '/' + name + c);
+      if(/huicheng_tongyong_01/i.test(t) && /eventType="TriggerParticle"/.test(t)) hasLoop = true;
+      if(/huijidi_01/i.test(t) && /eventType="TriggerParticleTick"/.test(t)) hasFall = true;
+      // Bảo đảm Track gắn SkinAvatarFilterType="9" và đủ danh sách SkinOrAvatarList base..base+45
+      if(!/SkinAvatarFilterType=/.test(t)){
+        t = t.replace(/(<Track\b[^>]*)(>)/, '$1 SkinAvatarFilterType="9"$2');
+      }
+      t = appendMissingSkinIds(t, base);
+      outXml += t;
+    }
+    return {xml: outXml, hasLoop, hasFall};
+  }
+  function commonBack(xmlText, heroDir, base, T, skinBackXml, heroBackXml){
+    const sl = skinListXml(base), sid = base + T;
     let out = xmlText;
-    // Loại trừ hiệu ứng biến về mặc định cho tướng này trên các track SkinAvatarFilterType="11"
-    out = out.replace(/(<Track[^>]*trackName="(?:GetResource\[huijidi\]|GetResource\[huicheng\]|TriggerParticleTick0|TriggerParticle0)"[^>]*SkinAvatarFilterType="11"[^>]*>[\s\S]*?)(<\/Track>)/g,
-      (m,a,b)=> a.includes('id="'+base+'"') ? m : (a + sl + b));
-    const sid = base + T;
-    const addTracks =
-      '<Track trackName="Mod_'+sid+'_BackFall" eventType="TriggerParticleTick" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
-      '<Event eventName="TriggerParticleTick" time="7.000" isDuration="false"><TemplateObject name="targetId" objectName="None" id="-1" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huijidi_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><float name="lifeTime" value="5.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bUseHeroLocalForward" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>'+
-      '<Track trackName="Mod_'+sid+'_BackLoop" eventType="TriggerParticle" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
-      '<Event eventName="TriggerParticle" time="0.000" length="7.000" isDuration="true"><TemplateObject name="targetId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huicheng_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bEnableOptCull" value="false" refParamName="" useRefParam="false" /><bool name="bTrailProtect" value="true" refParamName="" useRefParam="false" /><bool name="bApplySpecialEffect" value="true" refParamName="" useRefParam="false" /><bool name="bOnlySetAlpha" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
+    // 1) Đồng bộ toàn bộ Track hoạt ảnh / tư thế / âm thanh đã cấu hình cho skin đích trong CommonActions/Back.xml
+    //    (VD: Track 30-38 Home/Gohome layer 5, Track 32-35 & 55-56 tắt Idle của Billow 59901 và 50+ skin SS/SSS)
+    out = syncSkinFilterList(out, base, sid, true);
+    // 2) Đồng bộ CheckSkinIdTick trong Back.xml nếu skin đích có nhánh kiểm tra riêng (VD: 51015)
+    out = out.replace(/<Event eventName="CheckSkinIdTick"[\s\S]*?<\/Event>/g, (ev)=>{
+      const m = ev.match(/([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)?/);
+      if(!m || +m[3] !== sid) return ev;
+      if(/<bool name="(?:useNegateValue|bEqual)"/.test(ev)) return ev;
+      const hasSkip = /<bool name="bSkipLogicCheck" value="true"/.test(ev);
+      const rep = m[1]+m[2]+(sid+10500)+m[4]+(m[5]||'\n')+(hasSkip ? '' : m[1]+'<bool name="bEqual" value="false" refParamName="" useRefParam="false" />'+(m[5]||'\n'));
+      return ev.replace(m[0], rep);
+    });
+    // 3) Loại trừ hiệu ứng biến về mặc định: BẮT BUỘC gắn SkinAvatarFilterType="11" cho Track 7 & 8 (GetResource[huijidi]/[huicheng])
+    //    vì file gốc chưa có thuộc tính này, đồng thời thêm danh sách skin vào Track 24 & 25 (TriggerParticleTick0/TriggerParticle0)
+    out = out.replace(/<Track\b[^>]*trackName="(?:GetResource\[huijidi\]|GetResource\[huicheng\])"[\s\S]*?<\/Track>/g, (trk)=>{
+      if(!/SkinAvatarFilterType=/.test(trk)){
+        trk = trk.replace(/(<Track\b[^>]*)(>)/, '$1 SkinAvatarFilterType="11"$2');
+      }
+      return appendMissingSkinIds(trk, base);
+    });
+    out = out.replace(/<Track\b[^>]*trackName="(?:TriggerParticleTick0|TriggerParticle0)"[^>]*SkinAvatarFilterType="11"[\s\S]*?<\/Track>/g, (trk)=>{
+      return appendMissingSkinIds(trk, base);
+    });
+    // 4) Ghép các track phụ trợ biến về từ <sid>_Back.xml (79 tướng: xoay hướng, nâng chiều cao, hiệu ứng phụ...)
+    //    hoặc các track riêng cho sid trong <hero>/skill/Back.xml (VD: Billow 59901 ChangeHDHeightDuration 850 + reset dạng cá mập)
+    const curCount = (out.match(/<Track\b/g) || []).length;
+    const mergedSkin = extractSkinBackTracks(skinBackXml, heroDir, base, sid, curCount, false);
+    const mergedHero = extractSkinBackTracks(heroBackXml, heroDir, base, sid, curCount + (mergedSkin.xml.match(/<Track\b/g) || []).length, true);
+    let addTracks = mergedSkin.xml + mergedHero.xml;
+    const hasFall = mergedSkin.hasFall || mergedHero.hasFall;
+    const hasLoop = mergedSkin.hasLoop || mergedHero.hasLoop;
+    // 5) Thêm 2 track hiệu ứng biến về chuẩn (huijidi_01 + huicheng_tongyong_01) nếu chưa có trong <sid>_Back.xml
+    if(!hasFall){
+      addTracks += '<Track trackName="Mod_'+sid+'_BackFall" eventType="TriggerParticleTick" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
+      '<Event eventName="TriggerParticleTick" time="7.000" isDuration="false"><TemplateObject name="targetId" objectName="None" id="-1" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huijidi_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><float name="lifeTime" value="5.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bUseHeroLocalForward" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
+    }
+    if(!hasLoop){
+      addTracks += '<Track trackName="Mod_'+sid+'_BackLoop" eventType="TriggerParticle" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
+      '<Event eventName="TriggerParticle" time="0.000" length="7.000" isDuration="true"><TemplateObject name="targetId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+sid+'/huicheng_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bEnableOptCull" value="false" refParamName="" useRefParam="false" /><bool name="bTrailProtect" value="true" refParamName="" useRefParam="false" /><String name="syncAnimationName" value="" refParamName="" useRefParam="false" /><bool name="bApplySpecialEffect" value="true" refParamName="" useRefParam="false" /><bool name="bOnlySetAlpha" value="true" refParamName="" useRefParam="false" /><String name="customTagName" value="" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
+    }
     return out.replace('</Action>', addTracks + '</Action>');
   }
   function commonHaste(xmlText, heroDir, base, T){
     const sl = skinListXml(base), sid = base + T;
+    let out = syncSkinFilterList(xmlText, base, sid, false);
+    // Nếu sid nằm trong danh sách tắt vệt gia tốc mặc định (skinIdArray), thêm luôn base..base+45 để không chồng vệt mặc định
+    const sidTagRe = new RegExp('<int\\s+value="' + sid + '"\\s*\\/?>');
+    out = out.replace(/<Array\s+name="skinIdArray"[^>]*>[\s\S]*?<\/Array>/g, (arr)=>{
+      if(!sidTagRe.test(arr)) return arr;
+      let extra = '';
+      for(let k=0;k<=45;k++){
+        const id = base + k;
+        if(!new RegExp('<int\\s+value="' + id + '"\\s*\\/?>').test(arr)) extra += '<int value="' + id + '" />';
+      }
+      return arr.replace('</Array>', extra + '</Array>');
+    });
     const addTrack =
       '<Track trackName="Mod_'+sid+'_Haste" eventType="TriggerParticle" guid="'+heroDir+'/'+sid+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
       '<Event eventName="TriggerParticle" time="0.000" length="5.000" isDuration="true"><TemplateObject name="targetId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="Prefab_Skill_Effects/Hero_Skill_Effects/'+heroDir+'/'+sid+'/jiasu_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="0.700" z="-0.600" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
-    return xmlText.replace('</Action>', addTrack + '</Action>');
+    return out.replace('</Action>', addTrack + '</Action>');
   }
   return {setMd5,parse,build,motion,sound,hasSkinRow,shop,heroSkin,organSkin,xmlRules,u32,bdomParse,bdomSerialize,actorInfo,assetRef,commonBack,commonHaste};
 })();
@@ -1521,63 +1631,72 @@ async function buildModZip(){
   ZSTD_LOG = [];
   const sel=st.picked.filter(i=>st.skin[i]!=null);
   const heroesMod = sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
-  if(heroesMod.length<1) throw new Error('Bạn chưa chọn tướng/skin nào. CHƯA trừ điểm.');
-  if(heroesMod.length>60) throw new Error('Chỉ hỗ trợ tối đa 60 tướng mỗi lần tạo file (đang chọn '+heroesMod.length+' tướng). CHƯA trừ điểm.');
+  if(heroesMod.length===0) throw new Error('Chưa chọn skin cho tướng nào. CHƯA trừ điểm.');
+  if(heroesMod.length>60) throw new Error('Tối đa 60 tướng mỗi lần tạo file (đang chọn '+heroesMod.length+' tướng). CHƯA trừ điểm.');
 
+  const jobs = [];
   const seenActors = new Set();
   for(const item of heroesMod){
     const sk = findSkin(item.hero, item.skin);
     if(!sk) throw new Error('Chưa có ID skin thật cho "'+item.hero+' - '+item.skin+'" trong danh sách. CHƯA trừ điểm.');
-    const A = Math.floor(sk.id/100);
+    const A = Math.floor(sk.id/100), base = A*100, T = sk.id-base, has = !!sk.flag;
     if(seenActors.has(A)) throw new Error('Trùng ActorID '+A+' ('+item.hero+'). Mỗi tướng chỉ chọn 1 skin. CHƯA trừ điểm.');
     seenActors.add(A);
-    item.sk = sk;
     item.actor = A;
-    item.base = A*100;
-    item.T = sk.id - item.base;
-    item.has = !!sk.flag;
+    jobs.push({item, sk, A, base, T, has});
   }
 
   await ensureResForHeroes(heroesMod);
-  if(!RES_FILES || RES_FILES.size===0) throw new Error('Ban chua nap file goc!');
+  if(!RES_FILES || RES_FILES.size===0) throw new Error('Bạn chưa nạp file gốc!');
 
   SKINMOD.setMd5(md5Hex);
   let root='Resources/1.64.1/';
   for(const p of Object.values(RES_PATHS||{})){ const m=String(p).match(/^(.*?Resources\/[^\/]+\/)/); if(m){ root=m[1]; break; } }
   const files=[]; const yieldUI=()=>new Promise(r=>setTimeout(r,0)); const kb=n=>Math.round(n/1024)+'KB';
-  const raw={}; const origLen={}; const notFound=[];
+  const raw={}; const origLen={}; const tableChanged={}; const notFound=[];
   for(const [bn,rel] of SKIN_TABLES){
     const d=RES_FILES.get(bn); if(!d){ notFound.push(bn); continue; }
     let r=null; try{ r=gameDecode(d); }catch(e){ throw new Error('Không giải nén được '+bn+': '+(e&&e.message||e)+'. CHƯA trừ điểm.'); }
     if(!r){ notFound.push(bn+' (mã hóa)'); continue; }
-    raw[bn]=r; origLen[bn]=r.length; await yieldUI();
+    raw[bn]=r; origLen[bn]=r.length; tableChanged[bn]=false; await yieldUI();
   }
 
-  const dirtyTables = new Set();
-  const tableCounts = {};
-  const caTargets = [];
-  let actionsCount = 0, infosCount = 0, assetRefCount = 0;
+  ZSTD_LOG.push('Tổng số tướng mod: '+jobs.length+'/60 tướng');
 
-  for(let hi=0; hi<heroesMod.length; hi++){
-    const item = heroesMod[hi];
-    const {hero, sk, actor:A, base, T, has} = item;
-    const actBn = 'Actor_'+A+'_Actions.pkg.bytes';
-    const act = RES_FILES.get(actBn);
-    let HERO_DIR = (act && pkgHeroDir(act, A)) || null;
-    if(!HERO_DIR) throw new Error('Không thấy file '+actBn+' hoặc không đọc được thư mục tướng trong đó ('+hero+' - ActorID '+A+'). CHƯA trừ điểm.');
-    const COUPLE_PREFIX = 'Play_'+HERO_DIR.replace(/^\d+_/,'')+'_';
+  // Nạp trước CommonActions.pkg.bytes (nếu có tướng dùng hiệu ứng biến về / gia tốc)
+  const caBn = 'CommonActions.pkg.bytes';
+  const caPkg = RES_FILES.get(caBn);
+  const caXmlMap = new Map();
+  let caChangedHeroes = 0;
+  if(!caPkg) notFound.push(caBn);
+  else if(jobs.some(j=>j.has)){
+    pkgRewrite(caPkg, (name, stored)=>{
+      const low = name.toLowerCase();
+      if(low!=='commonresource/back.xml' && low!=='commonresource/hastee1.xml' && low!=='commonresource/hastee1_leave.xml') return null;
+      let rawXml; try{ rawXml = gameDecode(stored); }catch(_){ return null; }
+      if(!rawXml) return null;
+      const bom = rawXml[0]===0xEF && rawXml[1]===0xBB && rawXml[2]===0xBF;
+      const txt = new TextDecoder().decode(bom?rawXml.subarray(3):rawXml);
+      caXmlMap.set(low, {bom, txt, changed:false});
+      return null;
+    });
+  }
+
+  for(let idx=0; idx<jobs.length; idx++){
+    const {item, sk, A, base, T, has} = jobs[idx];
+    const actBn='Actor_'+A+'_Actions.pkg.bytes';
+    const act=RES_FILES.get(actBn);
+    let HERO_DIR=(act && pkgHeroDir(act,A)) || null;
+    if(!HERO_DIR) throw new Error('Không thấy file '+actBn+' hoặc không đọc được thư mục tướng trong đó (ActorID '+A+' - '+item.hero+'). CHƯA trừ điểm.');
+    const COUPLE_PREFIX='Play_'+HERO_DIR.replace(/^\d+_/,'')+'_';
     HERO_DIR = HERO_DIR.toLowerCase();
 
-    ZSTD_LOG.push('['+(hi+1)+'/'+heroesMod.length+'] '+hero+' • skin ID '+sk.id+' (ActorID '+A+') • '+(has?'● có hiệu ứng/âm thanh riêng':'○ không có hiệu ứng riêng'));
+    ZSTD_LOG.push('['+(idx+1)+'/'+jobs.length+'] '+item.hero+' • '+item.skin+' (ID '+sk.id+', ActorID '+A+') • '+(has?'● có hiệu ứng/âm thanh riêng':'○ không có hiệu ứng riêng'));
 
     const applyTable=(bn,fn)=>{
       if(!raw[bn]) return;
-      const out = fn(raw[bn]);
-      if(out){
-        raw[bn] = out;
-        dirtyTables.add(bn);
-        tableCounts[bn] = (tableCounts[bn]||0) + 1;
-      }
+      const out=fn(raw[bn]);
+      if(out){ raw[bn]=out; tableChanged[bn]=true; }
     };
     applyTable('ResSkinMotionBaseCfg.bytes',d=>SKINMOD.motion(d,base,T));
     applyTable('LobbyBank.bytes',d=>SKINMOD.sound(d,base,T,null,4));
@@ -1590,14 +1709,17 @@ async function buildModZip(){
     applyTable('heroSkin.bytes',d=>SKINMOD.heroSkin(d,base,T,A));
     applyTable('organSkin.bytes',d=>SKINMOD.organSkin(d,base,T));
 
-    // 1) Actor_<A>_Actions.pkg.bytes
-    let xmlChanged=0, xmlSkipped=0;
+    // 1) File Actions của tướng
+    let xmlChanged=0, xmlSkipped=0, skinBackXml=null, heroBackXml=null;
+    const sidBackRe = new RegExp('(^|/)'+(base+T)+'_back\\.xml$','i');
     const rw=pkgRewrite(act,(name,stored)=>{
       if(!/\.xml$/i.test(name)) return null;
       let data; try{ data=gameDecode(stored); }catch(e){ xmlSkipped++; return null; }
       if(!data){ xmlSkipped++; return null; }
       const bom = data[0]===0xEF && data[1]===0xBB && data[2]===0xBF;
       const text=new TextDecoder().decode(bom?data.subarray(3):data);
+      if(sidBackRe.test(name)) skinBackXml = text;
+      else if(/(^|\/)back\.xml$/i.test(name)) heroBackXml = text;
       const keepFn = (A===130) ? (resName)=>{
         if(/(^|\/)U1\.xml$/i.test(name) && resName==='gongbenwuzang_attack03_spell01') return true;
         if(/(^|\/)U1E5(1)?\.xml$/i.test(name) && resName==='gongbenwuzang_loop_spell01') return true;
@@ -1609,10 +1731,9 @@ async function buildModZip(){
     });
     xmlChanged=rw.changed;
     files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+actBn, data:rw.bytes});
-    actionsCount++;
-    ZSTD_LOG.push('  ↳ '+actBn+': sửa '+xmlChanged+' XML'+(xmlSkipped?(' (bỏ qua '+xmlSkipped+' mã hóa)'):''));
+    ZSTD_LOG.push('  ↳ '+actBn+': sửa '+xmlChanged+' XML'+(xmlSkipped?(' (bỏ qua '+xmlSkipped+' file con mã hóa)'):''));
 
-    // 2) Actor_<A>_Infos.pkg.bytes
+    // 2) Actor_<A>_Infos.pkg.bytes (ngoại hình: model trận + model sảnh + camera sảnh)
     const infoBn = 'Actor_'+A+'_Infos.pkg.bytes';
     const infoPkg = RES_FILES.get(infoBn);
     if(!infoPkg) notFound.push(infoBn);
@@ -1628,12 +1749,11 @@ async function buildModZip(){
       });
       if(infoChanged){
         files.push({name:root+'Prefab_Characters/'+infoBn, data:rwInfo.bytes});
-        infosCount++;
-        ZSTD_LOG.push('  ↳ '+infoBn+': đổi ngoại hình sang skin #'+T+' ('+kb(rwInfo.bytes.length)+')');
-      } else ZSTD_LOG.push('  ↳ '+infoBn+': giữ nguyên (skin #'+T+' vượt số slot)');
+        ZSTD_LOG.push('  ↳ '+infoBn+': đã đổi ngoại hình sang skin #'+T+' ('+kb(rwInfo.bytes.length)+')');
+      } else ZSTD_LOG.push('  ↳ '+infoBn+': không đổi được (skin #'+T+' vượt quá số slot SkinPrefab)');
     }
 
-    // 3) <A>_AssetRef.bytes
+    // 3) <A>_AssetRef.bytes (preload hiệu ứng chiêu thức)
     const arBn = A+'_AssetRef.bytes';
     const arBytes = RES_FILES.get(arBn);
     if(!arBytes) notFound.push(arBn);
@@ -1643,61 +1763,57 @@ async function buildModZip(){
         const patchedAr = SKINMOD.assetRef(rawAr, HERO_DIR, T, has, base);
         if(patchedAr){
           files.push({name:root+'AssetRefs/Hero/'+arBn, data:patchedAr});
-          assetRefCount++;
-          ZSTD_LOG.push('  ↳ '+arBn+': cập nhật preload hiệu ứng ('+kb(patchedAr.length)+')');
+          ZSTD_LOG.push('  ↳ '+arBn+': đã cập nhật preload hiệu ứng ('+kb(rawAr.length)+' → '+kb(patchedAr.length)+')');
         }
       }
     }
 
-    if(has) caTargets.push({HERO_DIR, base, T, hero});
+    // 4) Cộng dồn hiệu ứng biến về & gia tốc vào CommonActions
+    if(has && caXmlMap.size){
+      let heroCaHit = false;
+      for(const [low, entry] of caXmlMap.entries()){
+        const nextTxt = (low==='commonresource/back.xml')
+          ? SKINMOD.commonBack(entry.txt, HERO_DIR, base, T, skinBackXml, heroBackXml)
+          : SKINMOD.commonHaste(entry.txt, HERO_DIR, base, T);
+        if(nextTxt !== entry.txt){ entry.txt = nextTxt; entry.changed = true; heroCaHit = true; }
+      }
+      if(heroCaHit) caChangedHeroes++;
+    }
+
     await yieldUI();
   }
 
-  // Ghi các bảng Databin chung (mỗi bảng chỉ xuất 1 lần sau khi gộp tất cả tướng)
-  for(const [bn, rel] of SKIN_TABLES){
-    if(dirtyTables.has(bn)){
-      files.push({name:root+rel, data:raw[bn]});
-      ZSTD_LOG.push(bn+': đã sửa cho '+(tableCounts[bn]||1)+' tướng ('+kb(origLen[bn])+' → '+kb(raw[bn].length)+')');
-    } else if(raw[bn]){
+  // Đưa các bảng Databin dùng chung đã sửa vào gói ZIP
+  for(const [bn,rel] of SKIN_TABLES){
+    if(!raw[bn]) continue;
+    if(tableChanged[bn]){
+      files.push({name:root+rel,data:raw[bn]});
+      ZSTD_LOG.push(bn+': đã sửa ('+kb(origLen[bn])+' → '+kb(raw[bn].length)+')');
+    } else {
       ZSTD_LOG.push(bn+': không có gì để đổi (giữ nguyên)');
     }
   }
 
-  if(files.length===0) throw new Error('Không có file nào để đổi. CHƯA trừ điểm.');
-
-  // 4) CommonActions.pkg.bytes (gộp biến về & gia tốc cho toàn bộ tướng có hiệu ứng riêng)
-  const caBn = 'CommonActions.pkg.bytes';
-  const caPkg = RES_FILES.get(caBn);
-  if(!caPkg) notFound.push(caBn);
-  else if(caTargets.length>0){
-    let caChanged = 0;
-    const rwCa = pkgRewrite(caPkg, (name, stored)=>{
-      const low = name.toLowerCase();
-      if(low!=='commonresource/back.xml' && low!=='commonresource/hastee1.xml' && low!=='commonresource/hastee1_leave.xml') return null;
-      let rawXml; try{ rawXml = gameDecode(stored); }catch(_){ return null; }
-      if(!rawXml) return null;
-      const bom = rawXml[0]===0xEF && rawXml[1]===0xBB && rawXml[2]===0xBF;
-      let txt = new TextDecoder().decode(bom?rawXml.subarray(3):rawXml);
-      const origTxt = txt;
-      for(const ct of caTargets){
-        txt = (low==='commonresource/back.xml') ? SKINMOD.commonBack(txt, ct.HERO_DIR, ct.base, ct.T) : SKINMOD.commonHaste(txt, ct.HERO_DIR, ct.base, ct.T);
-      }
-      if(txt===origTxt) return null;
-      caChanged++;
-      const encB = new TextEncoder().encode(txt);
-      if(!bom) return encB;
+  // Đóng gói lại CommonActions.pkg.bytes nếu có ít nhất 1 XML thay đổi
+  if(caPkg && caXmlMap.size && Array.from(caXmlMap.values()).some(v=>v.changed)){
+    let caXmlCnt = 0;
+    const rwCa = pkgRewrite(caPkg, (name)=>{
+      const entry = caXmlMap.get(name.toLowerCase());
+      if(!entry || !entry.changed) return null;
+      caXmlCnt++;
+      const encB = new TextEncoder().encode(entry.txt);
+      if(!entry.bom) return encB;
       const r = new Uint8Array(encB.length+3); r.set([0xEF,0xBB,0xBF],0); r.set(encB,3); return r;
     });
-    if(caChanged){
-      files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+caBn, data:rwCa.bytes});
-      ZSTD_LOG.push(caBn+': đã thêm biến về & gia tốc cho '+caTargets.length+' tướng ('+caChanged+' XML)');
-    }
+    files.push({name:root+'Ages/Prefab_Characters/Prefab_Hero/'+caBn, data:rwCa.bytes});
+    ZSTD_LOG.push(caBn+': đã thêm biến về & gia tốc cho '+caChangedHeroes+' tướng ('+caXmlCnt+' XML)');
   }
 
-  ZSTD_LOG.push('✓ Hoàn tất '+heroesMod.length+' tướng: '+dirtyTables.size+' Databin + '+actionsCount+' Actions + '+infosCount+' Infos + '+assetRefCount+' AssetRef'+(caTargets.length?' + CommonActions':'')+'.');
-  const name = heroesMod.length===1
-    ? (slugFile(heroesMod[0].skin)+'.zip')
-    : (slugFile('Mod_'+heroesMod.length+'_Tuong_'+heroesMod.slice(0,3).map(h=>h.hero).join('_'))+'.zip');
+  if(files.length===0) throw new Error('Không có file nào để đổi. CHƯA trừ điểm.');
+  ZSTD_LOG.push('✓ Hoàn tất gói mod '+jobs.length+' tướng (Databin + Actions + Infos + AssetRef + CommonActions).');
+  const name = jobs.length===1
+    ? slugFile(jobs[0].item.skin)+'.zip'
+    : slugFile('Mod_'+jobs.length+'_Tuong_'+jobs.slice(0,3).map(j=>j.item.hero).join('_'))+'.zip';
   const fileList=files.map(f=>({name:f.name,size:f.data.length}));
   const totalSize=fileList.reduce((a,f)=>a+f.size,0);
   const debugInfo={resFilesCount:RES_FILES.size, outFilesCount:fileList.length, totalSize, fileList, hashPairsCount:0, hashHitsHex:0, hashHitsRaw:0, missing:(RES_MISSING||[]).concat(notFound), zstdLog:ZSTD_LOG.slice()};
