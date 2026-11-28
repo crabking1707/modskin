@@ -61,7 +61,11 @@ h1{font-size:30px;margin:14px 0 6px;letter-spacing:-.5px}p.sub{color:var(--mut);
 .sk.on::after{content:"✓";position:absolute;top:8px;left:8px;background:#facc15;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:13px}
 .t-def .top{background:linear-gradient(135deg,#f8fafc,#cbd5e1)}.t-A .top{background:linear-gradient(135deg,#6ee7b7,#0ea5e9)}
 .t-S .top{background:linear-gradient(135deg,#ff8a7a,#ff3b30)}.t-Sp .top{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
-.t-SS .top{background:linear-gradient(135deg,#ffd60a,#ff8a00)}.t-SSS .top{background:linear-gradient(135deg,#ff7ad1,#7c3aed)}.t-k .top{background:linear-gradient(135deg,#94a3b8,#334155)}
+.t-SS .top{background:linear-gradient(135deg,#ffd60a,#ff8a00)}.t-SSS .top{background:linear-gradient(135deg,#ff7ad1,#7c3aed)}.t-ht .top{background:linear-gradient(135deg,#06b6d4,#ec4899 55%,#f59e0b)}.t-ht .bdg{background:linear-gradient(135deg,#ec4899,#7c3aed);color:#fff}.t-k .top{background:linear-gradient(135deg,#94a3b8,#334155)}
+.sync-bar{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;background:#fff;border:1.5px solid #e2e8f0;border-radius:16px;padding:8px 12px;margin:0 0 12px;font-size:12px}
+.sync-bar b{color:#0f172a;font-size:12px}.sync-bar small{color:var(--mut);display:block;font-size:11px;margin-top:1px}
+.sync-btn{background:var(--ink);color:#fff;border-radius:99px;padding:6px 12px;font-weight:800;font-size:12px;white-space:nowrap}.sync-btn:disabled{opacity:.55}
+body:not(.is-admin) #btnSyncNow,body:not(.is-admin) .admin-only{display:none!important}
 .cam{display:flex;gap:8px;flex-wrap:wrap}.cam .chip{flex:1;justify-content:center;min-width:64px}
 .modal{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:50;display:grid;place-items:center;padding:16px}
 .box{background:#fff;border-radius:26px;padding:22px;width:100%;max-width:420px;max-height:85vh;overflow:auto}
@@ -155,13 +159,345 @@ const shortenerFor = n => shortenOrder()[n<2?0:1];
 /* ======================================================================== */
 
 const H = window.LQ_DATA;
+const LQ_IMG_ORIG = Object.assign({}, window.LQ_IMG || {});
 const ROLES = {"Đấu Sĩ":"#ff3b30","Xạ Thủ":"#ff9500","Pháp Sư":"#7c3aed","Trợ Thủ":"#10b981","Đỡ Đòn":"#0ea5e9","Sát Thủ":"#0f172a"};
-const TIER = {"Mặc định":["t-def","Mặc Định"],"Bậc A":["t-A","Bậc A"],"Bậc S":["t-S","Bậc S"],"Bậc S+":["t-Sp","Bậc S+"],"Bậc SS":["t-SS","Bậc SS"],"Bậc SSS":["t-SSS","Bậc SSS"],"Khác":["t-k","Khác"]};
+const TIER = {
+  "Mặc định":["t-def","Mặc Định"],
+  "Bậc A":["t-A","Bậc A"],
+  "Bậc S":["t-S","Bậc S"],
+  "Bậc S+":["t-Sp","Bậc S+"],
+  "Bậc SS":["t-SS","Bậc SS"],
+  "Bậc SSS":["t-SSS","Bậc SSS"],
+  "Hợp tác":["t-ht","Hợp tác"],
+  "Khác":["t-k","Khác"]
+};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toast = (m)=>{const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.append(t);setTimeout(()=>t.remove(),2600)};
-const heroImg = id => (window.LQ_IMG&&LQ_IMG['h:'+id])||`assets/heroes/${id}.webp`;
-const skinImg = k => (window.LQ_IMG&&LQ_IMG['s:'+k])||`assets/skins/${k}.webp`;
+const heroImg = id => {
+  if(typeof id==='string' && /^(?:https?:|data:)/i.test(id)) return id;
+  return (window.LQ_IMG&&LQ_IMG['h:'+id])||LQ_IMG_ORIG['h:'+id]||`assets/heroes/${id}.webp`;
+};
+const skinImg = k => {
+  if(!k) return '';
+  if(typeof k==='string' && /^(?:https?:|data:)/i.test(k)) return k;
+  return (window.LQ_IMG&&LQ_IMG['s:'+k])||LQ_IMG_ORIG['s:'+k]||`assets/skins/${k}.webp`;
+};
+window._lqImgFb = (el, kind, key, heroId) => {
+  if(!el || el.dataset.fbDone) return;
+  el.dataset.fbDone = '1';
+  const orig = kind==='h' ? LQ_IMG_ORIG['h:'+key] : (LQ_IMG_ORIG['s:'+key] || (heroId ? (LQ_IMG_ORIG['h:'+heroId] || (window.LQ_IMG&&LQ_IMG['h:'+heroId])) : ''));
+  if(orig && el.src !== orig) el.src = orig;
+};
+
+/* ---------- Tool tự động cập nhật Icon, Tên Skin & Bậc mới (00:00 mỗi đêm từ icon.txt) ---------- */
+const ICON_SYNC_URL = 'https://cdn.jsdelivr.net/gh/MLuc24/lien-quan-data@main/data/heroes.json';
+const ICON_SYNC_BASE = 'https://cdn.jsdelivr.net/gh/MLuc24/lien-quan-data@main/';
+const ICON_SYNC_CACHE_KEY = 'lq_icon_sync_cache_v1';
+const syncSt = { loading:false, day:'', at:0, heroesAdded:0, skinsAdded:0, skinsUpdated:0, iconsUpdated:0, error:'', source:'embedded' };
+
+const COLLAB_ASCII_RE = /\b(?:kirito|asuna|stacia|sword art online|sailor\s+(?:chibi\s+)?moon|tuxedo|ultraman|seven|tanjiro|nezuko|zenitsu|inosuke|butterfly mansion|kimetsu|demon slayer|ichigo kurosaki|byakuya kuchiki|toshiro hitsugaya|shihakusho|bleach|saitama|genos|terrible tornado|tatsumaki|one punch|gon|killua|kurapika|hisoka|hunter\s*x\s*hunter|satoru gojo|yuji itadori|megumi fushiguro|nobara kugisaki|jujutsu|cursed corpse|mikasa|levi|eren jaeg(?:er|ar)|annie leonhart|scout regiment|attack on titan|conan edogawa|kaito kid|pompompurin|cinnamoroll|kuromi|my melody|hello kitty|pochacco|sanrio|rimuru tempest|milim nava|shion|slime|okarun|momo|jiji|dandadan|harley quinn|bugcat|capoo|pasulol|m-tp|b\.?duck|chibi maruko|doraemon|hatsune miku|evangelion|spy\s*x\s*family|chainsaw man|naruto|one piece|dragon ball|frieren|solo leveling|kamen rider|gundam|transformers|kfc)\b/i;
+const COLLAB_VI_RE = /(?:hợp\s*tác|hop\s*tac|collab|collaboration|liên\s*kết|lien\s*ket|sát\s*quỷ\s*đoàn|sat\s*quy\s*doan|siêu\s*đạo\s*chích\s*kid|sieu\s*dao\s*chich\s*kid)/i;
+
+function todayKey(d = new Date()){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function syncNormKey(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function syncSlug(s){
+  return syncNormKey(s).replace(/\s+/g,'-');
+}
+function stripHeroPrefix(skinName, heroName){
+  const hn = syncNormKey(heroName), sn = syncNormKey(skinName);
+  if(!hn) return sn;
+  if(sn === hn) return '';
+  if(sn.startsWith(hn + ' ')) return sn.slice(hn.length + 1).trim();
+  return sn;
+}
+function isCollabSkin(skinName, rawTier, metaObj){
+  if(metaObj && (metaObj.isCollab || metaObj.collab || metaObj.is_collab || metaObj.collaboration)) return true;
+  const tagBag = [
+    rawTier || '',
+    metaObj && (metaObj.tag || metaObj.label || metaObj.badge || metaObj.category || metaObj.series || metaObj.quality || metaObj.group || ''),
+    metaObj && Array.isArray(metaObj.tags) ? metaObj.tags.join(' ') : ''
+  ].join(' ');
+  if(COLLAB_VI_RE.test(tagBag) || COLLAB_ASCII_RE.test(tagBag)) return true;
+  const nm = String(skinName || '');
+  if(COLLAB_VI_RE.test(nm) || COLLAB_ASCII_RE.test(nm)) return true;
+  return false;
+}
+function normalizeTier(rawTier, skinName, metaObj, heroName, fallbackTier){
+  const rt = String(rawTier || '').trim();
+  const low = syncNormKey(rt);
+  if(low === 'mac dinh' || low === 'default' || low === 'original' || (heroName && syncNormKey(skinName) === syncNormKey(heroName))) return 'Mặc định';
+  if(isCollabSkin(skinName, rt, metaObj)) return 'Hợp tác';
+  if(!rt) return fallbackTier || 'Khác';
+  if(/(?:^|\s)(?:bac\s*)?(?:sss|3s)(?:\s|$|\+|-)/i.test(low) || low.includes('sss')) return 'Bậc SSS';
+  if(/(?:^|\s)(?:bac\s*)?(?:ss|2s)(?:\s|$|\+|-)/i.test(low) || /\bss\b/.test(low)) return 'Bậc SS';
+  if(/s\+/i.test(rt) || low === 'bac s+' || low === 's plus' || low === 'bac s plus') return 'Bậc S+';
+  if(/(?:^|\s)(?:bac\s*)?s(?:\s|$)/i.test(low)) return 'Bậc S';
+  if(/(?:^|\s)(?:bac\s*)?a(?:\s|$)/i.test(low)) return 'Bậc A';
+  if(TIER[rt]) return rt;
+  return 'Khác';
+}
+function normalizeRole(rawRole){
+  const r = syncNormKey(rawRole);
+  if(!r) return 'Đấu Sĩ';
+  if(r.includes('sat thu') || r.includes('assassin')) return 'Sát Thủ';
+  if(r.includes('xa thu') || r.includes('marksman') || r.includes('archer') || r === 'ad') return 'Xạ Thủ';
+  if(r.includes('phap su') || r.includes('mage')) return 'Pháp Sư';
+  if(r.includes('tro thu') || r.includes('support')) return 'Trợ Thủ';
+  if(r.includes('do don') || r.includes('tank')) return 'Đỡ Đòn';
+  if(r.includes('dau si') || r.includes('warrior') || r.includes('fighter')) return 'Đấu Sĩ';
+  return ROLES[rawRole] ? rawRole : 'Đấu Sĩ';
+}
+function resolveSyncIcon(raw){
+  if(!raw || typeof raw !== 'string') return '';
+  const u = raw.trim();
+  if(!u) return '';
+  if(/^(?:https?:|data:)/i.test(u)) return u;
+  if(u.startsWith('//')) return 'https:' + u;
+  if(u.startsWith('/')) return ICON_SYNC_BASE + u.replace(/^\/+/, '');
+  if(/^(?:assets|images|img|icons|data)\//i.test(u)) return ICON_SYNC_BASE + u;
+  try{ return new URL(u, ICON_SYNC_URL).href; }catch(_){ return ICON_SYNC_BASE + u; }
+}
+function applyCollabTiersLocal(){
+  let cnt = 0;
+  for(const h of H){
+    if(!h || !Array.isArray(h.skins)) continue;
+    for(const s of h.skins){
+      if(s[1] === 'Mặc định') continue;
+      if(isCollabSkin(s[0], s[1], null) && s[1] !== 'Hợp tác'){ s[1] = 'Hợp tác'; cnt++; }
+    }
+  }
+  return cnt;
+}
+function extractRemoteHeroes(payload){
+  if(!payload) return [];
+  if(Array.isArray(payload)) return payload;
+  if(Array.isArray(payload.heroes)) return payload.heroes;
+  if(Array.isArray(payload.data)) return payload.data;
+  if(Array.isArray(payload.list)) return payload.list;
+  if(Array.isArray(payload.items)) return payload.items;
+  if(typeof payload === 'object'){
+    return Object.entries(payload).map(([k,v]) => (v && typeof v === 'object') ? Object.assign({id: v.id || k}, v) : null).filter(Boolean);
+  }
+  return [];
+}
+function pickHeroField(obj, keys){
+  for(const k of keys){ if(obj && obj[k] != null && obj[k] !== '') return obj[k]; }
+  return '';
+}
+function mergeRemoteHeroes(payload){
+  const list = extractRemoteHeroes(payload);
+  let heroesAdded = 0, skinsAdded = 0, skinsUpdated = 0, iconsUpdated = 0;
+  if(!window.LQ_IMG) window.LQ_IMG = {};
+  const byNormName = new Map();
+  for(const h of H){
+    byNormName.set(syncNormKey(h.name), h);
+    byNormName.set(syncNormKey(h.id), h);
+  }
+  for(const rh of list){
+    if(!rh || typeof rh !== 'object') continue;
+    const rawName = String(pickHeroField(rh, ['name','heroName','hero_name','displayName','title_vi']) || '').trim();
+    const rawId = String(pickHeroField(rh, ['id','slug','key','heroId','hero_id']) || '').trim();
+    if(!rawName && !rawId) continue;
+    const slug = syncSlug(rawId || rawName);
+    let h = byId[rawId] || byId[slug] || byNormName.get(syncNormKey(rawName)) || byNormName.get(syncNormKey(rawId));
+    const hIcon = resolveSyncIcon(pickHeroField(rh, ['icon','avatar','image','img','thumb','thumbnail','head','portrait','iconUrl','imageUrl','avatarUrl','url']));
+    if(!h){
+      const heroName = rawName || rawId;
+      h = {
+        id: slug || ('hero_' + H.length),
+        name: heroName,
+        title: String(pickHeroField(rh, ['title','subtitle','epithet']) || ''),
+        role: normalizeRole(pickHeroField(rh, ['role','lane','class','type','position'])),
+        skins: [[heroName, 'Mặc định', (slug || 'hero') + '_1']]
+      };
+      H.push(h);
+      byId[h.id] = h;
+      byNormName.set(syncNormKey(h.name), h);
+      byNormName.set(syncNormKey(h.id), h);
+      heroesAdded++;
+    }
+    if(hIcon){
+      window.LQ_IMG['h:' + h.id] = hIcon;
+      iconsUpdated++;
+    }
+    const rawSkins = Array.isArray(rh.skins) ? rh.skins : (Array.isArray(rh.skinList) ? rh.skinList : (Array.isArray(rh.skin_list) ? rh.skin_list : []));
+    const existingByShort = new Map();
+    for(const s of h.skins){
+      const shortK = stripHeroPrefix(s[0], h.name);
+      existingByShort.set(shortK, s);
+      existingByShort.set(syncNormKey(s[0]), s);
+    }
+    rawSkins.forEach((rs, idx) => {
+      if(!rs) return;
+      let sName = '', sTierRaw = '', sIconRaw = '', sNumId = 0, metaObj = null;
+      if(Array.isArray(rs)){
+        sName = String(rs[0] || '').trim();
+        sTierRaw = String(rs[1] || '').trim();
+        sIconRaw = String(rs[2] || '').trim();
+        if(rs[3] && /^\d{5}$/.test(String(rs[3]))) sNumId = +rs[3];
+      } else if(typeof rs === 'object'){
+        metaObj = rs;
+        sName = String(pickHeroField(rs, ['name','skinName','skin_name','title','displayName']) || '').trim();
+        sTierRaw = String(pickHeroField(rs, ['tier','rank','grade','level','quality','label','badge','rarity']) || '').trim();
+        sIconRaw = String(pickHeroField(rs, ['icon','avatar','image','img','thumb','thumbnail','head','portrait','iconUrl','imageUrl','url']) || '').trim();
+        const candId = pickHeroField(rs, ['skinId','skin_id','gameId','id']);
+        if(/^\d{5}$/.test(String(candId))) sNumId = +candId;
+      } else {
+        sName = String(rs).trim();
+      }
+      if(!sName) return;
+      const isDef = (idx === 0 && (!sTierRaw || syncNormKey(sTierRaw) === 'mac dinh' || syncNormKey(sTierRaw) === 'default')) || syncNormKey(sName) === syncNormKey(h.name) || syncNormKey(sName) === 'mac dinh';
+      let dispName = sName;
+      if(isDef) dispName = h.name;
+      else if(!syncNormKey(sName).startsWith(syncNormKey(h.name))) dispName = h.name + ' ' + sName;
+
+      const sIcon = resolveSyncIcon(sIconRaw);
+      const shortK = isDef ? '' : stripHeroPrefix(dispName, h.name);
+      const found = isDef ? h.skins[0] : (existingByShort.get(shortK) || existingByShort.get(syncNormKey(dispName)) || existingByShort.get(syncNormKey(sName)));
+
+      if(found){
+        const newTier = normalizeTier(sTierRaw, dispName, metaObj, h.name, found[1]);
+        let changed = false;
+        if(!isDef && dispName && dispName.length >= found[0].length && found[0] !== dispName){ found[0] = dispName; changed = true; }
+        if(newTier && found[1] !== newTier){ found[1] = newTier; changed = true; }
+        if(sIcon){
+          if(!found[2]) found[2] = h.id + '_s_' + (idx + 1);
+          window.LQ_IMG['s:' + found[2]] = sIcon;
+          iconsUpdated++;
+        }
+        if(changed) skinsUpdated++;
+      } else {
+        const newTier = normalizeTier(sTierRaw, dispName, metaObj, h.name, 'Khác');
+        const skKey = h.id + '_auto_' + (sNumId || (h.skins.length + 1));
+        if(sIcon){
+          window.LQ_IMG['s:' + skKey] = sIcon;
+          iconsUpdated++;
+        }
+        const entry = [dispName, newTier, sIcon ? skKey : ''];
+        h.skins.push(entry);
+        existingByShort.set(shortK, entry);
+        existingByShort.set(syncNormKey(dispName), entry);
+        skinsAdded++;
+      }
+
+      // Nếu JSON có sẵn mã ID skin 5 chữ số (VD 13216) thì tự động bổ sung vào SKIN_DB để hỗ trợ mod ngay
+      if(sNumId && typeof SKIN_DB !== 'undefined' && typeof _normName === 'function'){
+        const dbKey = _normName(h.name);
+        if(!SKIN_DB[dbKey]) SKIN_DB[dbKey] = {n: h.name, s: []};
+        if(!SKIN_DB[dbKey].s.some(x => x[0] === sNumId)){
+          const shortDisplay = dispName.replace(new RegExp('^' + h.name.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\s*[-–—:]?\\s*', 'i'), '').trim() || dispName;
+          const hasFx = (normalizeTier(sTierRaw, dispName, metaObj, h.name, 'Khác') !== 'Bậc A') ? 1 : 0;
+          SKIN_DB[dbKey].s.push([sNumId, shortDisplay, hasFx]);
+        }
+      }
+    });
+  }
+  applyCollabTiersLocal();
+  return {heroesAdded, skinsAdded, skinsUpdated, iconsUpdated};
+}
+function saveSyncCache(payload, day){
+  try{
+    localStorage.setItem(ICON_SYNC_CACHE_KEY, JSON.stringify({day, at: Date.now(), url: ICON_SYNC_URL, payload}));
+  }catch(_){
+    // Nếu JSON quá lớn cho quota localStorage thì vẫn lưu mốc ngày đã cập nhật
+    try{ localStorage.setItem(ICON_SYNC_CACHE_KEY, JSON.stringify({day, at: Date.now(), url: ICON_SYNC_URL, payload: null})); }catch(__){}
+  }
+}
+function readSyncCache(){
+  try{ return JSON.parse(localStorage.getItem(ICON_SYNC_CACHE_KEY) || 'null'); }catch(_){ return null; }
+}
+function renderSyncBarHtml(){
+  const timeStr = syncSt.at ? new Date(syncSt.at).toLocaleTimeString('vi-VN',{hour:'2-digit',minute:'2-digit'}) : '';
+  let line = '🔄 Tự động cập nhật icon, tên skin & bậc sau 00:00 mỗi đêm';
+  if(syncSt.loading) line = '⏳ Đang tải danh sách icon, tên skin & bậc mới từ CDN...';
+  else if(syncSt.error) line = '⚠️ Chưa tải được CDN (' + esc(syncSt.error) + ') • Đang dùng dữ liệu có sẵn';
+  else if(syncSt.day){
+    const parts = [];
+    if(syncSt.heroesAdded) parts.push('+' + syncSt.heroesAdded + ' tướng');
+    if(syncSt.skinsAdded) parts.push('+' + syncSt.skinsAdded + ' skin mới');
+    if(syncSt.skinsUpdated) parts.push(syncSt.skinsUpdated + ' bậc/tên cập nhật');
+    line = '✅ Đã đồng bộ ngày ' + syncSt.day + (timeStr ? ' lúc ' + timeStr : '') + (parts.length ? ' (' + parts.join(', ') + ')' : ' (mới nhất)');
+  }
+  const isAdmin = isAdminUser();
+  const btnHtml = isAdmin ? `<button class="sync-btn admin-only" id="btnSyncNow" ${syncSt.loading?'disabled':''}>${syncSt.loading?'Đang tải...':'🔄 Cập nhật ngay'}</button>` : '';
+  return `<div class="sync-bar" id="syncBar"><div><b>${line}</b><small>Nguồn: icon.txt (MLuc24/lien-quan-data) • Skin hợp tác tự gắn bậc <b>Hợp tác</b> • Tự làm mới lúc 00:00</small></div>${btnHtml}</div>`;
+}
+function isAdminUser(){
+  return Boolean(st.user && st.user.admin === true && String(st.user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase());
+}
+function updateSyncBarInPlace(){
+  const barEl = $('#syncBar');
+  if(!barEl) return;
+  barEl.outerHTML = renderSyncBarHtml();
+  bindSyncBar();
+}
+function bindSyncBar(){
+  const b = $('#btnSyncNow');
+  if(!b) return;
+  if(!isAdminUser()){ b.remove(); return; }
+  b.onclick = () => {
+    if(!isAdminUser()) return toast('Chỉ admin mới được cập nhật thủ công');
+    runAutoIconSync(true, true);
+  };
+}
+async function runAutoIconSync(force = false, showToast = false){
+  if(syncSt.loading) return;
+  const today = todayKey();
+  if(!force){
+    const cached = readSyncCache();
+    if(cached && cached.day === today && cached.url === ICON_SYNC_URL && cached.payload){
+      const stRes = mergeRemoteHeroes(cached.payload);
+      Object.assign(syncSt, stRes, {day: cached.day, at: cached.at || Date.now(), error:'', source:'cache'});
+      refreshViewAfterSync();
+      return;
+    }
+  }
+  syncSt.loading = true; syncSt.error = '';
+  refreshViewAfterSync();
+  try{
+    let res = await fetch(ICON_SYNC_URL, {cache: 'no-store'});
+    if(!res.ok) res = await fetch(ICON_SYNC_URL + '?d=' + encodeURIComponent(today));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const payload = await res.json();
+    const stRes = mergeRemoteHeroes(payload);
+    saveSyncCache(payload, today);
+    Object.assign(syncSt, stRes, {loading:false, day:today, at:Date.now(), error:'', source:'cdn'});
+    if(showToast) toast(`Đã cập nhật icon/skin (${stRes.skinsAdded ? '+' + stRes.skinsAdded + ' skin mới' : 'đã mới nhất'})`);
+  }catch(e){
+    syncSt.loading = false;
+    syncSt.error = (e && e.message) ? e.message : 'lỗi mạng';
+    if(showToast) toast('Không tải được heroes.json: ' + syncSt.error);
+  }
+  refreshViewAfterSync();
+}
+function refreshViewAfterSync(){
+  if(typeof MAKING !== 'undefined' && MAKING) return;
+  if(!st.user) return;
+  if(st.step === 2) view2();
+  else if(st.step === 3) view3();
+}
+let _midnightTimer = null;
+function scheduleMidnightSync(){
+  if(_midnightTimer) clearTimeout(_midnightTimer);
+  const now = new Date();
+  const next = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 3);
+  const ms = Math.max(5000, next.getTime() - now.getTime());
+  _midnightTimer = setTimeout(() => {
+    runAutoIconSync(true, true);
+    scheduleMidnightSync();
+  }, ms);
+}
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && syncSt.day && syncSt.day !== todayKey()){
+    runAutoIconSync(true, false);
+    scheduleMidnightSync();
+  }
+});
 
 /* ---------- Backend: Firebase hoặc Demo (localStorage) ---------- */
 const hasFB = !firebaseConfig.apiKey.startsWith("YOUR_");
@@ -193,7 +529,7 @@ if (hasFB) {
 } else {
   const L=k=>JSON.parse(localStorage.getItem(k)||'null'), S=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
   let cb=()=>{},dcfg=()=>{};
-  const push=()=>{const s=L('lq_s');const us=L('lq_u')||{};const u=s&&us[s];cb(u?{uid:s,email:s,name:u.name,credits:u.credits,freeDay:u.freeDay||0,freeCount:u.freeCount||0,admin:s===ADMIN_EMAIL}:null)};
+  const push=()=>{const s=L('lq_s');const us=L('lq_u')||{};const u=s&&us[s];cb(u?{uid:s,email:s,name:u.name,credits:u.credits,freeDay:u.freeDay||0,freeCount:u.freeCount||0,admin:String(s||'').toLowerCase()===ADMIN_EMAIL.toLowerCase()}:null)};
   B={
     async register(e,n,p){const us=L('lq_u')||{};if(us[e])throw new Error("Email đã được đăng ký");us[e]={name:n,pw:p,credits:0};S('lq_u',us);S('lq_s',e);push()},
     async login(e,p){const us=L('lq_u')||{};if(!us[e]||us[e].pw!==p)throw new Error("Sai email hoặc mật khẩu");S('lq_s',e);push()},
@@ -241,8 +577,10 @@ function authView(mode='login'){
 
 /* ---------- Header / credit ---------- */
 function renderHeader(){
-  const u=st.user;$('#hd').classList.toggle('hide',!u);if(!u)return;
-  $('#cn').textContent=u.credits;$('#cn').classList.toggle('adm',u.admin);
+  const u=st.user;$('#hd').classList.toggle('hide',!u);
+  document.body.classList.toggle('is-admin', isAdminUser());
+  if(!u)return;
+  $('#cn').textContent=u.credits;$('#cn').classList.toggle('adm',isAdminUser());
   $('#av').textContent=(u.name||'?')[0].toUpperCase();$('#stepn').textContent=st.step;
 }
 $('#cn').onclick=async()=>{ // Admin bấm vào số để sửa số lượt
@@ -413,6 +751,7 @@ function view2(){
   const roleChips=Object.keys(ROLES).map(r=>`<button class="chip ${st.role===r?'on':''}" data-r="${r}"><span class="dot" style="background:${ROLES[r]}"></span>${r}</button>`).join('');
   $('#app').innerHTML=`<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="pill" id="b2">← Quay lại</button><span class="pill"><span class="dot" style="background:#10b981"></span>${st.device==='ios'?'iOS':'Android'} đã chọn</span></div>
   <h1>Chọn tướng yêu thích</h1><p class="sub">Ấn vào icon để chọn nhiều tướng (tối đa 60 tướng). Viền sáng cyan = đã chọn.</p>
+  ${renderSyncBarHtml()}
   <input class="search" id="q" placeholder="Tìm tên tướng... (VD: Nakroth, Violet, Tel'Annas)" value="${esc(st.q)}">
   <div class="chips">${roleChips}<span class="chip" id="cnt"></span></div><div class="grid" id="hg"></div>`;
   $('#b2').onclick=()=>go(1);
@@ -423,16 +762,16 @@ function view2(){
   function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/['’\s-]/g,'')}
   function list(){const q=norm(st.q);const L=H.filter(h=>(!st.role||h.role===st.role)&&(!q||norm(h.name).includes(q)));
     $('#cnt').textContent=L.length+' tướng';
-    $('#hg').innerHTML=L.map(h=>`<button class="hero ${st.picked.includes(h.id)?'on':''}" data-h="${h.id}"><img loading="lazy" src="${heroImg(h.id)}" alt=""><b>${esc(h.name)}</b><small style="color:${ROLES[h.role]}">● ${h.role}</small></button>`).join('')}
+    $('#hg').innerHTML=L.map(h=>`<button class="hero ${st.picked.includes(h.id)?'on':''}" data-h="${h.id}"><img loading="lazy" src="${heroImg(h.id)}" onerror="window._lqImgFb(this,'h','${esc(h.id)}')" alt=""><b>${esc(h.name)}</b><small style="color:${ROLES[h.role]}">● ${h.role}</small></button>`).join('')}
   function foot(){const n=st.picked.length;bar(`<div class="row"><div class="logo" style="background:#0b1220;border:1px solid #334155">${n}</div><div class="s"><b>Đã chọn ${n}/60 tướng</b><span>${n?st.picked.map(i=>byId[i].name).join(', '):'Chưa chọn tướng nào'}</span></div><button class="go" id="n2" ${n?'':'disabled'}>Xác nhận (${n}) →</button></div>`);
     $('#n2').onclick=()=>go(3)}
-  list();foot();
+  bindSyncBar();list();foot();
 }
 
 function view3(){
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
-  const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
-    <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${s[2]?skinImg(s[2]):heroImg(id)}" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
+  const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" onerror="window._lqImgFb(this,'h','${esc(id)}')" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
+    <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];const src=s[2]?skinImg(s[2]):heroImg(id);return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${src}" onerror="window._lqImgFb(this,'s','${esc(s[2]||'')}','${esc(id)}')" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   const isResTab = st.tab==='res';
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <div class="rm-tabs" style="margin-top:12px">
@@ -440,7 +779,7 @@ function view3(){
     <button class="rm-tab ${isResTab?'on':''}" id="tabRes">🧩 Mod File Tài Nguyên (README)</button>
   </div>
   <div id="paneSkin" class="${isResTab?'hide':''}">
-  <h1>Chọn skin</h1>${secs}
+  <h1>Chọn skin</h1>${renderSyncBarHtml()}${secs}
   </div>
   <div id="paneRes" class="${isResTab?'':'hide'}"></div>
   <div class="card"><h3 style="margin:0 0 4px">📦 Nạp file gốc ${resFileForDevice().name} (bắt buộc)</h3><p class="sub" style="margin:0 0 12px">Bạn đang chọn <b>${st.device==='ios'?'iOS':'Android'}</b> - phải nạp đúng file <b>${resFileForDevice().name} (${resFileForDevice().size})</b> cho thiết bị đó, nạp sai file (iOS lấy file Android hoặc ngược lại) thì mod sẽ không đổi được model. File mod phải là file gốc thật đã patch, không phải template fake, thì game mới không tải lại.</p><label class="pill" style="cursor:pointer">📂 Chọn file ${resFileForDevice().name} từ máy<input type="file" id="fileResZip" accept=".zip" style="display:none"></label><button class="pill" id="btnGitRes">☁️ Lấy ${resFileForDevice().name} từ GitHub (bản mới nhất)</button><a class="pill" href="${resFileForDevice().url}" target="_blank" style="text-decoration:none">📥 Tải ${resFileForDevice().name} (${resFileForDevice().size}) về Tệp</a><button class="pill" id="btnClearRes">🗑️ Xóa cache Resources</button><p style="font-size:11px;color:#94a3b8;margin:6px 0 0">Nút GitHub lấy file <b>${resFileForDevice().name}</b> ở <b>Release v1</b> (${resFileForDevice().size}) - lúc game cập nhật bạn chỉ cần up file mới lên Release là link tải tự lấy bản mới. <b>Cách dùng đúng:</b> Bấm <b>"📥 Tải ${resFileForDevice().name} về Tệp"</b> để Safari tải về, rồi bấm <b>"Chọn file từ máy"</b> chọn file đó. Chú ý: file Android bạn đặt tên là <b>Resources_adroi.zip</b> (không phải android), phải đúng tên này mới tải được.</p><p id="resProgress" style="font-size:12px;color:#64748b;margin:8px 0 0;word-break:break-word">${RES_STATUS}</p></div>`;
@@ -507,6 +846,7 @@ function view3(){
   };
   const btnClear=document.getElementById('btnClearRes');
   if(btnClear) btnClear.onclick=()=>{ RES_FILES=null; RES_PATHS={}; setResStatus('Đã xóa cache Resources - Hãy nạp lại file.'); toast('Đã xóa cache'); };
+  bindSyncBar();
   document.querySelectorAll('.skins').forEach(g=>g.onclick=e=>{const b=e.target.closest('.sk');if(!b)return;st.skin[g.dataset.hero]=+b.dataset.i;
     g.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',x===b));foot()});
   function foot(){if(st.tab==='res'){bar('');return;}const d=st.picked.filter(i=>st.skin[i]!=null),u=st.user;
@@ -1217,16 +1557,14 @@ const SKINMOD = (()=>{
   }
   // Cấu hình chuẩn mặc định Full Evo 5 cho đúng 4 skin Tiến hóa bậc 5 trong Liên Quân Mobile
   // (Butterfly Phượng Cửu Thiên 11607 là skin 3S, KHÔNG thuộc nhóm Evo)
-  // QUAN TRỌNG: Model nền trong Actor_*_Infos LUÔN giữ nguyên _AW1_LOD1 / _AW1_Show1 (game không có file _AW5_LOD1);
-  // ngoại hình Evo 5 được nâng cấp qua ResCharacterComponent.bytes (gắn thẳng mảnh Evo 5 làm mặc định isDef=1, parent=0 cho skin base)!
+  // QUAN TRỌNG: Model nền trong Actor_*_Infos LUÔN giữ nguyên _AW1_LOD1 / _AW1_Show1 + camera sảnh gốc của slot để không mất model sảnh;
+  // hiệu ứng chiêu & biến về trỏ đúng mã thư mục fx bậc tối đa theo SkinWakeCondition.bytes & BattleBank.bytes.
   const EVO5_CFG = {
-    // Ngộ Không - Nhóc Tỳ Bá Đạo (16707): mảnh Evo 5 (1670302 + 1670403), Cam/Movie 03, VFX 1670703, Back 1670704, Bank 1670703_SFX + 1670704_VO + 1670705_Back
+    // Ngộ Không - Nhóc Tỳ Bá Đạo (16707): mảnh Evo 5 (1670302 + 1670403), VFX & Biến về 1670703 (fx3), Bank 1670703_SFX + 1670704_VO + 1670705_Back
     16707: {
       evoComponents: [1670302, 1670403],
-      cam: 'Prefab_Characters/Prefab_Hero/167_WuKong/1678_SunWuKong_03_Cam',
-      movie: 'Prefab_Characters/Prefab_Hero/167_WuKong/1678_SunWuKong_03_Movie',
       vfxDir: '1670703',
-      backVfxDir: '1670704',
+      backVfxDir: '1670703',
       battleBankRules: [
         {sid: 1670703, pat: /_SFX\b/i},
         {sid: 1670704, pat: /_VO\b/i},
@@ -1240,11 +1578,9 @@ const SKINMOD = (()=>{
       voSuffix: '_Skin7_AW4',
       backSuffix: '_Skin7_AW5'
     },
-    // Valhein - Xạ Thần Kagutsuchi (13311): mảnh Evo 5 (1331102), Cam/Node AW5, VFX 1331103, Back 1331104, Bank 1331102_SFX + 1331103_VO + 1331104_Back
+    // Valhein - Xạ Thần Kagutsuchi (13311): mảnh Evo 5 (1331102), VFX 1331103, Back 1331104, Bank 1331102_SFX + 1331103_VO + 1331104_Back
     13311: {
       evoComponents: [1331102],
-      cam: 'Prefab_Characters/Prefab_Hero/133_DiRenJie/13312_DiRenJie_AW5_Cam',
-      node: 'Prefab_Characters/Prefab_Hero/133_DiRenJie/13312_DiRenJie_AW5_Node',
       vfxDir: '1331103',
       backVfxDir: '1331104',
       battleBankRules: [
@@ -1260,12 +1596,10 @@ const SKINMOD = (()=>{
       voSuffix: '_Skin11_AW3',
       backSuffix: '_Skin11_AW4'
     },
-    // Butterfly - Bình Minh Tận Thế (11620): mảnh Evo 5 (1162002), Cam AW5 + Movie 11621, VFX 1162006, Back 1162007, Bank 1162005_SFX/VO + 1162006_Back
+    // Butterfly - Bình Minh Tận Thế (11620): mảnh Evo 5 (1162002), VFX bậc T2 tối đa 1162004 (fx4), Back 1162007 (fx6), Bank 1162005_SFX/VO + 1162006_Back
     11620: {
       evoComponents: [1162002],
-      cam: 'Prefab_Characters/Prefab_Hero/116_JingKe/Awaken/11621_JingKe_AW5_Cam',
-      movie: 'Prefab_Characters/Prefab_Hero/116_JingKe/11621_Jingke_Movie',
-      vfxDir: '1162006',
+      vfxDir: '1162004',
       backVfxDir: '1162007',
       battleBankRules: [
         {sid: 1162005, pat: /_(?:SFX|VO)\b/i},
@@ -1462,8 +1796,9 @@ const SKINMOD = (()=>{
   // ---- 5c) liteBulletCfg & skillmark: đổi đường dẫn đạn đánh thường & dấu ấn nội tại sang thư mục skin (base+T) ----
   // Sửa triệt để lỗi đạn đánh thường & dấu ấn đỏ mặc định của Hayate Thứ Nguyên Vệ Thần (13215), Yena (15412) và toàn bộ tướng dùng 2 bảng này
   function isSkinOwnPrefab(name, base){
-    // Prefab đổi dạng / HUD đã gắn mã skin 5 chữ số riêng ở đầu tên (VD: 15413_HuaMuLan_Red, 13216_MaKeBoLuoB, 13215_MaKeBoLuo_SkillHud, 15218_WangZhaoJunM, 52113_Florentino_BianShen)
-    // Các prefab này nằm trực tiếp dưới thư mục tướng (<heroDir>/<name>), KHÔNG nằm trong thư mục con /<sid>/
+    // Hayate Thứ Nguyên Vệ Thần (13215): prefab dạng 2 (13216_MaKeBoLuoB) và SkillHud (13215_MaKeBoLuo_SkillHud*) nằm trong thư mục con /13215/ giống 13215_ACE.xml
+    if(base === 13200 && /^(?:13215|13216)_/i.test(name)) return false;
+    // Các prefab đổi dạng gắn mã skin 5 chữ số khác (VD: 15413_HuaMuLan_Red của Yena 15412, 15218_WangZhaoJunM, 52113_Florentino_BianShen) nằm trực tiếp dưới <heroDir>/<name>
     return /^\d{5}_/.test(name) && !name.startsWith(String(base) + '_');
   }
   function skillPathTable(d, heroDir, T, has, base){
@@ -1813,7 +2148,10 @@ const SKINMOD = (()=>{
     const baseShow = bdomFind(tree, 'ArtLobbyShowLOD');
     if(baseShow && bdomHasNonEmptyChild(tShow)) baseShow.children = tShow.children.map(bdomClone);
     const baseIdleShow = bdomFind(tree, 'ArtLobbyIdleShowLOD');
-    if(baseIdleShow && tIdleShow && tIdleShow.children.length) baseIdleShow.children = tIdleShow.children.map(bdomClone);
+    if(baseIdleShow){
+      if(bdomHasNonEmptyChild(tIdleShow)) baseIdleShow.children = tIdleShow.children.map(bdomClone);
+      else if(bdomHasNonEmptyChild(tShow)) baseIdleShow.children = tShow.children.map(bdomClone);
+    }
     const baseEnemy = bdomFind(tree, 'ArtEnemyPrefabLOD');
     if(baseEnemy && tEnemy && tEnemy.children.length) baseEnemy.children = tEnemy.children.map(bdomClone);
     const baseEnemyEx = bdomFind(tree, 'ArtEnemyPrefabLODEx');
@@ -2494,7 +2832,7 @@ function handoffZip(blob,name,debugInfo,txtName,skinListText){
   PENDING_BUILD = {blob, name, debugInfo, txtName: resolvedTxtName, skinListText: resolvedTxt};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.3<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.4<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về (kèm danh sách skin đã mod).</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Tải file ZIP + Danh sách skin</button><button id="btnDlTxt" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#0f172a;font-weight:700;font-size:13px;margin-top:8px;cursor:pointer">📄 Chỉ tải danh sách skin (.txt)</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:6px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDlTxt = document.getElementById('btnDlTxt');
     if(btnDlTxt) btnDlTxt.onclick = async ()=>{
@@ -3264,15 +3602,20 @@ function renderResModPane(){
 
 
 /* ---------- Boot ---------- */
+applyCollabTiersLocal();
+scheduleMidnightSync();
+runAutoIconSync(false, false);
 B.onCfg(c=>{CFG={first:c&&c.first==='Link4M'?'Link4M':'Layma'};if(st.user&&st.topup&&!$('#cd'))renderTopup()});
 B.onUser(u=>{
   if(st.landing)return;
   st.user=u;
-  if(!u){st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
+  if(!u){st.booted=false;st.topup=false;$('#modal').innerHTML='';$('#barwrap').innerHTML='';renderHeader();authView();return}
   renderHeader();
   // Khi đang tạo file (MAKING=true) thì KHÔNG gọi view3() - view3() re-render nút sẽ làm mất lock + gây ghost-click trừ 2 điểm
   // Điểm vẫn cập nhật qua renderHeader ở trên, chỉ không re-render nút
-  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}else if(st.step===3 && !MAKING)view3(); // cập nhật nút khi điểm đổi, trừ lúc đang tạo
+  if(!st.booted){st.booted=true;go(1);if(getPend())openTopup()}
+  else if(st.step===2) updateSyncBarInPlace();
+  else if(st.step===3 && !MAKING) view3(); // cập nhật nút khi điểm đổi, trừ lúc đang tạo
   if(st.topup&&!$('#cd'))renderTopup(); // làm mới số điểm trong popup
 });
 </script>
