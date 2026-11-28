@@ -1264,10 +1264,70 @@ const SKINMOD = (()=>{
     return out.length!==rows.length ? build(d,out) : null;
   }
   // ---- 6) XML của pkg Actions ----
+  // Helper chuẩn hóa sự kiện CheckSkinIdTick (dùng chung cho cả file chiêu thức và CommonActions/Back.xml)
+  // Chỉ xử lý skinId thuộc cùng tướng (base <= id <= base+99), bỏ qua targetId="-1" hoặc kiểm tra skin tướng khác
+  function patchCheckSkinIdTick(xmlText, base, sid){
+    return xmlText.replace(/<Event\b[^>]*\beventName="CheckSkinIdTick"[\s\S]*?<\/Event>/g, (ev)=>{
+      if(/<TemplateObject\b[^>]*\bname="targetId"[^>]*\bid="-1"/i.test(ev)) return ev;
+      const m = ev.match(/([ \t]*)(<int\s+name="skinId"\s+value=")(\d+)("[^>]*\/>)(\r?\n)?/);
+      if(!m) return ev;
+      const val = +m[3];
+      if(val < base || val > base + 99) return ev;
+      const origNotEq = /<bool\s+name="bEqual"\s+value="false"/i.test(ev) || /<bool\s+name="useNegateValue"\s+value="true"/i.test(ev);
+      const desired = origNotEq ? (val !== sid) : (val === sid);
+      const ind = m[1], eol = m[5] || '\n';
+      const fakeId = (val === sid ? sid : val) + 10500;
+      let out = ev.replace(/[ \t]*<bool\s+name="(?:bEqual|useNegateValue)"[^>]*\/>\r?\n?/g, '');
+      const m2 = out.match(/([ \t]*)(<int\s+name="skinId"\s+value=")(\d+)("[^>]*\/>)(\r?\n)?/);
+      if(!m2) return ev;
+      const rep = m2[1] + m2[2] + fakeId + m2[4] + (m2[5] || eol) +
+        (desired ? (ind + '<bool name="bEqual" value="false" refParamName="" useRefParam="false" />' + eol) : '');
+      return out.replace(m2[0], rep);
+    });
+  }
+
+  // Helper chuẩn hóa sự kiện CheckSkinIdVirtualTick (hỗ trợ đầy đủ cả skinId đơn lẻ lẫn <Array name="skinIdArray">)
+  // Sửa dứt điểm lỗi chiêu 1 tàng hình Erin 56704 (S1B11.xml) và 6 tướng dùng skinIdArray khác (Marja, Hayate, Airi, Murad, Toro, Aleister)
+  function patchCheckSkinIdVirtualTick(xmlText, base, sid){
+    return xmlText.replace(/<Event\b[^>]*\beventName="CheckSkinIdVirtualTick"[\s\S]*?<\/Event>/g, (ev)=>{
+      if(/<TemplateObject\b[^>]*\bname="targetId"[^>]*\bid="-1"/i.test(ev)) return ev;
+      const ids = [];
+      const sm = ev.match(/([ \t]*)(<int\s+name="skinId"\s+value=")(\d+)("[^>]*\/>)(\r?\n)?/);
+      if(sm && +sm[3] > 0) ids.push(+sm[3]);
+      const arrM = ev.match(/([ \t]*)<Array\s+name="skinIdArray"[^>]*>[\s\S]*?<\/Array>(\r?\n)?/);
+      if(arrM){
+        const reInt = /<int\s+value="(\d+)"/g;
+        let im;
+        while((im = reInt.exec(arrM[0])) !== null){
+          const v = +im[1];
+          if(v > 0 && !ids.includes(v)) ids.push(v);
+        }
+      }
+      if(!ids.length) return ev;
+      // Chỉ can thiệp nếu có ít nhất 1 ID thuộc dải skin của chính tướng đang mod
+      if(!ids.some(v => v >= base && v <= base + 99)) return ev;
+      const isNeg = /<bool\s+name="useNegateValue"\s+value="true"/i.test(ev);
+      const inSet = ids.includes(sid);
+      const desired = isNeg ? !inSet : inSet;
+      const ind = (sm ? sm[1] : (arrM ? arrM[1] : '        '));
+      const eol = (sm && sm[5]) || (arrM && arrM[2]) || '\n';
+      const fakeId = sid + 10500;
+      let out = ev
+        .replace(/[ \t]*<bool\s+name="useNegateValue"[^>]*\/>\r?\n?/g, '')
+        .replace(/[ \t]*<Array\s+name="skinIdArray"[^>]*>[\s\S]*?<\/Array>\r?\n?/g, '');
+      const skinBlock = ind + '<int name="skinId" value="' + fakeId + '" refParamName="" useRefParam="false" />' + eol +
+        (desired ? (ind + '<bool name="useNegateValue" value="true" refParamName="" useRefParam="false" />' + eol) : '');
+      const sm2 = out.match(/[ \t]*<int\s+name="skinId"\s+value="\d+"[^>]*\/>\r?\n?/);
+      if(sm2) return out.replace(sm2[0], skinBlock);
+      return out.replace(/([ \t]*<\/Event>)/, skinBlock + '$1');
+    });
+  }
+
   function xmlRules(text, heroDir, T, has, base, keep){
     base = base||13000;
+    const sid = base + T;
     const D=heroDir.toLowerCase();
-    // Cơ chế chuẩn (GetHolidayResourcePathTick + useRefParam="true") để game không tự nạp đè hiệu ứng skin mặc định/skin khác
+    // 1) Cơ chế chuẩn (GetHolidayResourcePathTick + useRefParam="true") cho resourceName (TriggerParticle/TriggerParticleTick)
     const holiMap = new Map();
     const resTagRe = new RegExp('<String\\b([^>]*\\bname="resourceName"[^>]*)>', 'gi');
     const valRe = new RegExp('^prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]+)$', 'i');
@@ -1284,10 +1344,29 @@ const SKINMOD = (()=>{
       const end = selfClose ? ' />' : '>';
       if(!has) return '<String name="resourceName" value="'+full+'" refParamName="" useRefParam="false"'+end;
       const cleanName = name.replace(/\.prefab$/i,'');
-      const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+(base+T)+'/'+cleanName;
+      const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+sid+'/'+cleanName;
       if(!holiMap.has(cleanName)) holiMap.set(cleanName, targetPath);
       return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
     });
+    // 2) Chuyển hướng trực tiếp 10 thuộc tính đường dẫn ngoài resourceName (không dùng useRefParam="true" trong engine):
+    //    prefabName (biến hình ChangeActorMesh* như Cresht Eren 17108, Liliana, Volkath, Zip, Bright, Aya, Billow...),
+    //    prefab (BattleUIAnimation* cut-in HUD), particleName (TriggerUIAddPartical), effect (MinimapEffect),
+    //    parentResourceName, path, resourceName2, resourceName3, effectName, resourcePath.
+    if(has){
+      const extraTagRe = /<String\b([^>]*\bname="(prefabName|prefab|particleName|effect|parentResourceName|path|resourceName2|resourceName3|effectName|resourcePath)"[^>]*)>/gi;
+      text = text.replace(extraTagRe, (m, attrs, attrName)=>{
+        if(/\buseRefParam="true"/i.test(attrs)) return m;
+        const vm = attrs.match(/\bvalue="([^"]*)"/i);
+        if(!vm) return m;
+        const full = vm[1];
+        const pm = full.match(valRe);
+        if(!pm) return m;
+        const name = pm[1];
+        if(keep && keep(name)) return m;
+        const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+sid+'/'+name;
+        return m.replace(/\bvalue="[^"]*"/i, 'value="'+targetPath+'"');
+      });
+    }
     if(holiMap.size){
       const K = holiMap.size;
       // Khai báo đầy đủ tham số trong <RefParamList> để mọi XML (như khiên S3E4 của Butterfly) nạp đúng đường dẫn động
@@ -1314,24 +1393,10 @@ const SKINMOD = (()=>{
       text=text.replace(/(<String name="eventName" value="Play_[^"]*)("[^>]*\/>)\s*<Array name="extraSkinId"[^>]*>[\s\S]*?<\/Array>/g,(m,a,b)=>a+'_Skin'+T+b);
       { const act=heroDir.split('_')[0]; text=text.replace(new RegExp('(<String name="eventName" value=")(Play_'+act+'_[^"]*)"','g'),(m,a,v)=> /_Skin\d+$/.test(v)? m : a+v+'_Skin'+T+'"'); }
       text=text.split('<bool name="bAllowEmptyEffect" value="true"').join('<bool name="bAllowEmptyEffect" value="false"');
-      // CheckSkinIdTick: chỉ đổi skinId đích -> +10500; chỉ thêm bEqual="false" khi Event chưa có bEqual/useNegateValue/bSkipLogicCheck
-      text=text.replace(/<Event eventName="CheckSkinIdTick"[\s\S]*?<\/Event>/g, (ev)=>{
-        const m = ev.match(/([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)?/);
-        if(!m || +m[3] !== base+T) return ev;
-        const hasNeg = /<bool name="(?:useNegateValue|bEqual)"/.test(ev);
-        const hasSkip = /<bool name="bSkipLogicCheck" value="true"/.test(ev);
-        if(hasNeg) return ev; // giữ nguyên nhánh phủ định (NOT skin đích) để không chạy chồng hiệu ứng mặc định
-        const rep = m[1]+m[2]+(+m[3]+10500)+m[4]+(m[5]||'\n')+(hasSkip ? '' : m[1]+'<bool name="bEqual" value="false" refParamName="" useRefParam="false" />'+(m[5]||'\n'));
-        return ev.replace(m[0], rep);
-      });
-      text=text.replace(/(<Event eventName="CheckSkinIdVirtualTick"(?:(?!<\/Event>)[\s\S])*?)([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)([ \t]*)(<bool name="useNegateValue" value="true"[^>]*\/>(\r?\n)([ \t]*))?/g,
-        (m,pre,ind,a,v,c,eol,ind2,neg,eol2,ind3)=>{
-          const val=+v;
-          if(val===base+T) return pre+ind+a+(val+10500)+c+eol+(neg? ind3 : ind+'<bool name="useNegateValue" value="true" refParamName="" useRefParam="false" />'+eol+ind2);
-          if(val===base+T-1 && neg) return pre+ind+a+(val+10500)+c+eol+ind3;   // skin liền trước skin đích, điều kiện phủ định
-          return m; });
-      // Đồng bộ SkinOrAvatarList cho các tướng đời mới (Billow 59901, Bolt Baron, Biron, Dolia...)
-      text = syncSkinFilterList(text, base, base + T, false);
+      text=patchCheckSkinIdTick(text, base, sid);
+      text=patchCheckSkinIdVirtualTick(text, base, sid);
+      // Đồng bộ SkinOrAvatarList cho toàn bộ tướng có lọc SkinAvatarFilterType (Cresht 17108, Billow 59901, Bolt Baron, Biron, Dolia...)
+      text = syncSkinFilterList(text, base, sid, false);
     }
     return text;
   }
@@ -1581,11 +1646,22 @@ const SKINMOD = (()=>{
   // - Trong CommonActions/Back.xml (skipParticle=true): chỉ mở rộng hoạt ảnh/âm thanh/trạng thái (bỏ qua TriggerParticle mặc định để không bị chồng hiệu ứng)
   function syncSkinFilterList(xmlText, base, sid, skipParticle){
     const sidRe = new RegExp('<SkinOrAvatarList\\s+id="' + sid + '"\\s*\\/?>');
-    const baseRe = new RegExp('<SkinOrAvatarList\\s+id="' + base + '"\\s*\\/?>');
     return xmlText.replace(/<Track\b(?:[^>"']|"[^"]*"|'[^']*')*(?:\/>|>[\s\S]*?<\/Track>)/g, (trk)=>{
-      if(/\/>$/.test(trk) || !sidRe.test(trk) || baseRe.test(trk)) return trk;
+      if(/\/>$/.test(trk) || !/<SkinOrAvatarList\b/.test(trk)) return trk;
       if(skipParticle && /eventType="TriggerParticle(?:Tick)?"/.test(trk)) return trk;
-      return appendMissingSkinIds(trk, base);
+      if(sidRe.test(trk)){
+        return appendMissingSkinIds(trk, base);
+      }
+      // Trong file chiêu thức (!skipParticle): dịch mọi SkinOrAvatarList thuộc skin KHÁC cùng tướng sang +10500
+      // để nhánh của skin khác không bao giờ kích hoạt nhầm khi người chơi đang mặc sẵn skin đó
+      if(!skipParticle){
+        return trk.replace(/(<SkinOrAvatarList\s+id=")(\d+)("\s*\/?>)/g, (m, a, idStr, c)=>{
+          const id = +idStr;
+          if(id >= base && id <= base + 99 && id !== sid) return a + (id + 10500) + c;
+          return m;
+        });
+      }
+      return trk;
     });
   }
   // Trích xuất và chuẩn hóa các track riêng từ <sid>_Back.xml hoặc track SkinAvatarFilterType="9" của sid trong <hero>/skill/Back.xml
@@ -1609,7 +1685,7 @@ const SKINMOD = (()=>{
     }
     if(!selected.length) return {xml:'', hasLoop:false, hasFall:false};
     const D = heroDir.toLowerCase();
-    const resRe = new RegExp('(<String\\s+name="resourceName"\\s+value=")(prefab_skill_effects/hero_skill_effects/' + D + '/)([^"/]+)(")', 'gi');
+    const resRe = new RegExp('(<String\\s+name="(?:resourceName|prefabName|prefab|particleName|effect|parentResourceName|path|resourceName2|resourceName3|effectName|resourcePath)"\\s+value=")(prefab_skill_effects/hero_skill_effects/' + D + '/)([^"/]+)(")', 'gi');
     let outXml = '', hasLoop = false, hasFall = false;
     for(let t of selected){
       // Dịch chuyển Condition / TrackObject chính xác theo guid (ưu tiên) hoặc chỉ số gốc
@@ -1639,15 +1715,9 @@ const SKINMOD = (()=>{
     // 1) Đồng bộ toàn bộ Track hoạt ảnh / tư thế / âm thanh đã cấu hình cho skin đích trong CommonActions/Back.xml
     //    (VD: Track 30-38 Home/Gohome layer 5, Track 32-35 & 55-56 tắt Idle của Billow 59901 và 50+ skin SS/SSS)
     out = syncSkinFilterList(out, base, sid, true);
-    // 2) Đồng bộ CheckSkinIdTick trong Back.xml nếu skin đích có nhánh kiểm tra riêng (VD: 51015)
-    out = out.replace(/<Event eventName="CheckSkinIdTick"[\s\S]*?<\/Event>/g, (ev)=>{
-      const m = ev.match(/([ \t]*)(<int name="skinId" value=")(\d+)("[^>]*\/>)(\r?\n)?/);
-      if(!m || +m[3] !== sid) return ev;
-      if(/<bool name="(?:useNegateValue|bEqual)"/.test(ev)) return ev;
-      const hasSkip = /<bool name="bSkipLogicCheck" value="true"/.test(ev);
-      const rep = m[1]+m[2]+(sid+10500)+m[4]+(m[5]||'\n')+(hasSkip ? '' : m[1]+'<bool name="bEqual" value="false" refParamName="" useRefParam="false" />'+(m[5]||'\n'));
-      return ev.replace(m[0], rep);
-    });
+    // 2) Đồng bộ CheckSkinIdTick & CheckSkinIdVirtualTick trong Back.xml cho đúng tướng đang mod
+    out = patchCheckSkinIdTick(out, base, sid);
+    out = patchCheckSkinIdVirtualTick(out, base, sid);
     // 3) Loại trừ hiệu ứng biến về mặc định: BẮT BUỘC gắn SkinAvatarFilterType="11" cho Track 7 & 8 (GetResource[huijidi]/[huicheng])
     //    vì file gốc chưa có thuộc tính này, đồng thời thêm danh sách skin vào Track 24 & 25 (TriggerParticleTick0/TriggerParticle0)
     out = out.replace(/<Track\b[^>]*trackName="(?:GetResource\[huijidi\]|GetResource\[huicheng\])"[\s\S]*?<\/Track>/g, (trk)=>{
