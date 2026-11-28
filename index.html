@@ -1217,10 +1217,12 @@ const SKINMOD = (()=>{
   }
   // Cấu hình chuẩn mặc định Full Evo 5 cho đúng 4 skin Tiến hóa bậc 5 trong Liên Quân Mobile
   // (Butterfly Phượng Cửu Thiên 11607 là skin 3S, KHÔNG thuộc nhóm Evo)
+  // QUAN TRỌNG: Model nền trong Actor_*_Infos LUÔN giữ nguyên _AW1_LOD1 / _AW1_Show1 (game không có file _AW5_LOD1);
+  // ngoại hình Evo 5 được nâng cấp qua ResCharacterComponent.bytes (gắn thẳng mảnh Evo 5 làm mặc định isDef=1, parent=0 cho skin base)!
   const EVO5_CFG = {
-    // Ngộ Không - Nhóc Tỳ Bá Đạo (16707): Model AW5, Cam/Movie 03, VFX bậc tối đa 1670703, Back 1670704, Bank 1670703_SFX + 1670704_VO + 1670705_Back
+    // Ngộ Không - Nhóc Tỳ Bá Đạo (16707): mảnh Evo 5 (1670302 + 1670403), Cam/Movie 03, VFX 1670703, Back 1670704, Bank 1670703_SFX + 1670704_VO + 1670705_Back
     16707: {
-      awTag: '_AW5_',
+      evoComponents: [1670302, 1670403],
       cam: 'Prefab_Characters/Prefab_Hero/167_WuKong/1678_SunWuKong_03_Cam',
       movie: 'Prefab_Characters/Prefab_Hero/167_WuKong/1678_SunWuKong_03_Movie',
       vfxDir: '1670703',
@@ -1238,9 +1240,9 @@ const SKINMOD = (()=>{
       voSuffix: '_Skin7_AW4',
       backSuffix: '_Skin7_AW5'
     },
-    // Valhein - Xạ Thần Kagutsuchi (13311): Model AW5, Cam/Node AW5, VFX bậc tối đa 1331103, Back 1331104, Bank 1331102_SFX + 1331103_VO + 1331104_Back
+    // Valhein - Xạ Thần Kagutsuchi (13311): mảnh Evo 5 (1331102), Cam/Node AW5, VFX 1331103, Back 1331104, Bank 1331102_SFX + 1331103_VO + 1331104_Back
     13311: {
-      awTag: '_AW5_',
+      evoComponents: [1331102],
       cam: 'Prefab_Characters/Prefab_Hero/133_DiRenJie/13312_DiRenJie_AW5_Cam',
       node: 'Prefab_Characters/Prefab_Hero/133_DiRenJie/13312_DiRenJie_AW5_Node',
       vfxDir: '1331103',
@@ -1258,13 +1260,13 @@ const SKINMOD = (()=>{
       voSuffix: '_Skin11_AW3',
       backSuffix: '_Skin11_AW4'
     },
-    // Butterfly - Bình Minh Tận Thế (11620): Model AW5, Cam AW5, Movie 11621, VFX bậc tối đa 1162005, Bank 1162005_SFX/VO + 1162006_Back
+    // Butterfly - Bình Minh Tận Thế (11620): mảnh Evo 5 (1162002), Cam AW5 + Movie 11621, VFX 1162006, Back 1162007, Bank 1162005_SFX/VO + 1162006_Back
     11620: {
-      awTag: '_AW5_',
+      evoComponents: [1162002],
       cam: 'Prefab_Characters/Prefab_Hero/116_JingKe/Awaken/11621_JingKe_AW5_Cam',
       movie: 'Prefab_Characters/Prefab_Hero/116_JingKe/11621_Jingke_Movie',
-      vfxDir: '1162005',
-      backVfxDir: '1162005',
+      vfxDir: '1162006',
+      backVfxDir: '1162007',
       battleBankRules: [
         {sid: 1162005, pat: /_(?:SFX|VO)\b/i},
         {sid: 1162006, pat: /_Back\b/i}
@@ -1279,7 +1281,6 @@ const SKINMOD = (()=>{
     },
     // Nakroth - Siêu Việt (15004): bản 15004 vốn đã là model + hiệu ứng + âm thanh Full Evo 5 (1505_HanXin_LOD1 & Hero_HanXin_Skin_15004_SFX/VO)
     15004: {
-      awTag: '_AW5_',
       vfxDir: '15004',
       backVfxDir: '15004',
       keepStandard: true
@@ -1431,11 +1432,32 @@ const SKINMOD = (()=>{
       for(const t of trows){ const n=copyRow(t); id++; w32(n,4,id); w32(n,24,K); out.push(n); } }
     return build(d,out,id);
   }
-  // ---- 5b) ResCharacterComponent: gỡ mảnh phụ kiện của tướng đang mod để không xung đột/ẩn model (như Butterfly, Airi, Nakroth...) ----
-  function charComponent(d, actor){
+  // ---- 5b) ResCharacterComponent:
+  //  - Với 3 skin Evo 5 dùng mảnh tiến hóa (16707 Ngộ Không, 13311 Valhein, 11620 Butterfly Bình Minh Tận Thế):
+  //    chỉ giữ lại đúng các mảnh bậc Evo 5 cao nhất, đặt isDefault(byte 9)=1, parent(u32@21)=0 và gán skinId(u32@(len-33))=base để mặc định mở Full Evo 5!
+  //  - Với các skin thường khác: gỡ mảnh phụ kiện của tướng đang mod để tránh xung đột/ẩn model.
+  function charComponent(d, actor, base, T){
     const rows=parse(d);
-    const out=rows.filter(r=>{ const id=u32(r,4); return Math.floor(id/10000)!==actor && Math.floor(id/100000)!==actor; });
-    return out.length!==rows.length ? build(d,out) : null;
+    const evo = (base && T !== undefined) ? getEvoCfg(base + T) : null;
+    const keepEvo = (evo && evo.evoComponents && evo.evoComponents.length) ? new Set(evo.evoComponents) : null;
+    let changed = false;
+    const out = [];
+    for(const r of rows){
+      const cid = u32(r, 4);
+      const isActor = (Math.floor(cid/10000)===actor || Math.floor(cid/100000)===actor || (r.length>=21 && u32(r,17)===actor));
+      if(!isActor){ out.push(r); continue; }
+      if(keepEvo && keepEvo.has(cid)){
+        const nr = copyRow(r);
+        nr[9] = 1;                  // isDefault = true (tự trang bị mảnh Evo 5 mặc định)
+        w32(nr, 21, 0);             // parent = 0 (mảnh gốc, không phụ thuộc mảnh Evo 1)
+        if(nr.length >= 37) w32(nr, nr.length - 33, base); // gán skinId -> skin mặc định base (16700 / 13300 / 11600)
+        out.push(nr);
+        changed = true;
+      } else {
+        changed = true;
+      }
+    }
+    return changed ? build(d, out) : null;
   }
   // ---- 5c) liteBulletCfg & skillmark: đổi đường dẫn đạn đánh thường & dấu ấn nội tại sang thư mục skin (base+T) ----
   // Sửa triệt để lỗi đạn đánh thường & dấu ấn đỏ mặc định của Hayate Thứ Nguyên Vệ Thần (13215), Yena (15412) và toàn bộ tướng dùng 2 bảng này
@@ -1470,7 +1492,7 @@ const SKINMOD = (()=>{
         const clean = tail.replace(/\.prefab$/i, '');
         const evo = getEvoCfg(sid);
         const effDir = (evo && evo.vfxDir) ? evo.vfxDir : String(sid);
-        const newStr = str.slice(0, nlen) + effDir + '/' + clean;
+        const newStr = str.slice(0, nlen) + effDir + '/' + clean + '.prefab';
         edits.push({start: i - 4, end: i + slen, newBytes: _te.encode(newStr)});
         i += slen - 1;
       }
@@ -1558,7 +1580,7 @@ const SKINMOD = (()=>{
     const evo = getEvoCfg(sid);
     const effDir = (evo && evo.vfxDir) ? evo.vfxDir : String(sid);
     // Hayate Thứ Nguyên Vệ Thần (13215) và các skin Evo 5 (1670703, 1331103, 1162005) nạp prefab theo đường dẫn chuẩn KHÔNG gắn hậu tố .prefab
-    const usePrefabExt = !(sid === 13215 || (evo && !evo.keepStandard));
+    const usePrefabExt = true;
     const D=heroDir.toLowerCase();
     const valRe = new RegExp('^prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]+)$', 'i');
 
@@ -1751,20 +1773,7 @@ const SKINMOD = (()=>{
     // Nếu là skin Evo 5 (16707 Ngộ Không, 13311 Valhein, 11620 Butterfly Bình Minh Tận Thế), tự nâng model/sảnh/camera/movie lên Full Evo 5
     const evo = getEvoCfg((base||0) + T);
     if(evo && !evo.keepStandard){
-      const upAw = (node)=>{
-        if(!node) return;
-        for(const a of node.attrs){
-          if(a[0]==='V'){
-            const s = _td.decode(a[1]);
-            if(/_AW1_/i.test(s)) a[1] = _te.encode(s.replace(/_AW1_/gi, evo.awTag || '_AW5_'));
-          }
-        }
-        for(const ch of node.children) upAw(ch);
-      };
-      upAw(bdomFind(target, 'ArtSkinPrefabLOD'));
-      upAw(bdomFind(target, 'ArtSkinLobbyShowLOD'));
-      upAw(bdomFind(target, 'ArtSkinLobbyIdleShowLOD'));
-      upAw(bdomFind(target, 'ArtEnemySkinPrefabLOD'));
+      // Giữ nguyên prefab gốc _AW1_LOD1 / _AW1_Show1 (game không có file _AW5_LOD1); ngoại hình Evo 5 nạp qua ResCharacterComponent.bytes
       if(evo.cam){
         const camN = bdomFind(target, 'ArtSkinLobbyShowCamera');
         if(camN) bdomSetV(camN, evo.cam);
@@ -1926,7 +1935,7 @@ const SKINMOD = (()=>{
     // 2) Chuyển hướng toàn bộ đường dẫn đơn cấp sang thư mục skin đích (effDir; Hayate 13215 & Evo 5 không gắn thừa .prefab)
     const evo = getEvoCfg(sid);
     const effDir = (evo && evo.vfxDir) ? evo.vfxDir : String(sid);
-    const usePrefabExt = !(sid === 13215 || (evo && !evo.keepStandard));
+    const usePrefabExt = true;
     const D = heroDir.toLowerCase();
     const re = new RegExp('^(prefab_skill_effects/hero_skill_effects/'+D+'/)([^/]+)$','i');
     function walk(n){
@@ -1945,6 +1954,25 @@ const SKINMOD = (()=>{
       for(const ch of n.children) walk(ch);
     }
     walk(tree);
+    // Nếu skin Evo 5 dùng thư mục hiệu ứng biến về riêng (VD: Ngộ Không 1670704, Valhein 1331104, Butterfly 1162007), nạp sẵn vào baseSubset/particlesInFirstLayer
+    if(evo && evo.backVfxDir && evo.backVfxDir !== effDir && baseSub){
+      const pArr = bdomFind(baseSub, 'particlesInFirstLayer');
+      if(pArr && pArr.children.length){
+        const proto = pArr.children[0];
+        const existing = new Set(pArr.children.map(it=>{ const iv=bdomFind(it,'v1'); return (iv?bdomGetV(iv):bdomGetV(it)).toLowerCase(); }));
+        for(const bfx of ['huicheng_tongyong_01.prefab', 'huijidi_01.prefab']){
+          const full = 'prefab_skill_effects/hero_skill_effects/' + D + '/' + evo.backVfxDir + '/' + bfx;
+          if(!existing.has(full.toLowerCase())){
+            const cl = bdomClone(proto);
+            const iv = bdomFind(cl, 'v1');
+            if(iv) bdomSetV(iv, full);
+            pArr.children.push(cl);
+            existing.add(full.toLowerCase());
+            changed++;
+          }
+        }
+      }
+    }
     return changed ? bdomSerialize(tree) : null;
   }
 
@@ -1969,20 +1997,37 @@ const SKINMOD = (()=>{
     const sidRe = new RegExp('<SkinOrAvatarList\\s+id="' + sid + '"\\s*\\/?>');
     return xmlText.replace(/<Track\b(?:[^>"']|"[^"]*"|'[^']*')*(?:\/>|>[\s\S]*?<\/Track>)/g, (trk)=>{
       if(/\/>$/.test(trk) || !/<SkinOrAvatarList\b/.test(trk)) return trk;
-      if(skipParticle && /eventType="TriggerParticle(?:Tick)?"/.test(trk)) return trk;
-      if(sidRe.test(trk)){
-        return appendMissingSkinIds(trk, base);
+      if(skipParticle){
+        // Trong CommonActions (dùng chung toàn bộ 131 tướng): giữ nguyên bộ lọc theo tướng/skin, mở rộng danh sách skin của tướng đích
+        if(/eventType="TriggerParticle(?:Tick)?"/.test(trk)) return trk;
+        return sidRe.test(trk) ? appendMissingSkinIds(trk, base) : trk;
       }
-      // Trong file chiêu thức (!skipParticle): dịch mọi SkinOrAvatarList thuộc skin KHÁC cùng tướng sang +10500
-      // để nhánh của skin khác không bao giờ kích hoạt nhầm khi người chơi đang mặc sẵn skin đó
-      if(!skipParticle){
-        return trk.replace(/(<SkinOrAvatarList\s+id=")(\d+)("\s*\/?>)/g, (m, a, idStr, c)=>{
+      // Trong file chiêu thức riêng của tướng (!skipParticle):
+      // Giải quyết tĩnh trực tiếp SkinAvatarFilterType="9" (chỉ chạy cho danh sách) và "11" (loại trừ danh sách) theo đúng skin đích sid!
+      // - Gỡ bỏ hẳn SkinAvatarFilterType + SkinOrAvatarList trên các track cần chạy -> chạy 100% không điều kiện (fix dứt điểm mất chiêu & mất biến hình Hayate 13215!)
+      // - Tắt enabled="false" trên các track không dành cho sid -> không bao giờ xung đột với skin mặc định hay skin khác
+      const ids = [];
+      trk.replace(/<SkinOrAvatarList\s+id="(\d+)"\s*\/?>/g, (_, n)=>{ ids.push(+n); return _; });
+      if(!ids.some(id => id >= base && id <= base + 99)) return trk;
+      const isInclude = /\bSkinAvatarFilterType="9"/.test(trk);
+      const isExclude = /\bSkinAvatarFilterType="11"/.test(trk);
+      if(!isInclude && !isExclude) return sidRe.test(trk) ? appendMissingSkinIds(trk, base) : trk;
+      const hasSid = ids.includes(sid);
+      const shouldRun = isInclude ? hasSid : !hasSid;
+      if(shouldRun){
+        return trk
+          .replace(/\s+SkinAvatarFilterType="\d+"/g, '')
+          .replace(/[ \t]*<SkinOrAvatarList\b[^>]*\/?>\r?\n?/g, '');
+      } else {
+        let off = trk.replace(/(<Track\b[^>]*?)\benabled="true"/, '$1enabled="false"');
+        if(!/\benabled="/.test(off.match(/<Track\b[^>]*>/)[0])){
+          off = off.replace(/<Track\b/, '<Track enabled="false"');
+        }
+        return off.replace(/(<SkinOrAvatarList\s+id=")(\d+)("\s*\/?>)/g, (m, a, idStr, c)=>{
           const id = +idStr;
-          if(id >= base && id <= base + 99 && id !== sid) return a + (id + 10500) + c;
-          return m;
+          return (id >= base && id <= base + 99) ? (a + (id + 10500) + c) : m;
         });
       }
-      return trk;
     });
   }
   // Trích xuất và chuẩn hóa các track riêng từ <sid>_Back.xml hoặc track SkinAvatarFilterType="9" của sid trong <hero>/skill/Back.xml
@@ -2020,7 +2065,7 @@ const SKINMOD = (()=>{
       // Chuẩn hóa đường dẫn hiệu ứng trong <sid>_Back.xml / <A>_Back.xml về đúng thư mục skin đích (hỗ trợ cả Evo 5 backVfxDir và Hayate 132_Back.xml)
       const evoB = getEvoCfg(sid);
       const backDir = (evoB && evoB.backVfxDir) ? evoB.backVfxDir : String(sid);
-      t = t.replace(resRe, (m, a, p, name, c)=> isSkinOwnPrefab(name, base) ? m : (a + p + backDir + '/' + name + c));
+      t = t.replace(resRe, (m, a, p, name, c)=> isSkinOwnPrefab(name, base) ? m : (a + p + backDir + '/' + name.replace(/\.prefab$/i,'') + '.prefab' + c));
       if(evoB && !evoB.keepStandard && evoB.backSuffix){
         t = t.replace(/<Event\b[^>]*\beventName="PlayHeroSoundTick"[\s\S]*?<\/Event>/g, (ev)=>{
           let oEv = ev.replace(/(<String\s+name="eventName"\s+value=")([^"]+)(")/g, (mm, a, v, c)=>{
@@ -2075,7 +2120,7 @@ const SKINMOD = (()=>{
     // 5) Thêm 2 track hiệu ứng biến về chuẩn (huijidi_01 + huicheng_tongyong_01) nếu chưa có trong <sid>_Back.xml / <A>_Back.xml
     const evoB = getEvoCfg(sid);
     const backDir = (evoB && evoB.backVfxDir) ? evoB.backVfxDir : String(sid);
-    const backExt = (sid === 13215 || (evoB && !evoB.keepStandard)) ? '' : '.prefab';
+    const backExt = '.prefab';
     if(!hasFall){
       addTracks += '<Track trackName="Mod_'+sid+'_BackFall" eventType="TriggerParticleTick" guid="'+heroDir+'/'+backDir+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
       '<Event eventName="TriggerParticleTick" time="7.000" isDuration="false"><TemplateObject name="targetId" objectName="None" id="-1" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" objectName="self" id="0" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="prefab_skill_effects/hero_skill_effects/'+heroDir+'/'+backDir+'/huijidi_01'+backExt+'" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="-0.300" z="0.000" refParamName="" useRefParam="false" /><float name="lifeTime" value="5.000" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /><bool name="bUseHeroLocalForward" value="true" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
@@ -2102,7 +2147,7 @@ const SKINMOD = (()=>{
     });
     const evoH = getEvoCfg(sid);
     const hDir = (evoH && evoH.vfxDir) ? evoH.vfxDir : String(sid);
-    const hExt = (sid === 13215 || (evoH && !evoH.keepStandard)) ? '' : '.prefab';
+    const hExt = '.prefab';
     const addTrack =
       '<Track trackName="Mod_'+sid+'_Haste" eventType="TriggerParticle" guid="'+heroDir+'/'+hDir+'" enabled="true" useRefParam="false" refParamName="" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true" SkinAvatarFilterType="9">'+
       '<Event eventName="TriggerParticle" time="0.000" length="5.000" isDuration="true"><TemplateObject name="targetId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="Prefab_Skill_Effects/Hero_Skill_Effects/'+heroDir+'/'+hDir+'/jiasu_tongyong_01'+hExt+'" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="0.700" z="-0.600" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
@@ -2314,7 +2359,7 @@ async function buildModZip(){
     applyTable('HeroSkinShop.bytes',d=>SKINMOD.shop(d,base,T));
     applyTable('heroSkin.bytes',d=>SKINMOD.heroSkin(d,base,T,A));
     applyTable('organSkin.bytes',d=>SKINMOD.organSkin(d,base,T));
-    applyTable('ResCharacterComponent.bytes',d=>SKINMOD.charComponent(d,A));
+    applyTable('ResCharacterComponent.bytes',d=>SKINMOD.charComponent(d,A,base,T));
     applyTable('liteBulletCfg.bytes',d=>SKINMOD.skillPathTable(d,HERO_DIR,T,has,base));
     applyTable('skillmark.bytes',d=>SKINMOD.skillPathTable(d,HERO_DIR,T,has,base));
 
@@ -2449,7 +2494,7 @@ function handoffZip(blob,name,debugInfo,txtName,skinListText){
   PENDING_BUILD = {blob, name, debugInfo, txtName: resolvedTxtName, skinListText: resolvedTxt};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.2<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p>' : '';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.3<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p>' : '';
     m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về (kèm danh sách skin đã mod).</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Tải file ZIP + Danh sách skin</button><button id="btnDlTxt" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#0f172a;font-weight:700;font-size:13px;margin-top:8px;cursor:pointer">📄 Chỉ tải danh sách skin (.txt)</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:6px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
     const btnDlTxt = document.getElementById('btnDlTxt');
     if(btnDlTxt) btnDlTxt.onclick = async ()=>{
