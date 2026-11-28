@@ -59,6 +59,7 @@ h1{font-size:30px;margin:14px 0 6px;letter-spacing:-.5px}p.sub{color:var(--mut);
 .sk .nm{padding:8px 10px 10px;font-weight:700;font-size:13px;line-height:1.25;min-height:50px}
 .sk.on{border-color:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.3)}
 .sk.on::after{content:"✓";position:absolute;top:8px;left:8px;background:#facc15;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:13px}
+.sk.locked{opacity:.68;filter:grayscale(.35);border-color:#fca5a5}.sk.locked::after{content:"🔒";position:absolute;top:8px;left:8px;background:#ef4444;color:#fff;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px}
 .t-def .top{background:linear-gradient(135deg,#f8fafc,#cbd5e1)}.t-A .top{background:linear-gradient(135deg,#6ee7b7,#0ea5e9)}
 .t-S .top{background:linear-gradient(135deg,#ff8a7a,#ff3b30)}.t-Sp .top{background:linear-gradient(135deg,#22d3ee,#7c3aed)}
 .t-SS .top{background:linear-gradient(135deg,#ffd60a,#ff8a00)}.t-SSS .top{background:linear-gradient(135deg,#ff7ad1,#7c3aed)}.t-ht .top{background:linear-gradient(135deg,#06b6d4,#ec4899 55%,#f59e0b)}.t-ht .bdg{background:linear-gradient(135deg,#ec4899,#7c3aed);color:#fff}.t-k .top{background:linear-gradient(135deg,#94a3b8,#334155)}
@@ -768,10 +769,27 @@ function view2(){
   bindSyncBar();list();foot();
 }
 
+const EVO_LOCK_MSG = 'skin đang bị lỗi ad sẽ khắc phục sớm';
+const LOCKED_EVO_IDS = new Set([16707, 13311, 11620, 15004]);
+function isLockedEvoSkin(heroId, skinName){
+  const n = String(skinName || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, ' ').trim();
+  if(heroId === 'ngo-khong' && n.includes('nhoc ty ba dao')) return true;
+  if(heroId === 'valhein' && n.includes('kagutsuchi')) return true;
+  if(heroId === 'butterfly' && n.includes('binh minh tan the')) return true;
+  if(heroId === 'nakroth' && n.includes('sieu viet')) return true;
+  return false;
+}
+function showEvoLockNotice(){
+  toast(EVO_LOCK_MSG);
+  modal(`<div class="box topup"><button class="x" id="xEvo">✕</button><h2 style="margin-bottom:8px">🔒 Skin tạm khóa</h2><p style="margin:0 0 16px;font-size:15px;line-height:1.5;color:#334155"><b>${EVO_LOCK_MSG}</b></p><button class="cta" id="okEvo">Đã hiểu</button></div>`);
+  $('#xEvo').onclick = ()=>modal('');
+  $('#okEvo').onclick = ()=>modal('');
+}
 function view3(){
+  st.picked.forEach(id=>{const h=byId[id];if(h && st.skin[id]!=null && h.skins[st.skin[id]] && isLockedEvoSkin(id, h.skins[st.skin[id]][0])) delete st.skin[id];});
   const done=st.picked.filter(i=>st.skin[i]!=null).length,all=st.picked.length;
   const secs=st.picked.map(id=>{const h=byId[id];return `<div class="card"><div class="hh"><img src="${heroImg(id)}" onerror="window._lqImgFb(this,'h','${esc(id)}')" alt=""><div><h3>Skin cho ${esc(h.name)}</h3><small>${h.role} • ${h.skins.length} biến thể • chọn 1</small></div></div>
-    <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];const src=s[2]?skinImg(s[2]):heroImg(id);return `<button class="sk ${t[0]} ${st.skin[id]===i?'on':''}" data-i="${i}"><div class="top"><img loading="lazy" src="${src}" onerror="window._lqImgFb(this,'s','${esc(s[2]||'')}','${esc(id)}')" alt=""></div><span class="bdg">${t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
+    <div class="skins" data-hero="${id}">${h.skins.map((s,i)=>{const t=TIER[s[1]]||TIER['Khác'];const src=s[2]?skinImg(s[2]):heroImg(id);const lk=isLockedEvoSkin(id,s[0]);return `<button class="sk ${t[0]} ${lk?'locked':''} ${(!lk && st.skin[id]===i)?'on':''}" data-i="${i}" data-locked="${lk?1:0}"><div class="top"><img loading="lazy" src="${src}" onerror="window._lqImgFb(this,'s','${esc(s[2]||'')}','${esc(id)}')" alt=""></div><span class="bdg">${lk?'🔒 Đang lỗi':t[1]}</span><div class="nm">${esc(s[0])}</div></button>`}).join('')}</div></div>`}).join('');
   const isResTab = st.tab==='res';
   $('#app').innerHTML=`<div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pill" id="b3">← Quay lại</button><span class="pill">${st.device==='ios'?'iOS':'Android'}</span></div>
   <div class="rm-tabs" style="margin-top:12px">
@@ -847,7 +865,9 @@ function view3(){
   const btnClear=document.getElementById('btnClearRes');
   if(btnClear) btnClear.onclick=()=>{ RES_FILES=null; RES_PATHS={}; setResStatus('Đã xóa cache Resources - Hãy nạp lại file.'); toast('Đã xóa cache'); };
   bindSyncBar();
-  document.querySelectorAll('.skins').forEach(g=>g.onclick=e=>{const b=e.target.closest('.sk');if(!b)return;st.skin[g.dataset.hero]=+b.dataset.i;
+  document.querySelectorAll('.skins').forEach(g=>g.onclick=e=>{const b=e.target.closest('.sk');if(!b)return;
+    if(b.dataset.locked==='1'){showEvoLockNotice();return;}
+    st.skin[g.dataset.hero]=+b.dataset.i;
     g.querySelectorAll('.sk').forEach(x=>x.classList.toggle('on',x===b));foot()});
   function foot(){if(st.tab==='res'){bar('');return;}const d=st.picked.filter(i=>st.skin[i]!=null),u=st.user;
     bar(`<div class="row"><div class="logo" style="background:#fff;color:#0f172a">✨</div><div class="s"><b>${st.device==='ios'?'iOS':'Android'} • ${all} tướng • ${d.length} skin đã chọn</b><span>${d.length?d.map(i=>byId[i].name+': '+byId[i].skins[st.skin[i]][0]).join(' | '):'Chọn skin cho từng tướng để tạo file'}</span></div></div>
@@ -1996,8 +2016,27 @@ const SKINMOD = (()=>{
     });
 
     if(has){
-      // 2) Chuyển hướng trực tiếp 10 thuộc tính đường dẫn ngoài resourceName (prefabName/prefab cho Hayate 13216_MaKeBoLuoB, SkillHud, cutin & Butterfly Skin20E1 Cam), ĐỒNG NHẤT gắn .prefab với AssetRef!
-      const extraTagRe = /<String\b([^>]*\bname="(prefabName|prefab|particleName|effect|parentResourceName|path|resourceName2|resourceName3|effectName|resourcePath)"[^>]*)>/gi;
+      // 2A) Riêng ChangeActorMeshDuration (đổi dạng model 3D như Hayate 13215 -> 13216_MaKeBoLuoB, Billow 5991_LvMeng_Shak, Liliana 5101_Fox...):
+      //     - TUYỆT ĐỐI KHÔNG gắn .prefab vào prefabName vì engine tự nối _LOD1/_LOD2/_LOD3 hoặc nạp mesh không đuôi .prefab!
+      //     - Tắt bOptimizeSwitchingModelLag="true" -> "false" để game nạp thẳng model từ prefabName thay vì tra pool cache của skin mặc định (13200).
+      text = text.replace(/<Event\b[^>]*\beventName="ChangeActorMeshDuration"[\s\S]*?<\/Event>/g, (ev)=>{
+        let oEv = ev.replace(/<String\b([^>]*\bname="prefabName"[^>]*)>/gi, (m, attrs)=>{
+          if(/\buseRefParam="true"/i.test(attrs)) return m;
+          const vm = attrs.match(/\bvalue="([^"]*)"/i);
+          if(!vm) return m;
+          const pm = vm[1].match(valRe);
+          if(!pm) return m;
+          const name = pm[1];
+          if((keep && keep(name)) || isSkinOwnPrefab(name, base)) return m;
+          const cleanName = name.replace(/\.prefab$/i, '');
+          const meshPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+effDir+'/'+cleanName;
+          return m.replace(/\bvalue="[^"]*"/i, 'value="'+meshPath+'"');
+        });
+        oEv = oEv.replace(/(<bool\s+name="bOptimizeSwitchingModelLag"\s+value=")true(")/gi, '$1false$2');
+        return oEv;
+      });
+      // 2B) Chuyển hướng trực tiếp 9 thuộc tính đường dẫn hiệu ứng/UI ngoài resourceName (prefab cho SkillHud/cutin, particleName, effect...), giữ nguyên prefabName của ChangeActorMeshDuration ở bước 2A!
+      const extraTagRe = /<String\b([^>]*\bname="(prefab|particleName|effect|parentResourceName|path|resourceName2|resourceName3|effectName|resourcePath)"[^>]*)>/gi;
       text = text.replace(extraTagRe, (m, attrs)=>{
         if(/\buseRefParam="true"/i.test(attrs)) return m;
         const vm = attrs.match(/\bvalue="([^"]*)"/i);
@@ -2359,6 +2398,8 @@ const SKINMOD = (()=>{
     const re = new RegExp('^(prefab_skill_effects/hero_skill_effects/'+D+'/)([^/]+)$','i');
     const reSub = new RegExp('^(prefab_skill_effects/hero_skill_effects/'+D+'/'+effDir+'/[^/]+)$','i');
     const reComp = new RegExp('^(prefab_skill_effects/component_effects/'+sid+'/.+)$','i');
+    // Mesh 3D của ChangeActorMeshDuration KHÔNG gắn .prefab trong AssetRef để khớp chính xác với ChangeActorMeshDuration
+    const isActorMeshName = (nm)=>/(?:^13216_MaKeBoLuoB$|_LOD\d+$|_BianShen(?:_\d+)?$|_LvMeng_Shak|_Fox$|_Horse$|_Bright_God$|_Driver_Fat$|_Songshu$|_Xdongwu|_MiYue_worm$|_ZhuGeLiang_FS$|_LiXinTongShuai$|_lixinkaobao|_Sprint$)/i.test(nm);
     function walk(n){
       for(const a of n.attrs){
         if(a[0]==='V'){
@@ -2366,14 +2407,17 @@ const SKINMOD = (()=>{
           const m = s.match(re);
           if(m && !isSkinOwnPrefab(m[2], base)){
             const clean = m[2].replace(/\.prefab$/i, '');
-            const fname = usePrefabExt ? (clean + '.prefab') : clean;
+            const fname = (usePrefabExt && !isActorMeshName(clean)) ? (clean + '.prefab') : clean;
             a[1] = _te.encode(m[1] + effDir + '/' + fname);
             changed++;
           } else {
             const m2 = s.match(reSub) || s.match(reComp);
             if(m2 && usePrefabExt && !/\.prefab$/i.test(m2[1])){
-              a[1] = _te.encode(m2[1] + '.prefab');
-              changed++;
+              const tail = m2[1].split('/').pop() || '';
+              if(!isActorMeshName(tail)){
+                a[1] = _te.encode(m2[1] + '.prefab');
+                changed++;
+              }
             }
           }
         }
@@ -2381,6 +2425,24 @@ const SKINMOD = (()=>{
       for(const ch of n.children) walk(ch);
     }
     walk(tree);
+    // Bổ sung preload dự phòng đường dẫn gốc cho mesh đổi dạng Hayate 13215 (13216_MaKeBoLuoB)
+    if(baseSub && sid === 13215){
+      const pArr = bdomFind(baseSub, 'particlesInFirstLayer');
+      if(pArr && pArr.children && pArr.children.length){
+        const fallbackMesh = 'prefab_skill_effects/hero_skill_effects/132_makeboluo/13216_MaKeBoLuoB';
+        const hasFb = pArr.children.some(it => {
+          const iv = bdomFind(it, 'v1') || it;
+          return bdomGetV(iv).toLowerCase() === fallbackMesh;
+        });
+        if(!hasFb){
+          const cl = bdomClone(pArr.children[0]);
+          const iv = bdomFind(cl, 'v1') || cl;
+          bdomSetV(iv, fallbackMesh);
+          pArr.children.push(cl);
+          changed++;
+        }
+      }
+    }
     // Nếu skin Evo 5 dùng thư mục hiệu ứng biến về riêng (VD: Ngộ Không 1670704, Valhein 1331104, Butterfly 1162007), nạp sẵn vào baseSubset/particlesInFirstLayer
     if(evo && evo.backVfxDir && evo.backVfxDir !== effDir && baseSub){
       const pArr = bdomFind(baseSub, 'particlesInFirstLayer');
@@ -2718,6 +2780,7 @@ async function buildModZip(){
   const sel=st.picked.filter(i=>st.skin[i]!=null);
   const heroesMod = sel.map(i=>{const h=byId[i]; const s=h.skins[st.skin[i]]; return {hero:h.name, heroId:i, skin:s[0], tier:s[1], skinIndex:st.skin[i]};});
   if(heroesMod.length===0) throw new Error('Chưa chọn skin cho tướng nào. CHƯA trừ điểm.');
+  if(heroesMod.some(h=>isLockedEvoSkin(h.heroId, h.skin))) throw new Error(EVO_LOCK_MSG);
   if(heroesMod.length>60) throw new Error('Tối đa 60 tướng mỗi lần tạo file (đang chọn '+heroesMod.length+' tướng). CHƯA trừ điểm.');
 
   const jobs = [];
