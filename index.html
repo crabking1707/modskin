@@ -646,7 +646,9 @@ const SKIN_TABLES = [
   ['HeroSkinShop.bytes','Databin/Client/Shop/HeroSkinShop.bytes'],
   ['heroSkin.bytes','Databin/Client/Actor/heroSkin.bytes'],
   ['organSkin.bytes','Databin/Client/Actor/organSkin.bytes'],
-  ['ResCharacterComponent.bytes','Databin/Client/Character/ResCharacterComponent.bytes']
+  ['ResCharacterComponent.bytes','Databin/Client/Character/ResCharacterComponent.bytes'],
+  ['liteBulletCfg.bytes','Databin/Client/Skill/liteBulletCfg.bytes'],
+  ['skillmark.bytes','Databin/Client/Skill/skillmark.bytes']
 ];
 function resNeededBasenames(heroesMod){
   const set = new Set(SKIN_TABLES.map(x=>x[0]));
@@ -1321,6 +1323,59 @@ const SKINMOD = (()=>{
     const out=rows.filter(r=>{ const id=u32(r,4); return Math.floor(id/10000)!==actor && Math.floor(id/100000)!==actor; });
     return out.length!==rows.length ? build(d,out) : null;
   }
+  // ---- 5c) liteBulletCfg & skillmark: đổi đường dẫn đạn đánh thường & dấu ấn nội tại sang thư mục skin (base+T) ----
+  // Sửa triệt để lỗi đạn đánh thường & dấu ấn đỏ mặc định của Hayate Thứ Nguyên Vệ Thần (13215), Yena (15412) và toàn bộ tướng dùng 2 bảng này
+  function isSkinOwnPrefab(name, base){
+    // Prefab đổi dạng / HUD đã gắn mã skin 5 chữ số riêng ở đầu tên (VD: 15413_HuaMuLan_Red, 13216_MaKeBoLuoB, 13215_MaKeBoLuo_SkillHud, 15218_WangZhaoJunM, 52113_Florentino_BianShen)
+    // Các prefab này nằm trực tiếp dưới thư mục tướng (<heroDir>/<name>), KHÔNG nằm trong thư mục con /<sid>/
+    return /^\d{5}_/.test(name) && !name.startsWith(String(base) + '_');
+  }
+  function skillPathTable(d, heroDir, T, has, base){
+    if(!has || !d) return null;
+    const rows = parse(d);
+    const sid = base + T;
+    const needle = _te.encode('prefab_skill_effects/hero_skill_effects/' + heroDir.toLowerCase() + '/');
+    const nlen = needle.length;
+    let changed = false;
+    const out = rows.map(r => {
+      // Tìm tất cả chuỗi length-prefixed (u32 len + ASCII + 0x00) khớp thư mục tướng 1 cấp
+      const edits = [];
+      for(let i = 4; i + nlen + 2 <= r.length; i++){
+        // Kiểm tra nhanh chữ cái đầu ('p' hoặc 'P')
+        if((r[i] | 32) !== 0x70) continue;
+        let ok = true;
+        for(let j = 0; j < nlen; j++){
+          if((r[i + j] | 32) !== needle[j]){ ok = false; break; }
+        }
+        if(!ok) continue;
+        const slen = u32(r, i - 4);
+        if(slen <= nlen + 1 || i + slen > r.length || r[i + slen - 1] !== 0) continue;
+        const str = _td.decode(r.subarray(i, i + slen - 1));
+        const tail = str.slice(nlen);
+        if(!tail || tail.includes('/') || isSkinOwnPrefab(tail, base)) continue;
+        const clean = tail.replace(/\.prefab$/i, '');
+        const newStr = str.slice(0, nlen) + sid + '/' + clean + '.prefab';
+        edits.push({start: i - 4, end: i + slen, newBytes: _te.encode(newStr)});
+        i += slen - 1;
+      }
+      if(!edits.length) return r;
+      changed = true;
+      const parts = [];
+      let cur = 0;
+      for(const ed of edits){
+        parts.push(r.subarray(cur, ed.start));
+        const hdr = new Uint8Array(4);
+        w32(hdr, 0, ed.newBytes.length + 1);
+        parts.push(hdr, ed.newBytes, new Uint8Array([0]));
+        cur = ed.end;
+      }
+      parts.push(r.subarray(cur));
+      const nr = catBytes(parts);
+      w32(nr, 0, nr.length - 4);
+      return nr;
+    });
+    return changed ? build(d, out) : null;
+  }
   // ---- 6) XML của pkg Actions ----
   // Helper chuẩn hóa sự kiện CheckSkinIdTick (dùng chung cho cả file chiêu thức và CommonActions/Back.xml)
   // Chỉ xử lý skinId thuộc cùng tướng (base <= id <= base+99), bỏ qua targetId="-1" hoặc kiểm tra skin tướng khác
@@ -1385,10 +1440,11 @@ const SKINMOD = (()=>{
     base = base||13000;
     const sid = base + T;
     const D=heroDir.toLowerCase();
-    // 1) Cơ chế chuẩn (GetHolidayResourcePathTick + useRefParam="true") cho resourceName (TriggerParticle/TriggerParticleTick)
-    const holiMap = new Map();
-    const resTagRe = new RegExp('<String\\b([^>]*\\bname="resourceName"[^>]*)>', 'gi');
     const valRe = new RegExp('^prefab_skill_effects/hero_skill_effects/'+D+'/([^"/]+)$', 'i');
+
+    // 1) Đổi trực tiếp resourceName sang đường dẫn đầy đủ có đuôi .prefab (useRefParam="false")
+    //    Chuẩn 100% như bản mod mẫu thực tế: không tiêm GetHolidayResourcePathTick, không dịch lệch Condition/TrackObject
+    const resTagRe = new RegExp('<String\\b([^>]*\\bname="resourceName"[^>]*)>', 'gi');
     text = text.replace(resTagRe, (m, attrs)=>{
       if(/\buseRefParam="true"/i.test(attrs)) return m;
       const vm = attrs.match(/\bvalue="([^"]*)"/i);
@@ -1397,22 +1453,22 @@ const SKINMOD = (()=>{
       const pm = full.match(valRe);
       if(!pm) return m;
       const name = pm[1];
-      if(keep && keep(name)) return m;
+      if((keep && keep(name)) || isSkinOwnPrefab(name, base)) return m;
       const selfClose = /\/\s*$/.test(attrs);
       const end = selfClose ? ' />' : '>';
       if(!has) return '<String name="resourceName" value="'+full+'" refParamName="" useRefParam="false"'+end;
       const cleanName = name.replace(/\.prefab$/i,'');
-      const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+sid+'/'+cleanName;
-      if(!holiMap.has(cleanName)) holiMap.set(cleanName, targetPath);
-      return '<String name="resourceName" value="" refParamName="'+cleanName+'" useRefParam="true"'+end;
+      const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+sid+'/'+cleanName+'.prefab';
+      return '<String name="resourceName" value="'+targetPath+'" refParamName="" useRefParam="false"'+end;
     });
-    // 2) Chuyển hướng trực tiếp 10 thuộc tính đường dẫn ngoài resourceName (không dùng useRefParam="true" trong engine):
-    //    prefabName (biến hình ChangeActorMesh* như Cresht Eren 17108, Liliana, Volkath, Zip, Bright, Aya, Billow...),
-    //    prefab (BattleUIAnimation* cut-in HUD), particleName (TriggerUIAddPartical), effect (MinimapEffect),
-    //    parentResourceName, path, resourceName2, resourceName3, effectName, resourcePath.
+
     if(has){
+      // 2) Chuyển hướng trực tiếp 10 thuộc tính đường dẫn ngoài resourceName:
+      //    prefabName (ChangeActorMesh* biến hình như Cresht Eren 17108, Liliana, Volkath, Zip, Bright, Aya, Billow...),
+      //    prefab (BattleUIAnimation* cut-in HUD), particleName, effect, parentResourceName, path, resourceName2/3, effectName, resourcePath.
+      //    QUAN TRỌNG: giữ nguyên các prefab đổi dạng/HUD gắn mã skin 5 chữ số riêng (15413_HuaMuLan_Red, 13216_MaKeBoLuoB, 15218_WangZhaoJunM, 52113_Florentino_BianShen...)
       const extraTagRe = /<String\b([^>]*\bname="(prefabName|prefab|particleName|effect|parentResourceName|path|resourceName2|resourceName3|effectName|resourcePath)"[^>]*)>/gi;
-      text = text.replace(extraTagRe, (m, attrs, attrName)=>{
+      text = text.replace(extraTagRe, (m, attrs)=>{
         if(/\buseRefParam="true"/i.test(attrs)) return m;
         const vm = attrs.match(/\bvalue="([^"]*)"/i);
         if(!vm) return m;
@@ -1420,55 +1476,41 @@ const SKINMOD = (()=>{
         const pm = full.match(valRe);
         if(!pm) return m;
         const name = pm[1];
-        if(keep && keep(name)) return m;
+        if((keep && keep(name)) || isSkinOwnPrefab(name, base)) return m;
         const targetPath = 'prefab_skill_effects/hero_skill_effects/'+D+'/'+sid+'/'+name;
         return m.replace(/\bvalue="[^"]*"/i, 'value="'+targetPath+'"');
       });
-    }
-    if(holiMap.size){
-      const K = holiMap.size;
-      // Khai báo đầy đủ tham số trong <RefParamList> để mọi XML (như khiên S3E4 của Butterfly) nạp đúng đường dẫn động
-      let refAdd = '';
-      for(const [pName] of holiMap){
-        if(!new RegExp('<String\\b[^>]*\\bname="'+pName.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'"').test(text)){
-          refAdd += '<String name="'+pName+'" value="" refParamName="" useRefParam="false" />';
-        }
-      }
-      if(refAdd){
-        if(/<\/RefParamList>/.test(text)) text = text.replace('</RefParamList>', refAdd + '</RefParamList>');
-        else if(/<RefParamList\s*\/>/.test(text)) text = text.replace(/<RefParamList\s*\/>/, '<RefParamList>' + refAdd + '</RefParamList>');
-        else text = text.replace(/(<Action\b)/, '<RefParamList>' + refAdd + '</RefParamList>$1');
-      }
-      // Dịch chuyển toàn bộ chỉ số Track trong <Condition id="N"> và <TrackObject ... id="N"> (N >= 0) thêm +K để không lệch điều kiện
-      text = text.replace(/(<(?:Condition|TrackObject)\b[^>]*\bid=")(\d+)(")/g, (m, a, id, c) => a + (+id + K) + c);
-      let inject = '';
-      for(const [pName, pVal] of holiMap){
-        inject += '<Track trackName="ModSkin_'+pName+'" eventType="GetHolidayResourcePathTick" guid="MOD-SKIN-'+pName+'" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true"><Event eventName="GetHolidayResourcePathTick" time="0.000" isDuration="false" guid="MOD-EV-'+pName+'"><String name="holidayResourcePathPrefix" value="'+pVal+'" refParamName="" useRefParam="false"/><String name="outPathParamName" value="'+pName+'" refParamName="" useRefParam="false"/></Event></Track>';
-      }
-      text = text.replace(/(<Action[^>]*>)/, '$1' + inject);
-    }
-    if(has){
-      // Đồng bộ âm thanh PlayHeroSoundTick cho toàn bộ 131 tướng (cả tướng không có extraSkinId và tên chữ như Play_WuKong_*, LianPo_*, Stop_WuKong_*)
-      // Chỉ gắn hậu tố _Skin<sT> khi skin thực sự có BattleBank riêng (sT > 0); giữ nguyên sự kiện hệ thống/dùng chung và sự kiện đã có _Skin<N>
+
+      // 3) Đồng bộ âm thanh PlayHeroSoundTick cho toàn bộ 131 tướng (Ngộ Không 16712, Hayate 13215, Yena 15412, Airi 13011...)
+      //    - Chỉ gắn _Skin<sT> khi skin có BattleBank riêng (sT > 0)
+      //    - BẮT BUỘC đặt useSkinSwitch="false" để engine KHÔNG tự nối thêm _Skin<skinĐangMặc> lần thứ 2 khi người chơi đang mặc sẵn skin khác (sửa dứt điểm mất tiếng Ngộ Không 16712!)
       {
         const sT = (soundT === undefined) ? T : soundT;
         text = text.replace(/<Event\b[^>]*\beventName="PlayHeroSoundTick"[\s\S]*?<\/Event>/g, (ev)=>{
-          let outEv = ev;
-          if(sT > 0){
-            outEv = outEv.replace(/\s*<Array\s+name="extraSkinId"[^>]*>[\s\S]*?<\/Array>/g, '');
-            outEv = outEv.replace(/(<String\s+name="eventName"\s+value=")([^"]+)(")/g, (m, a, v, c)=>{
-              if(!v || /_Skin\d+(?:_|$)/i.test(v)) return m;
-              if(/^(?:Play_|Stop_)?(?:AOV_Common|B35_Common|sys_|UI_|Common_)/i.test(v)) return m;
-              return a + v + '_Skin' + sT + c;
-            });
+          if(sT <= 0) return ev;
+          let outEv = ev.replace(/\s*<Array\s+name="extraSkinId"[^>]*>[\s\S]*?<\/Array>/g, '');
+          let touched = false;
+          outEv = outEv.replace(/(<String\s+name="eventName(?:2D)?"\s+value=")([^"]+)(")/g, (m, a, v, c)=>{
+            if(!v || /^(?:Play_|Stop_)?(?:AOV_Common|B35_Common|sys_|UI_|Common_)/i.test(v)) return m;
+            touched = true;
+            if(/_Skin\d+(?:_|$)/i.test(v)) return m;
+            return a + v + '_Skin' + sT + c;
+          });
+          if(touched){
+            if(/<bool\s+name="useSkinSwitch"\b/i.test(outEv)){
+              outEv = outEv.replace(/(<bool\s+name="useSkinSwitch"\s+value=")true(")/i, '$1false$2');
+            } else {
+              outEv = outEv.replace(/([ \t]*<\/Event>)/, '        <bool name="useSkinSwitch" value="false" refParamName="" useRefParam="false" />\n$1');
+            }
           }
           return outEv;
         });
       }
+
       text=text.split('<bool name="bAllowEmptyEffect" value="true"').join('<bool name="bAllowEmptyEffect" value="false"');
       text=patchCheckSkinIdTick(text, base, sid);
       text=patchCheckSkinIdVirtualTick(text, base, sid);
-      // Đồng bộ SkinOrAvatarList cho toàn bộ tướng có lọc SkinAvatarFilterType (Cresht 17108, Billow 59901, Bolt Baron, Biron, Dolia...)
+      // 4) Đồng bộ SkinOrAvatarList cho toàn bộ tướng có lọc SkinAvatarFilterType (Hayate 13215, Cresht 17108, Billow 59901, Bolt Baron, Biron, Dolia...)
       text = syncSkinFilterList(text, base, sid, false);
     }
     return text;
@@ -1726,7 +1768,7 @@ const SKINMOD = (()=>{
         if(a[0]==='V'){
           const s = _td.decode(a[1]);
           const m = s.match(re);
-          if(m){
+          if(m && !isSkinOwnPrefab(m[2], base)){
             const fname = /\.prefab$/i.test(m[2]) ? m[2] : (m[2]+'.prefab');
             a[1] = _te.encode(m[1] + sid + '/' + fname);
             changed++;
@@ -1879,7 +1921,7 @@ const SKINMOD = (()=>{
       '<Event eventName="TriggerParticle" time="0.000" length="5.000" isDuration="true"><TemplateObject name="targetId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><TemplateObject name="objectSpaceId" id="1" objectName="target" isTemp="false" refParamName="" useRefParam="false" /><String name="resourceName" value="Prefab_Skill_Effects/Hero_Skill_Effects/'+heroDir+'/'+sid+'/jiasu_tongyong_01.prefab" refParamName="" useRefParam="false" /><Vector3 name="bindPosOffset" x="0.000" y="0.700" z="-0.600" refParamName="" useRefParam="false" /><Vector3i name="scalingInt" x="10000" y="10000" z="10000" refParamName="" useRefParam="false" /></Event>'+sl+'</Track>';
     return out.replace('</Action>', addTrack + '</Action>');
   }
-  return {setMd5,parse,build,motion,sound,hasSkinRow,resolveSoundT,shop,heroSkin,organSkin, charComponent,xmlRules,u32,bdomParse,bdomSerialize,actorInfo,assetRef,commonBack,commonHaste};
+  return {setMd5,parse,build,motion,sound,hasSkinRow,resolveSoundT,shop,heroSkin,organSkin,charComponent,skillPathTable,xmlRules,u32,bdomParse,bdomSerialize,actorInfo,assetRef,commonBack,commonHaste};
 })();
 
 // v8.0: ID skin thật của game (do bạn cung cấp: skin.txt). Cờ 1 = ● (skin có hiệu ứng/âm thanh riêng), 0 = ○
@@ -2076,6 +2118,8 @@ async function buildModZip(){
     applyTable('heroSkin.bytes',d=>SKINMOD.heroSkin(d,base,T,A));
     applyTable('organSkin.bytes',d=>SKINMOD.organSkin(d,base,T));
     applyTable('ResCharacterComponent.bytes',d=>SKINMOD.charComponent(d,A));
+    applyTable('liteBulletCfg.bytes',d=>SKINMOD.skillPathTable(d,HERO_DIR,T,has,base));
+    applyTable('skillmark.bytes',d=>SKINMOD.skillPathTable(d,HERO_DIR,T,has,base));
 
     // 1) File Actions của tướng
     let xmlChanged=0, xmlSkipped=0, skinBackXml=null, heroBackXml=null;
@@ -2095,7 +2139,7 @@ async function buildModZip(){
       let out=SKINMOD.xmlRules(text,HERO_DIR,T,has,base,keepFn,soundT);
       // Yena Huyền Cửu Thiên (15412): gắn trực tiếp model dạng Trọng Đao Đỏ (15413_HuaMuLan_Red) vào P1E6.xml (buff 154960 luôn chạy khi bấm Chiêu 3 chuyển dạng Trọng Đao và tự hoàn lại Song Đao khi chuyển về)
       if(A===154 && T===12 && /(^|\/)p1e6\.xml$/i.test(name) && !/15413_HuaMuLan_Red/i.test(out)){
-        const redTrack = '<Track trackName="Mod_15412_RedMesh" eventType="ChangeActorMeshDuration" guid="MOD-15412-RED-MESH" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true"><Event eventName="ChangeActorMeshDuration" time="0.000" length="2.000" isDuration="true" guid="MOD-15412-RED-EV"><TemplateObject name="targetId" id="0" objectName="self" isTemp="false" refParamName="" useRefParam="false" /><String name="prefabName" value="prefab_skill_effects/hero_skill_effects/154_huamulan/15412/15413_HuaMuLan_Red" refParamName="" useRefParam="false" /><bool name="bUseOriginalActorMesh" value="true" refParamName="" useRefParam="false" /><bool name="bNotRecycleMesh" value="true" refParamName="" useRefParam="false" /></Event></Track>';
+        const redTrack = '<Track trackName="Mod_15412_RedMesh" eventType="ChangeActorMeshDuration" guid="MOD-15412-RED-MESH" enabled="true" useRefParam="false" refParamName="" r="0.000" g="0.000" b="0.000" execOnForceStopped="false" execOnActionCompleted="false" stopAfterLastEvent="true"><Event eventName="ChangeActorMeshDuration" time="0.000" length="2.000" isDuration="true" guid="MOD-15412-RED-EV"><TemplateObject name="targetId" id="0" objectName="self" isTemp="false" refParamName="" useRefParam="false" /><String name="prefabName" value="Prefab_Skill_Effects/Hero_Skill_Effects/154_HuaMuLan/15413_HuaMuLan_Red" refParamName="" useRefParam="false" /><bool name="bUseOriginalActorMesh" value="true" refParamName="" useRefParam="false" /><bool name="bNotRecycleMesh" value="true" refParamName="" useRefParam="false" /></Event></Track>';
         out = out.replace('</Action>', redTrack + '</Action>');
       }
       if(out===text) return null;
@@ -2187,40 +2231,75 @@ async function buildModZip(){
   const name = jobs.length===1
     ? slugFile(jobs[0].item.skin)+'.zip'
     : slugFile('Mod_'+jobs.length+'_Tuong_'+jobs.slice(0,3).map(j=>j.item.hero).join('_'))+'.zip';
+  const txtName = name.replace(/\.zip$/i, '') + '_DanhSachSkin.txt';
+  const skinListLines = [
+    '=== DANH SÁCH SKIN ĐÃ MOD (' + jobs.length + ' tướng) ===',
+    'File ZIP: ' + name,
+    '----------------------------------------',
+    ...jobs.map((j, i) => (i+1) + '. ' + j.item.hero + ' - ' + j.item.skin + ' (ID: ' + j.sk.id + (j.item.tier ? ', ' + j.item.tier : '') + ')')
+  ];
+  const skinListText = skinListLines.join('\n') + '\n';
+  files.push({name:'DanhSachSkin.txt', data:new TextEncoder().encode(skinListText)});
   const fileList=files.map(f=>({name:f.name,size:f.data.length}));
   const totalSize=fileList.reduce((a,f)=>a+f.size,0);
   const debugInfo={resFilesCount:RES_FILES.size, outFilesCount:fileList.length, totalSize, fileList, hashPairsCount:0, hashHitsHex:0, hashHitsRaw:0, missing:(RES_MISSING||[]).concat(notFound), zstdLog:ZSTD_LOG.slice()};
-  return {blob:zipStore(files), name, rows:heroesMod, patchedCount:files.length, hashPairs:[], debugInfo};
+  return {blob:zipStore(files), name, txtName, skinListText, rows:heroesMod, patchedCount:files.length, hashPairs:[], debugInfo};
 }
 let MAKING = false; // Khóa chống bấm liên tục / bấm 2 lần -> trừ 2 điểm
 let PENDING_BUILD = null; // File đã tạo xong, chờ user bấm "Tải file" (giữ gesture cho iOS share)
-function handoffZip(blob,name,debugInfo){
+function handoffZip(blob,name,debugInfo,txtName,skinListText){
   // Không tự share ngay sau await (mất gesture -> Safari báo "not allowed by user agent")
   // Hiện dialog "File mod đã xong!" với nút Tải - user bấm nút đó là gesture mới, share sẽ được
-  PENDING_BUILD = {blob, name, debugInfo};
+  const resolvedTxtName = txtName || (name.replace(/\.zip$/i,'') + '_DanhSachSkin.txt');
+  const resolvedTxt = skinListText || ('File ZIP: ' + name + '\n');
+  PENDING_BUILD = {blob, name, debugInfo, txtName: resolvedTxtName, skinListText: resolvedTxt};
   const m = document.getElementById('modal');
   if(m){
-    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.0<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>Hash MD5 mới: '+(debugInfo.hashPairsCount||0)+' file • ghi đè vào verification: '+(debugInfo.hashHitsHex||0)+' chỗ hex, '+(debugInfo.hashHitsRaw||0)+' chỗ raw<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p><p style="font-size:11px;color:#dc2626;margin:0 0 12px">Nếu vẫn 82KB thì chụp màn hình DEBUG này gửi mình!</p>' : '';
-    m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về.</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Bấm để Tải file về</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:8px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
+    const dbg = debugInfo ? '<p style="font-size:11px;color:#0f172a;background:#f1f5f9;border-radius:8px;padding:8px;margin:0 0 12px;text-align:left">🔍 DEBUG v8.1<br>Đã nạp: '+(debugInfo.resFilesCount||'?')+' file gốc<br>Đã patch: '+(debugInfo.outFilesCount||'?')+' file, tổng '+(Math.round((debugInfo.totalSize||0)/1024))+' KB<br>Kích thước tổng: '+Math.round((debugInfo.totalSize||0)/1024)+' KB (lưu raw như file mẫu)<br>'+((debugInfo.missing&&debugInfo.missing.length)?('<span style=\"color:#dc2626\">⚠ Thiếu trong zip: '+debugInfo.missing.join(', ')+'</span><br>'):'')+((debugInfo.zstdLog&&debugInfo.zstdLog.length)?('<span style=\"font-size:10px;color:#0369a1\">ZSTD: '+debugInfo.zstdLog.join('<br>')+'</span><br>'):'')+'<span style="font-size:10px;color:#64748b">'+(debugInfo.fileList||[]).map(f=>f.name.split('/').pop()+' ('+Math.round(f.size/1024)+'KB)').join('<br>')+'</span></p>' : '';
+    m.innerHTML = '<div style="position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:16px;overflow-y:auto"><div style="background:#fff;border-radius:16px;padding:20px;max-width:380px;width:100%;text-align:center;max-height:90vh;overflow-y:auto"><h3 style="margin:0 0 8px">✅ File mod đã xong!</h3><p style="font-size:13px;color:#64748b;margin:0 0 12px">File: <b>'+name+'</b><br>Đã trừ 1 điểm. Bấm nút dưới để tải về (kèm danh sách skin đã mod).</p>'+dbg+'<button id="btnDlMod" style="width:100%;padding:12px;border:none;border-radius:10px;background:#0f172a;color:#fff;font-weight:700;font-size:15px;cursor:pointer">⬇️ Tải file ZIP + Danh sách skin</button><button id="btnDlTxt" style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:10px;background:#f8fafc;color:#0f172a;font-weight:700;font-size:13px;margin-top:8px;cursor:pointer">📄 Chỉ tải danh sách skin (.txt)</button><button id="btnCloseMod" style="width:100%;padding:10px;border:none;background:none;color:#64748b;font-size:13px;margin-top:6px;cursor:pointer">Đóng (không tải, vẫn trừ 1 điểm)</button></div></div>';
+    const btnDlTxt = document.getElementById('btnDlTxt');
+    if(btnDlTxt) btnDlTxt.onclick = async ()=>{
+      const cur = PENDING_BUILD; if(!cur) return;
+      const txtBlob = new Blob([cur.skinListText], {type:'text/plain;charset=utf-8'});
+      const txtFile = new File([txtBlob], cur.txtName, {type:'text/plain;charset=utf-8'});
+      const ios = st.device==='ios' || /iPhone|iPad|iPod/.test(navigator.userAgent||'');
+      try{
+        if(ios && navigator.canShare && navigator.canShare({files:[txtFile]})){
+          await navigator.share({files:[txtFile]});
+        } else {
+          const a=document.createElement('a'), url=URL.createObjectURL(txtBlob);
+          a.href=url; a.download=cur.txtName; document.body.appendChild(a); a.click(); a.remove();
+          setTimeout(()=>URL.revokeObjectURL(url),20000);
+        }
+        toast('Đã tải '+cur.txtName);
+      }catch(e){ if(e && e.name!=='AbortError') toast('Không tải được file txt: '+(e.message||e)); }
+    };
     const btnDl = document.getElementById('btnDlMod');
     if(btnDl) btnDl.onclick = async ()=>{
       const cur = PENDING_BUILD; if(!cur) return;
-      // Khi bấm Tải thì mới cho phép tạo file mới (reset sau khi tải, không reset trước để chống bấm 2 lần)
       try{
-        const file = new File([cur.blob], cur.name, {type:'application/zip'});
+        const zipFile = new File([cur.blob], cur.name, {type:'application/zip'});
+        const txtBlob = new Blob([cur.skinListText], {type:'text/plain;charset=utf-8'});
+        const txtFile = new File([txtBlob], cur.txtName, {type:'text/plain;charset=utf-8'});
         const ios = st.device==='ios' || /iPhone|iPad|iPod/.test(navigator.userAgent||'');
-        if(ios && navigator.canShare && navigator.canShare({files:[file]})){
-          await navigator.share({files:[file], title:cur.name});
+        // Không truyền title vào navigator.share để iOS KHÔNG tự sinh file "văn bản" chỉ chứa tên zip;
+        // thay vào đó chia sẻ thẳng [zipFile, txtFile] để iOS lưu đúng file ZIP + file .txt danh sách các skin được mod!
+        if(ios && navigator.canShare && navigator.canShare({files:[zipFile, txtFile]})){
+          await navigator.share({files:[zipFile, txtFile]});
+        } else if(ios && navigator.canShare && navigator.canShare({files:[zipFile]})){
+          await navigator.share({files:[zipFile]});
         } else {
           const a=document.createElement('a'), url=URL.createObjectURL(cur.blob);
           a.href=url; a.download=cur.name; document.body.appendChild(a); a.click(); a.remove();
           setTimeout(()=>URL.revokeObjectURL(url),20000);
+          const a2=document.createElement('a'), url2=URL.createObjectURL(txtBlob);
+          a2.href=url2; a2.download=cur.txtName; document.body.appendChild(a2); a2.click(); a2.remove();
+          setTimeout(()=>URL.revokeObjectURL(url2),20000);
         }
-        toast('Đã tải '+cur.name);
+        toast('Đã tải '+cur.name+' & '+cur.txtName);
         PENDING_BUILD=null; MAKING=false; LAST_MAKE_AT=0;
         try{ if(typeof view3==='function') view3(); }catch(_){}
       }catch(e){
-        // User hủy share -> không hoàn điểm (đã trừ vì file đã tạo xong), chỉ báo
         if(e && e.name!=='AbortError') toast('Không tải được file: '+(e.message||e));
         else toast('Đã hủy tải - File đã tạo, bấm "Tạo file ZIP" lại sẽ không trừ điểm nếu file vẫn còn (xem dưới)');
       }
@@ -2239,7 +2318,7 @@ async function make(){
   if(now - LAST_MAKE_AT < 3000){ toast('Vừa bấm rồi, đợi xíu...'); return; }
   // Nếu đã có file chờ tải (vừa tạo xong mà chưa tải), bấm lại thì mở lại dialog tải, KHÔNG trừ điểm nữa
   if(PENDING_BUILD){
-    await handoffZip(PENDING_BUILD.blob, PENDING_BUILD.name);
+    await handoffZip(PENDING_BUILD.blob, PENDING_BUILD.name, PENDING_BUILD.debugInfo, PENDING_BUILD.txtName, PENDING_BUILD.skinListText);
     return;
   }
   const u=st.user;
@@ -2268,8 +2347,8 @@ async function make(){
   // KHÔNG làm st.user.credits -1 ở đây nữa - đợi Firebase onSnapshot trả về điểm mới (8) rồi renderHeader sẽ hiện đúng
   // Giữ MAKING=true cho tới khi dialog đóng, để ghost-click không lọt 2 lần tạo file
   // Set PENDING_BUILD TRƯỚC khi mở dialog, để bấm lại không tạo file mới
-  PENDING_BUILD = {blob: built.blob, name: built.name};
-  try{ await handoffZip(built.blob, built.name, built.debugInfo); }
+  PENDING_BUILD = {blob: built.blob, name: built.name, debugInfo: built.debugInfo, txtName: built.txtName, skinListText: built.skinListText};
+  try{ await handoffZip(built.blob, built.name, built.debugInfo, built.txtName, built.skinListText); }
   catch(e){ MAKING=false; PENDING_BUILD=null; return toast('Không tải được file: '+(e.message||e)); }
   toast('Đã tạo '+built.name+' • Đã trừ 1 điểm (điểm sẽ cập nhật sau 1-2s) • Bấm "⬇️ Bấm để Tải file về" để tải');
   // KHÔNG gọi view3() ngay ở đây - view3() sẽ re-render nút và làm mất MAKING lock + PENDING_BUILD
